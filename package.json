@@ -1,0 +1,15 @@
+{
+  "name": "3d-mcp",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "fastmcp": "^1.20.5"
+  }
+}
