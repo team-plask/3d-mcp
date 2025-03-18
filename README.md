@@ -8,13 +8,13 @@
 
 ## Table of Contents
 
-- Design Philosophy
-- Architectural Patterns
-- System Architecture
-- Getting Started
-- Tool Categories
-- Contributing
-- License
+- [Design Philosophy](#design-philosophy)
+- [Architectural Patterns](#architectural-patterns)
+- [System Architecture](#system-architecture)
+- [Getting Started](#getting-started)
+- [Tool Categories](#tool-categories)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Design Philosophy
 
