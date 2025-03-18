@@ -1,18 +1,19 @@
-# 3D-MCP
+# 3D Model Context Protocol (3D-MCP)
 
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue) 
+
 ## Overview
 
 3D-MCP is a universal Model Context Protocol implementation for 3D creative workflows. It provides a standardized interface for interacting with various Digital Content Creation (DCC) tools like Blender, Maya, Unreal Engine, and other 3D applications through a unified API.
 
 ## Table of Contents
 
-- Key Concepts
-- Architecture
-- Getting Started
-- Usage
-- Tool Categories
-- Contributing
+- [Key Concepts](#key-concepts)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Tool Categories](#tool-categories)
+- [Contributing](#contributing)
 
 ## Key Concepts
 
@@ -55,10 +56,7 @@ bun install
 ### Running the Server
 
 ```bash
-# Test the addition server example using CLI:
-npx fastmcp dev src/examples/addition.ts
-# Test the addition server example using MCP Inspector:
-npx fastmcp inspect src/examples/addition.ts
+bun run index.ts
 ```
 
 This starts the MCP server using stdio transport, which can be connected to by any MCP-compatible client.
@@ -115,7 +113,6 @@ The project uses [Zod](https://github.com/colinhacks/zod) for runtime type valid
 - Animation data structures
 
 
-
 ## Contributing
 
 Contributions are welcome! Here are the main areas where you can help:
@@ -124,7 +121,3 @@ Contributions are welcome! Here are the main areas where you can help:
 2. Creating compound tools from existing atomic tools
 3. Adding support for new DCC tools
 4. Improving type definitions and documentation
-
-## License
-
-MIT
