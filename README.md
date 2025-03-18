@@ -1,7 +1,6 @@
 # 3D-MCP
 
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green)
-
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)
 ## Overview
 
 3D-MCP is a universal Model Context Protocol implementation for 3D creative workflows. It provides a standardized interface for interacting with various Digital Content Creation (DCC) tools like Blender, Maya, Unreal Engine, and other 3D applications through a unified API.
@@ -115,7 +114,7 @@ The project uses [Zod](https://github.com/colinhacks/zod) for runtime type valid
 - Material definitions
 - Animation data structures
 
-```
+
 
 ## Contributing
 
@@ -129,7 +128,3 @@ Contributions are welcome! Here are the main areas where you can help:
 ## License
 
 MIT
-
----
-
-Maintained by [Your Name/Organization]
