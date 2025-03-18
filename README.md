@@ -4,7 +4,7 @@
 
 ## Overview
 
-3D-MCP is a universal Model Context Protocol implementation that serves as a semantic layer between LLMs and 3D creative software. It provides a standardized interface for interacting with various Digital Content Creation (DCC) tools like Blender, Maya, Unreal Engine, and other 3D applications through a unified API.
+3D-MCP is a universal [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that serves as a semantic layer between LLMs and 3D creative software. It provides a standardized interface for interacting with various Digital Content Creation (DCC) tools like Blender, Maya, Unreal Engine, and other 3D applications through a unified API.
 
 ## Table of Contents
 
