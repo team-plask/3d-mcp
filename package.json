@@ -4,15 +4,19 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "codegen": "bun run scripts/plugin-codegen.ts"
+    "extract-schemas": "bun run packages/scripts/extract-schemas.ts",
+    "codegen": "bun --silent run packages/scripts/plugin-codegen.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^5",
+    "zod-to-json-schema": "^3.21.4"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "fastmcp": "^1.20.5"
+    "fastmcp": "^1.20.5",
+    "zod": "^3.22.4"
   }
 }
