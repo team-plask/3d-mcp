@@ -4,147 +4,134 @@
 
 ## Overview
 
-3D-MCP is a universal [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that serves as a semantic layer between LLMs and 3D creative software. It provides a standardized interface for interacting with various Digital Content Creation (DCC) tools like Blender, Maya, Unreal Engine, and other 3D applications through a unified API.
+3D-MCP is a concrete implementation of the [Model Context Protocol](https://modelcontextprotocol.io/introduction) for 3D software. It creates a unified TypeScript API that automatically generates native plugins for Blender, Maya, Unreal Engine, and other 3D applications.
 
-## Table of Contents
-
-- [Design Philosophy](#design-philosophy)
-- [Architectural Patterns](#architectural-patterns)
-- [System Architecture](#system-architecture)
-- [Getting Started](#getting-started)
-- [Tool Categories](#tool-categories)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Design Philosophy
-
-3D-MCP addresses fundamental challenges in 3D workflows:
-
-### Problems Solved
-
-1. **Fragmentation**: Each DCC tool (Blender, Maya, Unreal, etc.) has its own API and language (Python, MEL, Blueprint)
-2. **Code duplication**: Similar operations require different implementations across tools
-3. **Semantic gap**: LLMs need to understand 3D concepts at a high level, not implementation details
-
-### Solution Architecture
-
-Our solution implements several key design patterns:
-
-- **Interface Segregation Principle**: Abstract atomic tools define clear, focused interfaces
-- **Dependency Inversion Principle**: High-level operations depend on abstractions, not implementations
-- **Semantic Abstraction**: Exposing 3D concepts as intentional operations rather than mechanical manipulations
-
-## System Architecture
-
-
-The architecture follows a client-server model with distinct responsibility layers:
-
-### 1. Semantic Interface Layer (MCP Server)
-- Defines the semantic interface that LLMs interact with
-- Exposes tools and operations in LLM-friendly terminology
-- Handles protocol communication and message routing
-
-### 2. Abstract Tool Layer
-- Defines tool interfaces as abstract contracts
-- Specifies input/output schemas with Zod validation
-- Tool interfaces are organized by domains (Animation, Rendering, etc.)
-
-### 3. Compound Tool Layer
-- Implements higher-level operations by composing atomic tools
-- Follows composition patterns for complex operations
-- Depends only on abstract tool interfaces, not concrete implementations
-
-### 4. Plugin System
-- Each DCC tool implements concrete versions of the atomic tools
-- Plugins translate abstract operations to tool-specific API calls
-- Implementations are isolated from the semantic interface
-
-```
-Client Application → MCP Server → Abstract Tools → Plugin → DCC Software
-                          ↑
-                          └── Compound Tools
+```typescript
+// Use the same code to work across any 3D software
+await tools.animation.createKeyframe({
+  objectId: "cube_1",
+  property: "rotation.x",
+  time: 30,
+  value: Math.PI/2
+});
 ```
 
-## Plugin Code Generation System
+## Why 3D-MCP?
 
-### Key Component of the Architecture
+| Problem | Solution | Implementation |
+|---------|----------|----------------|
+| **Fragmentation** | Single API for all 3D software | Abstract interfaces with auto-generated native plugins |
+| **Complexity** | High-level semantic operations | Compound tools built from atomic operations. After we cover the atomic tools for a plug-in, no need for additional plug-in development. |
+| **Development Cost** | Write once, run everywhere | Schema-driven code generation for Python, C++, etc. |
 
-The 3D-MCP system includes a code generation system that automatically produces plugin implementations for multiple 3D tools from a single abstract interface definition. This is a crucial architectural component that:
+## Technical Architecture
 
-1. **Enforces the Dependency Inversion Principle** by automatically generating concrete implementations from abstract interfaces
-2. **Eliminates manual synchronization** between interfaces and implementations
-3. **Ensures consistency** across different platform implementations (Blender, Maya, Unreal)
+### 1. Abstract Tool System
 
-### Schema-Driven Development
+Tools are organized by domain and implemented as TypeScript classes with Zod schemas:
 
-The code generation approach implements a schema-driven development pattern:
+```typescript
+// src/tool/animation/createKeyframe.ts
+export const createKeyframeSchema = z.object({
+  objectId: z.string(),
+  property: z.string(),
+  time: z.number(),
+  value: z.number()
+});
 
-- Abstract tool interfaces are defined using [Zod](https://github.com/colinhacks/zod) schemas
-- Schemas specify both parameter types and return values with validation rules using [zodToJsonSchema](https://github.com/colinhacks/zod-to-json-schema)
-- The code generator extracts these schemas and translates them to target languages
-- Generated code includes appropriate type conversions, validation, and error handling
+export class CreateKeyframeTool implements Tool {
+  async execute(params: z.infer<typeof createKeyframeSchema>) {
+    // Implementation delegates to the appropriate plugin
+  }
+}
+```
 
-### Workflow
+### 2. Code Generation Pipeline
 
-The plugin code generation workflow:
-```markdown
-Abstract Tool Definition (Zod) → Schema Extraction → Platform-specific Code Generation → Plugin Implementation
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐
+│ Abstract Tool   │     │ Schema          │     │ Target-specific Code    │
+│ Definition (TS) │ ──> │ Extraction (TS) │ ──> │ (Python/C++/etc.)       │
+└─────────────────┘     └─────────────────┘     └─────────────────────────┘
+```
+
+The system automatically:
+1. Extracts Zod schemas from tool definitions
+2. Generates type-safe implementations in target languages
+3. Handles parameter validation and error handling
+4. Provides native implementations for each DCC tool
+
+### 3. Cross-Platform Implementation
+
+Each DCC tool gets native code that feels idiomatic:
+
+```python
+# Generated Blender plugin from the same interface
+def create_keyframe(object_id, property, time, value):
+    obj = bpy.data.objects.get(object_id)
+    if not obj:
+        return {"error": f"Object {object_id} not found"}
+    obj.keyframe_insert(data_path=property, frame=time)
+    return {"success": True}
+```
+
+```cpp
+// Generated Unreal Engine plugin from the same interface
+bool UAnimationTools::CreateKeyframe(FString ObjectId, FString Property, 
+                                    float Time, float Value) {
+    UObject* Object = FindObject<UObject>(nullptr, *ObjectId);
+    if (!Object) return false;
+    // Unreal-specific implementation
+    return true;
+}
 ```
 
 ## Getting Started
 
-### Installation
+### Quick Start
 
 ```bash
+# Install dependencies
 bun install
-```
 
-### Running the Server
-
-```bash
+# Run the server
 bun run index.ts
+
+# Extract schemas and generate plugins
+bun run packages/scripts/plugin-codegen.ts
 ```
 
-This starts the MCP server using stdio transport, which can be connected to by any MCP-compatible client.
+### Development Workflow
 
-## Tool Categories
+1. Define abstract tools with Zod schemas in `src/tool/`
+2. Run schema extraction with `bun run packages/scripts/extract-schemas.ts`
+3. Generate plugins with `bun run packages/scripts/plugin-codegen.ts`
+4. Use the tools via the MCP server
+
+## Key Features
 
 ### Animation Tools
+- Create and modify keyframes with precise timing control
+- Build animation curves with easing and interpolation
+- Retarget animations between different character rigs
 
-Animation tools provide a semantic interface for creating and manipulating keyframe animations:
-
-- Creating animation clips and channels
-- Adding and removing keyframes
-- Controlling animation playback
-- Blending between animations
-- Importing animation data
-
-### Render Tools
-
-Render tools provide a semantic interface for the rendering process:
-
-- Setting up rendering parameters
-- Managing materials and textures
-- Configuring lighting
-- Executing render operations
-
-### Core Types
-
-The project uses [Zod](https://github.com/colinhacks/zod) for runtime type validation, with core types aligned with glTF standards where appropriate:
-
-- Transform components (translation, rotation, scale)
-- Material definitions
-- Animation data structures
+### Rendering Tools
+- Configure materials with PBR properties
+- Set up lighting environments
+- Control render parameters (quality, resolution, passes)
 
 ## Contributing
 
-Contributions are welcome! Here are the main areas where you can help:
+### Why It's Easy to Contribute
 
-1. Defining new abstract tool interfaces
-2. Implementing compound tools that combine existing atomic tools
-3. Creating plugins for additional DCC tools
-4. Improving type definitions and documentation
+1. **Add New Tools**: Define a new abstract tool with a Zod schema, and the code generation system automatically produces implementations for all supported DCCs.
+
+2. **Add New DCCs**: Implement a new code generator for a target language or platform, and all existing tools get implementations for free.
+
+3. **Clear Development Model**: The separation of abstract interfaces from concrete implementations makes the system easy to extend without breaking existing functionality.
 
 ---
 
-*3D-MCP: Bridging the gap between language models and 3D creative software*
+*3D-MCP: One API to rule all 3D software*
+
+Similar code found with 2 license types
