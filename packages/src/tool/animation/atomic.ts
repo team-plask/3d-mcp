@@ -232,7 +232,7 @@ const animationAtomicTools = {
       "Import animation data from external source",
     parameters: z.object({
       format: z
-        .enum(["gltf", "fbx", "bvh", "json"])
+        .enum(["glb", "fbx", "bvh", "json"])
         .describe("Source format"),
       data: z
         .any()
