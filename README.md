@@ -133,5 +133,3 @@ bun run packages/scripts/plugin-codegen.ts
 ---
 
 *3D-MCP: One API to rule all 3D software*
-
-Similar code found with 2 license types
