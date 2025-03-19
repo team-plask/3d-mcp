@@ -86,6 +86,36 @@ bool UAnimationTools::CreateKeyframe(FString ObjectId, FString Property,
 }
 ```
 
+### 4. Atomic and Compound Tool Architecture
+
+The system implements the dependency inversion principle through a two-tier architecture:
+
+- **Atomic Tools**: Fundamental operations that require DCC-specific implementations. These are the only components that need native code generation for each target platform.
+
+- **Compound Tools**: Higher-level operations composed entirely from atomic tools. These tools are completely platform-agnostic, requiring **zero additional implementation** when supporting new 3D applications.
+
+```typescript
+// Example of a compound tool that works across all platforms
+const blendAnimations = defineCompoundTool({
+  description: "Create a smooth transition blend between two animations",
+  parameters: blendAnimationsParams,
+  returns: blendAnimationsReturns,
+  execute: async (params) => {
+    // Uses atomic tools that already have platform-specific implementations
+    const layer = await tools.animation.createLayer({ name: params.blendLayerName });
+    await tools.animation.addClipToLayer({ layerId: layer.id, clipId: params.fromClipId });
+    // Additional atomic operations to implement the blending...
+    return { layerId: layer.id, success: true };
+  }
+});
+```
+
+This architecture provides significant scalability advantages:
+
+1. **Linear Growth**: Only atomic tools need concrete implementations, while compound tools scale without additional platform-specific code.
+2. **Interface Stability**: Compound tools depend only on atomic tool interfaces, not implementations.
+3. **Reduced Development Burden**: Once atomic tools are implemented for a DCC, all existing compound tools work automatically.
+
 ## Getting Started
 
 ### Quick Start
