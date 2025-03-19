@@ -4,10 +4,10 @@
 
 ## Overview
 
-3D-MCP is a concrete implementation of the [Model Context Protocol](https://modelcontextprotocol.io/introduction) for 3D software. It creates a unified TypeScript API that automatically generates native plugins for Blender, Maya, Unreal Engine, and other 3D applications.
+3D-MCP is a universal implementation of the [Model Context Protocol](https://modelcontextprotocol.io/introduction) for 3D software. It creates a unified TypeScript interface for LLM that automatically generates native plugins for Blender, Maya, Unreal Engine, and other 3D applications.
 
 ```typescript
-// Use the same code to work across any 3D software
+// LLM uses the same interface to work across any 3D software
 await tools.animation.createKeyframe({
   objectId: "cube_1",
   property: "rotation.x",
