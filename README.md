@@ -18,14 +18,13 @@
 
 ## Design Philosophy
 
-3D-MCP is built on solid software design principles that address fundamental challenges in 3D workflows:
+3D-MCP addresses fundamental challenges in 3D workflows:
 
 ### Problems Solved
 
 1. **Fragmentation**: Each DCC tool (Blender, Maya, Unreal, etc.) has its own API and language (Python, MEL, Blueprint)
 2. **Code duplication**: Similar operations require different implementations across tools
-3. **Integration overhead**: Building cross-tool workflows requires learning multiple APIs
-4. **Semantic gap**: LLMs need to understand 3D concepts at a high level, not implementation details
+3. **Semantic gap**: LLMs need to understand 3D concepts at a high level, not implementation details
 
 ### Solution Architecture
 
@@ -34,33 +33,6 @@ Our solution implements several key design patterns:
 - **Interface Segregation Principle**: Abstract atomic tools define clear, focused interfaces
 - **Dependency Inversion Principle**: High-level operations depend on abstractions, not implementations
 - **Semantic Abstraction**: Exposing 3D concepts as intentional operations rather than mechanical manipulations
-- **Composition Over Inheritance**: Building complex operations by composing atomic tools
-
-## Architectural Patterns
-
-### Semantic Interface Pattern
-
-3D-MCP functions as a **semantic interface layer** that translates high-level 3D concepts into tool-specific operations:
-
-```
-LLM → Semantic Request → MCP Server → Abstract Tool Interface → Concrete Tool Implementation → DCC Software
-```
-
-### Abstraction Layers
-
-The system is built on three key abstraction layers:
-
-1. **Abstract Interface Layer** - Defines the "what" of 3D operations independent of any tool
-2. **Tool Implementation Layer** - Implements the "how" for each specific DCC software
-3. **Composition Layer** - Builds higher-level operations from atomic ones
-
-### Dependency Inversion
-
-The architecture follows the Dependency Inversion Principle:
-
-- **High-level modules** (compound tools) depend on abstractions
-- **Low-level modules** (plugin implementations) depend on the same abstractions
-- Neither depends directly on the other, allowing for loose coupling
 
 ## System Architecture
 
@@ -91,6 +63,32 @@ The architecture follows a client-server model with distinct responsibility laye
 Client Application → MCP Server → Abstract Tools → Plugin → DCC Software
                           ↑
                           └── Compound Tools
+```
+
+## Plugin Code Generation System
+
+### Key Component of the Architecture
+
+The 3D-MCP system includes a code generation system that automatically produces plugin implementations for multiple 3D tools from a single abstract interface definition. This is a crucial architectural component that:
+
+1. **Enforces the Dependency Inversion Principle** by automatically generating concrete implementations from abstract interfaces
+2. **Eliminates manual synchronization** between interfaces and implementations
+3. **Ensures consistency** across different platform implementations (Blender, Maya, Unreal)
+
+### Schema-Driven Development
+
+The code generation approach implements a schema-driven development pattern:
+
+- Abstract tool interfaces are defined using [Zod](https://github.com/colinhacks/zod) schemas
+- Schemas specify both parameter types and return values with validation rules using [zodToJsonSchema](https://github.com/colinhacks/zod-to-json-schema)
+- The code generator extracts these schemas and translates them to target languages
+- Generated code includes appropriate type conversions, validation, and error handling
+
+### Workflow
+
+The plugin code generation workflow:
+```markdown
+Abstract Tool Definition (Zod) → Schema Extraction → Platform-specific Code Generation → Plugin Implementation
 ```
 
 ## Getting Started
