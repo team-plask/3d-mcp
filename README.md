@@ -1,4 +1,4 @@
-# 3D-MCP: Semantic Interface for 3D Digital Content Creation
+# 3D-MCP: Semantic Interface for 3D Content Creation
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue) ![License](https://img.shields.io/badge/License-Apache_2.0-green)
 
