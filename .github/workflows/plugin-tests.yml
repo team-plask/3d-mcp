@@ -39,4 +39,3 @@ jobs:
         name: generated-plugins
         path: packages/plugins/
         if-no-files-found: ignore
-```
