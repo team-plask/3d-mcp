@@ -1,278 +1,596 @@
 import { z } from "zod";
-import {
-  InterpolationMethod,
-  AnimationPlaybackAction,
-  AnimationPathType,
-  KeyframeOperationBase,
-  KeyframeInput,
-  OperationResponse,
-} from "./type";
-import { TensorType } from "../core/type";
 import { createExecutableTools } from "../core/request";
+import { OperationResponse } from "../core/entity";
+import { createCrudOperations } from "../core/utils";
+import { AnimationEntities } from "./entity";
 
+const entityCruds = Object.entries(
+  AnimationEntities
+).reduce((acc, [key, value]) => {
+  const cruds = createCrudOperations(
+    key.toLowerCase(),
+    value
+  );
+  acc = { ...acc, ...cruds };
+  return acc;
+}, {} as Record<string, any>);
+
+/**
+ * Animation atomic tools organized by entity type with batch support
+ */
 const animationAtomicTools = {
-  /**
-   * Insert multiple keyframes in a batch operation
-   */
+  ...entityCruds,
+
+  // Keyframe operations
+
   insertKeyframes: {
     description:
       "Insert multiple keyframes in a single batch operation",
-    parameters: KeyframeOperationBase.extend({
+    parameters: z.object({
+      channelId: z.string().describe("Channel identifier"),
       keyframes: z
-        .array(KeyframeInput)
+        .array(
+          AnimationEntities.Keyframe.omit({ id: true })
+        )
         .describe("Array of keyframes to insert"),
     }),
     returns: OperationResponse.extend({
-      keyframeIndices: z
-        .array(z.number())
-        .describe("Indices of the inserted keyframes"),
+      keyframeIds: z
+        .array(z.string())
+        .describe("IDs of the inserted keyframes"),
     }),
   },
 
-  /**
-   * Remove keyframes from an animation channel
-   */
-  removeKeyframes: {
+  bakeKeyframes: {
+    description: "Bake procedural animation to keyframes",
+    parameters: z.object({
+      channelId: z
+        .string()
+        .describe("Target channel identifier"),
+      startTime: z
+        .number()
+        .describe("Start time for baking"),
+      endTime: z.number().describe("End time for baking"),
+      frameRate: z
+        .number()
+        .positive()
+        .describe("Sampling rate in frames per second"),
+    }),
+    returns: OperationResponse.extend({
+      keyframeIds: z
+        .array(z.string())
+        .describe("IDs of created keyframes"),
+      keyframeCount: z
+        .number()
+        .describe("Number of keyframes created"),
+    }),
+  },
+
+  transformKeyframes: {
     description:
-      "Remove a keyframe from an animation channel",
-    parameters: KeyframeOperationBase.extend({
-      keyframeIndex: z
-        .array(z.number().int().nonnegative())
-        .describe("Indexes of the keyframes to remove"),
+      "Transform multiple keyframes with scale, offset, or other operations",
+    parameters: z.object({
+      channelId: z.string().describe("Channel identifier"),
+      keyframeIds: z
+        .array(z.string())
+        .describe("IDs of keyframes to transform"),
+      operation: z
+        .enum(["scale", "offset", "mirror", "noise"])
+        .describe("Transform operation type"),
+      timeParams: z
+        .object({
+          scale: z
+            .number()
+            .positive()
+            .optional()
+            .describe("Time scaling factor"),
+          offset: z
+            .number()
+            .optional()
+            .describe("Time offset to apply"),
+        })
+        .optional()
+        .describe("Time transformation parameters"),
+      valueParams: z
+        .object({
+          scale: z
+            .union([z.number(), z.array(z.number())])
+            .optional()
+            .describe("Value scaling factor"),
+          offset: z
+            .union([z.number(), z.array(z.number())])
+            .optional()
+            .describe("Value offset to apply"),
+          noiseAmplitude: z
+            .number()
+            .optional()
+            .describe(
+              "Noise amplitude for random variations"
+            ),
+        })
+        .optional()
+        .describe("Value transformation parameters"),
     }),
     returns: OperationResponse,
   },
 
-  /**
-   * Create a new animation channel
-   */
-  createChannel: {
-    description: "Create a new animation channel",
-    parameters: z.object({
-      clipId: z
-        .string()
-        .describe("Animation clip identifier"),
-      nodeId: z.string().describe("Target node identifier"),
-      path: AnimationPathType.describe(
-        "Standard property path to animate"
-      ),
-      customPath: z
-        .string()
-        .optional()
-        .describe("Custom property path if using 'custom'"),
-      type: TensorType.describe(
-        "Type of the animated property"
-      ),
-    }),
-    returns: OperationResponse.extend({
-      channelIndex: z
-        .number()
-        .describe("Index of the created channel"),
-    }),
-  },
+  // Channel operations
 
-  /**
-   * Create a new animation clip
-   */
-  createClip: {
-    description: "Create a new animation clip",
+  batchChannelSetMute: {
+    description:
+      "Mute or unmute multiple animation channels",
     parameters: z.object({
-      name: z
-        .string()
-        .describe("Name of the animation clip"),
-      duration: z
-        .number()
-        .nonnegative()
-        .describe("Duration in seconds"),
-      loop: z
-        .boolean()
-        .optional()
-        .describe("Whether the animation should loop"),
-    }),
-    returns: OperationResponse.extend({
-      clipId: z
-        .string()
-        .describe("Unique identifier for the created clip"),
-    }),
-  },
-
-  /**
-   * Update animation clip properties
-   */
-  updateClip: {
-    description: "Update animation clip properties",
-    parameters: z.object({
-      clipId: z
-        .string()
-        .describe("Animation clip identifier"),
-      name: z
-        .string()
-        .optional()
-        .describe("New name for the clip"),
-      duration: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe("New duration in seconds"),
-      loop: z
-        .boolean()
-        .optional()
-        .describe("Whether the animation should loop"),
-      speed: z
-        .number()
-        .optional()
-        .describe("Playback speed multiplier"),
+      items: z
+        .array(
+          z.object({
+            channelId: z
+              .string()
+              .describe("Channel identifier"),
+            muted: z
+              .boolean()
+              .describe("Whether to mute the channel"),
+          })
+        )
+        .describe("Channels to update"),
     }),
     returns: OperationResponse,
   },
 
-  /**
-   * Control animation playback
-   */
-  playAnimation: {
-    description: "Control animation playback",
-    parameters: z.object({
-      clipId: z
-        .string()
-        .describe("Animation clip identifier"),
-      action: AnimationPlaybackAction.describe(
-        "Playback control action"
-      ),
-      time: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe("Seek to specific time"),
-      speed: z
-        .number()
-        .optional()
-        .describe("Playback speed multiplier"),
-    }),
-    returns: OperationResponse.extend({
-      currentTime: z
-        .number()
-        .optional()
-        .describe("Current time after operation"),
-    }),
-  },
-
-  /**
-   * Evaluate animation at a specific time
-   */
-  evaluateAnimation: {
-    description: "Evaluate animation at a specific time",
-    parameters: z.object({
-      clipId: z
-        .string()
-        .describe("Animation clip identifier"),
-      time: z
-        .number()
-        .nonnegative()
-        .describe("Time to evaluate at"),
-    }),
-    returns: OperationResponse.extend({
-      snapshot: z
-        .record(z.string(), z.any())
-        .describe("Key-value pairs of animated properties"),
-    }),
-  },
-
-  /**
-   * Create a new animation layer for blending
-   */
-  createLayer: {
+  batchChannelSetSolo: {
     description:
-      "Create a new animation layer for blending",
+      "Solo or unsolo multiple animation channels",
     parameters: z.object({
-      name: z
-        .string()
-        .describe("Name of the animation layer"),
-      weight: z
+      items: z
+        .array(
+          z.object({
+            channelId: z
+              .string()
+              .describe("Channel identifier"),
+            solo: z
+              .boolean()
+              .describe("Whether to solo the channel"),
+          })
+        )
+        .describe("Channels to update"),
+    }),
+    returns: OperationResponse,
+  },
+
+  // Clip operations
+
+  trimClip: {
+    description:
+      "Trim an animation clip to a specific time range",
+    parameters: z.object({
+      clipId: z.string().describe("Clip identifier"),
+      startTime: z
         .number()
-        .min(0)
-        .max(1)
-        .default(1)
-        .describe("Blend weight of this layer"),
-      additive: z
-        .boolean()
-        .default(false)
-        .describe("Whether this layer is additive"),
+        .nonnegative()
+        .describe("New start time"),
+      endTime: z
+        .number()
+        .positive()
+        .describe("New end time"),
+    }),
+    returns: OperationResponse,
+  },
+
+  batchClipTrim: {
+    description:
+      "Trim multiple animation clips in a single operation",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            clipId: z.string().describe("Clip identifier"),
+            startTime: z
+              .number()
+              .nonnegative()
+              .describe("New start time"),
+            endTime: z
+              .number()
+              .positive()
+              .describe("New end time"),
+          })
+        )
+        .describe("Clips to trim"),
+    }),
+    returns: OperationResponse,
+  },
+
+  splitClip: {
+    description:
+      "Split a clip into two separate clips at the specified time",
+    parameters: z.object({
+      clipId: z.string().describe("Source clip identifier"),
+      splitTime: z
+        .number()
+        .positive()
+        .describe("Time to split the clip at"),
     }),
     returns: OperationResponse.extend({
-      layerId: z
+      newClipId: z
         .string()
         .describe(
-          "Unique identifier for the created layer"
+          "ID of the newly created clip from the split"
         ),
     }),
   },
 
-  /**
-   * Set the blend weight of an animation layer
-   */
-  setLayerWeight: {
-    description:
-      "Set the blend weight of an animation layer",
+  mergeClips: {
+    description: "Merge multiple clips into a single clip",
     parameters: z.object({
-      layerId: z.string().describe("Layer identifier"),
-      weight: z
-        .number()
-        .min(0)
-        .max(1)
-        .describe("New weight value"),
-    }),
-    returns: OperationResponse,
-  },
-
-  /**
-   * Import animation data from external source
-   */
-  importAnimation: {
-    description:
-      "Import animation data from external source",
-    parameters: z.object({
-      format: z
-        .enum(["glb", "fbx", "bvh", "json"])
-        .describe("Source format"),
-      data: z
-        .any()
-        .describe("Animation data in the specified format"),
-      targetMapping: z
-        .record(z.string(), z.string())
-        .optional()
-        .describe(
-          "Map source node names to scene node IDs"
-        ),
-    }),
-    returns: OperationResponse.extend({
       clipIds: z
         .array(z.string())
-        .describe("IDs of imported animation clips"),
+        .min(2)
+        .describe("IDs of clips to merge"),
+      name: z
+        .string()
+        .optional()
+        .describe("Name for the merged clip"),
+      blendTime: z
+        .number()
+        .nonnegative()
+        .optional()
+        .describe("Time to blend between clips"),
+    }),
+    returns: OperationResponse.extend({
+      mergedClipId: z
+        .string()
+        .describe("ID of the newly created merged clip"),
     }),
   },
 
-  /**
-   * Add a clip to an animation layer
-   */
-  addClipToLayer: {
-    description: "Add an animation clip to a layer",
+  batchClipPlayback: {
+    description:
+      "Control playback for multiple clips simultaneously",
     parameters: z.object({
-      layerId: z.string().describe("Layer identifier"),
-      clipId: z.string().describe("Clip identifier"),
+      items: z
+        .array(
+          z.object({
+            clipId: z.string().describe("Clip identifier"),
+            action: z
+              .enum(["play", "pause", "stop", "seek"])
+              .describe("Playback action"),
+            time: z
+              .number()
+              .optional()
+              .describe("Seek time if using 'seek' action"),
+          })
+        )
+        .describe("Clip playback operations"),
     }),
     returns: OperationResponse,
   },
 
-  /**
-   * Remove a clip from an animation layer
-   */
-  removeClipFromLayer: {
-    description: "Remove an animation clip from a layer",
+  // Layer operations
+
+  batchLayerSetWeight: {
+    description:
+      "Set weights for multiple animation layers at once",
     parameters: z.object({
-      layerId: z.string().describe("Layer identifier"),
-      clipId: z.string().describe("Clip identifier"),
+      items: z
+        .array(
+          z.object({
+            layerId: z
+              .string()
+              .describe("Layer identifier"),
+            weight: z
+              .number()
+              .min(0)
+              .max(1)
+              .describe("New weight value"),
+          })
+        )
+        .describe("Layer weights to update"),
     }),
     returns: OperationResponse,
+  },
+
+  batchClipLayerOperation: {
+    description:
+      "Perform operations on clips and layers in batch",
+    parameters: z.object({
+      operation: z
+        .enum(["add", "remove", "reorder"])
+        .describe("Operation to perform"),
+      items: z
+        .array(
+          z.object({
+            layerId: z
+              .string()
+              .describe("Layer identifier"),
+            clipId: z.string().describe("Clip identifier"),
+            timeOffset: z
+              .number()
+              .optional()
+              .describe(
+                "Time offset for the clip (for add operation)"
+              ),
+            order: z
+              .number()
+              .int()
+              .nonnegative()
+              .optional()
+              .describe(
+                "New order index (for reorder operation)"
+              ),
+          })
+        )
+        .describe("Clip-layer operations to perform"),
+    }),
+    returns: OperationResponse,
+  },
+
+  // Curve operations
+  batchCurveSmooth: {
+    description:
+      "Smooth multiple animation curves in a single operation",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            curveId: z
+              .string()
+              .describe("Curve identifier"),
+            strength: z
+              .number()
+              .min(0)
+              .max(1)
+              .default(0.5)
+              .describe("Smoothing strength"),
+            preserveKeyframes: z
+              .array(z.number())
+              .optional()
+              .describe(
+                "Indices of keyframes to preserve exactly"
+              ),
+          })
+        )
+        .describe("Curves to smooth"),
+    }),
+    returns: OperationResponse,
+  },
+
+  batchCurveSetInterpolation: {
+    description:
+      "Set interpolation modes for multiple curves or segments",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            curveId: z
+              .string()
+              .describe("Curve identifier"),
+            mode: z
+              .enum([
+                "linear",
+                "bezier",
+                "constant",
+                "hermite",
+              ])
+              .describe("Interpolation mode"),
+            startKeyframeIndex: z
+              .number()
+              .int()
+              .nonnegative()
+              .optional()
+              .describe(
+                "Start keyframe index for segment (applies to all if omitted)"
+              ),
+            endKeyframeIndex: z
+              .number()
+              .int()
+              .nonnegative()
+              .optional()
+              .describe(
+                "End keyframe index for segment (applies to all if omitted)"
+              ),
+          })
+        )
+        .describe("Curve interpolation operations"),
+    }),
+    returns: OperationResponse,
+  },
+
+  // Driver operations
+  batchDriverEvaluate: {
+    description:
+      "Evaluate multiple drivers with specific values",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            driverId: z
+              .string()
+              .describe("Driver identifier"),
+            variables: z
+              .record(z.string(), z.any())
+              .optional()
+              .describe(
+                "Custom variable values for evaluation"
+              ),
+          })
+        )
+        .describe("Drivers to evaluate"),
+    }),
+    returns: OperationResponse.extend({
+      results: z
+        .array(
+          z.object({
+            driverId: z
+              .string()
+              .describe("Driver identifier"),
+            result: z
+              .any()
+              .describe("Result of the driver evaluation"),
+          })
+        )
+        .describe("Evaluation results"),
+    }),
+  },
+
+  // Rig operations
+
+  batchRigSelectBones: {
+    description: "Select bones across multiple rigs",
+    parameters: z.object({
+      selectionSets: z
+        .array(
+          z.object({
+            rigId: z.string().describe("Rig identifier"),
+            boneIds: z
+              .array(z.string())
+              .describe("Bone identifiers to select"),
+          })
+        )
+        .describe("Bone selections by rig"),
+    }),
+    returns: OperationResponse,
+  },
+
+  // IK Chain operations
+
+  batchIkChainSolve: {
+    description:
+      "Solve multiple IK chains in a single operation",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            ikChainId: z
+              .string()
+              .describe("IK chain identifier"),
+            targetPosition: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe("Target position override"),
+            targetRotation: z
+              .array(z.number())
+              .length(4)
+              .optional()
+              .describe(
+                "Target rotation override (quaternion)"
+              ),
+            poleVectorPosition: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe("Pole vector position override"),
+          })
+        )
+        .describe("IK chains to solve"),
+    }),
+    returns: OperationResponse,
+  },
+
+  batchIkChainSetInfluence: {
+    description: "Set influence for multiple IK chains",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            ikChainId: z
+              .string()
+              .describe("IK chain identifier"),
+            influence: z
+              .number()
+              .min(0)
+              .max(1)
+              .describe("Influence value"),
+          })
+        )
+        .describe("IK chain influences to update"),
+    }),
+    returns: OperationResponse,
+  },
+
+  // Import/Export operations
+  batchImportAnimation: {
+    description:
+      "Import multiple animation data sources in a single operation",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            format: z
+              .enum(["glb", "fbx", "bvh", "json"])
+              .describe("Source format"),
+            data: z
+              .any()
+              .describe(
+                "Animation data in the specified format"
+              ),
+            targetMapping: z
+              .record(z.string(), z.string())
+              .optional()
+              .describe(
+                "Map source node names to scene node IDs"
+              ),
+          })
+        )
+        .describe("Animation sources to import"),
+    }),
+    returns: OperationResponse.extend({
+      results: z
+        .array(
+          z.object({
+            index: z
+              .number()
+              .int()
+              .nonnegative()
+              .describe(
+                "Index in the original items array"
+              ),
+            clipIds: z
+              .array(z.string())
+              .describe("IDs of imported animation clips"),
+          })
+        )
+        .describe("Import results"),
+    }),
+  },
+
+  batchExportAnimation: {
+    description:
+      "Export multiple animation collections to external formats",
+    parameters: z.object({
+      items: z
+        .array(
+          z.object({
+            clipIds: z
+              .array(z.string())
+              .describe("IDs of clips to export"),
+            format: z
+              .enum(["glb", "fbx", "bvh", "json"])
+              .describe("Target format"),
+            options: z
+              .record(z.string(), z.any())
+              .optional()
+              .describe("Format-specific export options"),
+          })
+        )
+        .describe("Animation export operations"),
+    }),
+    returns: OperationResponse.extend({
+      results: z
+        .array(
+          z.object({
+            index: z
+              .number()
+              .int()
+              .nonnegative()
+              .describe(
+                "Index in the original items array"
+              ),
+            data: z
+              .any()
+              .describe("Exported animation data"),
+          })
+        )
+        .describe("Export results"),
+    }),
   },
 } as const;
 

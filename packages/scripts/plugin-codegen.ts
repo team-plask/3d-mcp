@@ -375,9 +375,9 @@ function generatePythonImplementation(
       const returnStructure = returnProps
         .map((prop) => {
           if (prop === "success") return '"success": True';
-          return `"${prop}": None  # TODO: Implement`;
+          return `"${prop}": None  `;
         })
-        .join(",\n                ");
+        .join(", # TODO: Implement  \n                ");
 
       return `def ${toolName}(params: Dict[str, Any]) -> Dict[str, Any]:
 ${docstring}

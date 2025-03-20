@@ -349,10 +349,9 @@ function sendTestRequest(
       );
       // Use an actual tool from the render category instead of the 'test' tool
       const request = {
-        tool: "addClipToLayer",
+        tool: "batchLayerSetWeight",
         params: {
-          layerId: "layer_0",
-          clipId: "clip_0",
+          items: [],
         },
       };
       client.write(JSON.stringify(request));

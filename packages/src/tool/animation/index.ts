@@ -1,5 +1,5 @@
 export * from "./atomic";
-export * from "./type";
+export * from "./entity";
 export * from "./compounded";
 
 import { animationAtomicToolsWithExecute } from "./atomic";
