@@ -1,21 +1,87 @@
 import { z } from "zod";
 
 /**
+ * Plugin configuration type
+ */
+interface PluginConfig {
+  name: string;
+  url: string;
+  port: number;
+}
+
+/**
+ * Available plugin configurations
+ */
+const PLUGINS: Record<string, PluginConfig> = {
+  blender: {
+    name: "blender",
+    url: "localhost",
+    port: 8002,
+  },
+  maya: {
+    name: "maya",
+    url: "localhost",
+    port: 8001,
+  },
+  unreal: {
+    name: "unreal",
+    url: "localhost",
+    port: 8000,
+  },
+};
+
+/**
+ * Map of tool categories to their respective plugins
+ */
+const TOOL_PLUGIN_MAP: Record<string, string> = {
+  animation: "blender", // Default animation tools to Blender
+  render: "maya", // Default render tools to Maya
+};
+
+/**
+ * Get the appropriate plugin for a tool
+ * @param toolName The name of the tool being executed
+ * @returns The plugin configuration
+ */
+function getPluginForTool(toolName: string): PluginConfig {
+  // For now using a simple mapping based on tool categories
+  // This could be extended with more sophisticated routing logic
+
+  // Try to determine the category from the tool name
+  // This is a simple implementation - in a real system you might have a more robust way to map tools to plugins
+  const category = Object.keys(TOOL_PLUGIN_MAP).find(
+    (cat) =>
+      toolName.toLowerCase().includes(cat.toLowerCase())
+  );
+
+  const pluginName = category
+    ? TOOL_PLUGIN_MAP[category]
+    : "blender"; // Default to blender if no match
+  return PLUGINS[pluginName!]!;
+}
+
+/**
  * Request function to send a POST request to a plug-in
  * @param params Request parameters
  * @returns Response data
  */
-async function request<T>(params: T): Promise<unknown> {
-  const result = await fetch(
-    "https://api.example.com/endpoint",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
-    }
-  );
+async function request<
+  T extends { toolName: string; parameters: any }
+>(params: T): Promise<unknown> {
+  // Determine which plugin to use based on the tool name
+  const plugin = getPluginForTool(params.toolName);
+  const url = `http://${plugin.url}:${plugin.port}`;
+
+  const result = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      tool: params.toolName,
+      params: params.parameters,
+    }),
+  });
 
   if (!result.ok) {
     throw new Error(
@@ -49,6 +115,10 @@ function createExecutableTools<
       execute: (
         args: z.infer<T[K]["parameters"]>
       ) => Promise<z.infer<T[K]["returns"]>>;
+
+      executeString: (
+        args: z.infer<T[K]["parameters"]>
+      ) => Promise<string>;
     };
   };
 
@@ -65,6 +135,14 @@ function createExecutableTools<
         const parsedResponse =
           toolDefs[toolName]!.returns.parse(response);
         return parsedResponse;
+      },
+      executeString: async (args) => {
+        const response = await request({
+          toolName,
+          parameters: args,
+        });
+
+        return JSON.stringify(response);
       },
     };
   }
@@ -83,6 +161,7 @@ interface CompoundToolConfig<
   parameters: P;
   returns: R;
   execute: (params: z.infer<P>) => Promise<z.infer<R>>;
+  executeString: (params: z.infer<P>) => Promise<string>;
 }
 
 /**
@@ -98,6 +177,7 @@ function defineCompoundTool<
   parameters: P;
   returns: R;
   execute: (params: unknown) => Promise<z.infer<R>>;
+  executeString: (params: string) => Promise<string>;
 } {
   return {
     description: config.description,
@@ -110,6 +190,17 @@ function defineCompoundTool<
       const validParams = config.parameters.parse(params);
       return config.execute(validParams);
     },
+    executeString: async (
+      params: string
+    ): Promise<string> => {
+      // Parse and validate parameters using the tool's schema
+      const validParams = config.parameters.parse(
+        JSON.parse(params)
+      );
+      const response = await config.execute(validParams);
+      // Convert the response to a string
+      return JSON.stringify(response);
+    },
   };
 }
 
@@ -117,4 +208,6 @@ export {
   request,
   createExecutableTools,
   defineCompoundTool,
+  PLUGINS,
+  getPluginForTool,
 };
