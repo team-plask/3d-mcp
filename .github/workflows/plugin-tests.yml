@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
     
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
@@ -34,8 +35,7 @@ jobs:
       
     - name: Store generated plugins as artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@master
       with:
         name: generated-plugins
         path: packages/plugins/
-        if-no-files-found: ignore
