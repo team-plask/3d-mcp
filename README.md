@@ -1,4 +1,6 @@
-# 3D-MCP: Semantic Interface for 3D Content Creation
+# 3D MCP
+
+![Plugin Tests](https://github.com/team-plask/3d-mcp/workflows/Plugin%20Code%20Generation%20Tests/badge.svg)
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue) ![License](https://img.shields.io/badge/License-Apache_2.0-green)
 

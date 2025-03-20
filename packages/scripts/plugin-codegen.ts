@@ -311,7 +311,7 @@ function generatePythonParamValidation(
         requiredChecks.push(`
         # Validate enum values for ${name}
         if ${name} is not None and ${name} not in ${validValues}:
-            raise ValueError(f"Parameter '${name}' must be one of {${validValues}}, got {${name}}")`);
+            raise ValueError(f"Parameter '${name}' out of enum range")`);
       }
     }
     validationBlocks.push(requiredChecks.join("\n\n"));
@@ -337,7 +337,7 @@ function generatePythonParamValidation(
         block += `\n        
         # Validate enum values for ${name}
         if ${name} is not None and ${name} not in ${validValues}:
-            raise ValueError(f"Parameter '${name}' must be one of {${validValues}}, got {${name}}")`;
+            raise ValueError(f"Parameter '${name}' must be one of ${validValues}, got ${name}")`;
       }
 
       return block;

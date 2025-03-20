@@ -135,6 +135,8 @@ describe("Plugin Code Generation Tests", () => {
   test(
     "Python servers start up correctly",
     async () => {
+      let serverTestsFailed = false;
+
       // Test for Maya server
       console.log("Starting Maya server test...");
       const mayaPort = 8001; // Use different ports for each server
@@ -142,6 +144,7 @@ describe("Plugin Code Generation Tests", () => {
         "maya",
         mayaPort
       );
+
       try {
         console.log(
           `Waiting for Maya server to start on port ${mayaPort}...`
@@ -154,15 +157,20 @@ describe("Plugin Code Generation Tests", () => {
             mayaPort
           );
           console.log("Maya server response:", response);
+
+          // Check that response has success property and it's true
+          expect(response).toHaveProperty("success");
           expect(response.success).toBe(true);
+          console.log("Maya server connection verified");
         } catch (error) {
           console.error(
             "Maya server connection failed:",
             error
           );
-          // Skip this test if connection fails but don't fail the overall test
-          console.log(
-            "Skipping Maya server test due to connection issues"
+          serverTestsFailed = true;
+          // Now we want to fail the test if connection fails
+          throw new Error(
+            `Maya server test failed: ${error.message}`
           );
         }
       } finally {
@@ -178,6 +186,7 @@ describe("Plugin Code Generation Tests", () => {
         "blender",
         blenderPort
       );
+
       try {
         console.log(
           `Waiting for Blender server to start on port ${blenderPort}...`
@@ -190,15 +199,20 @@ describe("Plugin Code Generation Tests", () => {
             blenderPort
           );
           console.log("Blender server response:", response);
+
+          // Verify proper response
+          expect(response).toHaveProperty("success");
           expect(response.success).toBe(true);
+          console.log("Blender server connection verified");
         } catch (error) {
           console.error(
             "Blender server connection failed:",
             error
           );
-          // Skip this test if connection fails but don't fail the overall test
-          console.log(
-            "Skipping Blender server test due to connection issues"
+          serverTestsFailed = true;
+          // Now we want to fail the test if connection fails
+          throw new Error(
+            `Blender server test failed: ${error.message}`
           );
         }
       } finally {
@@ -206,10 +220,8 @@ describe("Plugin Code Generation Tests", () => {
         blenderServerProcess.kill();
       }
 
-      // Instead of failing the test, just log success since we're expecting server issues in some environments
-      console.log(
-        "Server tests completed (success or skipped)"
-      );
+      // Now fail the test if any server test failed
+      expect(serverTestsFailed).toBe(false);
     },
     TIMEOUT
   );
@@ -285,17 +297,40 @@ function startPythonServer(
   console.log(
     `Starting ${pluginName} server: python ${serverPath} --port ${port}`
   );
+
+  // Add check to see if the server file exists
+  if (!existsSync(serverPath)) {
+    console.error(`Server file not found: ${serverPath}`);
+    throw new Error(`Server file not found: ${serverPath}`);
+  }
+
   // Pass the port to the Python server
-  return exec(
+  const serverProcess = exec(
     `python ${serverPath} --port ${port}`,
     (error, stdout, stderr) => {
       if (error) {
         console.error(`Server error: ${error.message}`);
+        // Log more detailed information about the error
+        if (stderr)
+          console.error(`Server stderr: ${stderr}`);
       }
       if (stdout) console.log(`Server stdout: ${stdout}`);
       if (stderr) console.error(`Server stderr: ${stderr}`);
     }
   );
+
+  // Add error event handler to catch startup failures
+  serverProcess.on("error", (err) => {
+    console.error(
+      `Failed to start ${pluginName} server:`,
+      err
+    );
+    throw new Error(
+      `Failed to start ${pluginName} server: ${err.message}`
+    );
+  });
+
+  return serverProcess;
 }
 
 function sendTestRequest(
@@ -312,12 +347,23 @@ function sendTestRequest(
       console.log(
         `Connected to ${host}:${port}, sending test request`
       );
-      // Test request with a simple tool
+      // Use an actual tool from the render category instead of the 'test' tool
       const request = {
-        tool: "test",
-        params: {},
+        tool: "addClipToLayer",
+        params: {
+          layerId: "layer_0",
+          clipId: "clip_0",
+        },
       };
       client.write(JSON.stringify(request));
+
+      // Close the connection after sending the request
+      setTimeout(() => {
+        console.log(
+          "Closing connection after sending request"
+        );
+        client.end();
+      }, 1000);
     });
 
     let data = "";
@@ -329,11 +375,27 @@ function sendTestRequest(
     client.on("end", () => {
       console.log(`Connection ended with data: ${data}`);
       try {
-        resolve(JSON.parse(data));
+        // If response is empty or cannot be parsed, create a default error response
+        if (!data || data === "{}") {
+          console.warn(
+            "Empty response from server, creating default error response"
+          );
+          resolve({
+            success: false,
+            error: "Server returned empty response",
+          });
+        } else {
+          resolve(JSON.parse(data));
+        }
       } catch (e) {
-        reject(
-          new Error(`Failed to parse response: ${data}`)
+        console.error(
+          `Failed to parse response: ${data}, error: ${e}`
         );
+        // Provide a fallback response so the test can continue
+        resolve({
+          success: false,
+          error: `Failed to parse: ${e}`,
+        });
       }
     });
 
