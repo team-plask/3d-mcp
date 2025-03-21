@@ -252,4 +252,4 @@ export const AnimationEntities = {
   Driver,
   Rig,
   IKChain,
-};
+} as const;

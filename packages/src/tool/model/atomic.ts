@@ -2,20 +2,10 @@ import { z } from "zod";
 import { createExecutableTools } from "../core/request";
 import { OperationResponse } from "../core/entity";
 import { createCrudOperations } from "../core/utils";
-import { ModelingEntities } from "./entity";
+import { ModelEntities } from "./entity";
 import { Tensor } from "../core/entity";
 
-const entityCruds = Object.entries(ModelingEntities).reduce(
-  (acc, [key, value]) => {
-    const cruds = createCrudOperations(
-      key.toLowerCase(),
-      value
-    );
-    acc = { ...acc, ...cruds };
-    return acc;
-  },
-  {} as Record<string, any>
-);
+const entityCruds = createCrudOperations(ModelEntities);
 
 /**
  * Modeling atomic tools with focus on domain-specific batch operations

@@ -1,6 +1,7 @@
 import {
   animationTools,
   animationAtomicToolsWithExecute,
+  AnimationEntities,
 } from "./animation";
 import {
   renderTools,
@@ -9,17 +10,22 @@ import {
 import {
   coreTools,
   coreAtomicToolsWithExecute,
+  CoreEntities,
 } from "./core";
 import {
   modelTools,
   modelAtomicToolsWithExecute,
+  ModelEntities,
 } from "./model";
+import { RigEntities } from "./rig/entity";
+import { rigAtomicToolsWithExecute } from "./rig/atomic";
 
 const tools = {
   ...animationTools,
   ...renderTools,
   ...coreTools,
   ...modelTools,
+  ...rigAtomicToolsWithExecute,
 } as const;
 
 const atomicTools = {
@@ -27,7 +33,21 @@ const atomicTools = {
   ...renderAtomicToolsWithExecute,
   ...coreAtomicToolsWithExecute,
   ...modelAtomicToolsWithExecute,
+  ...rigAtomicToolsWithExecute,
 } as const;
 
-// Export the tools for direct access
-export { tools, atomicTools, coreTools, modelTools };
+const entities = {
+  AnimationEntities,
+  CoreEntities,
+  ModelEntities,
+  RigEntities,
+} as const;
+
+// Export the tools and entities for direct access
+export {
+  tools,
+  atomicTools,
+  coreTools,
+  modelTools,
+  entities,
+};

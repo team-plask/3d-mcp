@@ -280,7 +280,7 @@ export const SubdivisionSurface = BaseEntity.extend({
 });
 
 // Export collected entities
-export const ModelingEntities = {
+export const ModelEntities = {
   Mesh,
   Vertex,
   Edge,
@@ -290,4 +290,4 @@ export const ModelingEntities = {
   Group,
   Curve,
   SubdivisionSurface,
-};
+} as const;

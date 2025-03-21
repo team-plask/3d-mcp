@@ -4,16 +4,7 @@ import { OperationResponse } from "../core/entity";
 import { createCrudOperations } from "../core/utils";
 import { AnimationEntities } from "./entity";
 
-const entityCruds = Object.entries(
-  AnimationEntities
-).reduce((acc, [key, value]) => {
-  const cruds = createCrudOperations(
-    key.toLowerCase(),
-    value
-  );
-  acc = { ...acc, ...cruds };
-  return acc;
-}, {} as Record<string, any>);
+const entityCruds = createCrudOperations(AnimationEntities);
 
 /**
  * Animation atomic tools organized by entity type with batch support

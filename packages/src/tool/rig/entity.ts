@@ -4,8 +4,38 @@ import {
   Tensor,
   NodeBase,
   Color,
+  IKChain,
+  Joint as CoreJoint,
+  BlendShape as CoreBlendShape,
+  Constraint as CoreConstraint,
   Pose,
 } from "../core/entity";
+
+/**
+ * Joint - A specialized bone/joint in a skeletal hierarchy
+ */
+export const Joint = CoreJoint.extend({
+  rigId: z
+    .string()
+    .describe("ID of the rig this joint belongs to"),
+  rigName: z
+    .string()
+    .optional()
+    .describe(
+      "Optional human-readable path name within the rig"
+    ),
+  segmentScaleCompensate: z
+    .boolean()
+    .default(true)
+    .describe(
+      "Whether children preserve scale when parent scales"
+    ),
+  jointRadius: z
+    .number()
+    .positive()
+    .default(1)
+    .describe("Display radius for the joint"),
+});
 
 /**
  * Rig - Complete skeleton structure containing multiple joints
@@ -166,6 +196,11 @@ export const RigControl = NodeBase.extend({
 });
 
 /**
+ * Rigging-specific constraint
+ */
+export const Constraint = CoreConstraint;
+
+/**
  * BindPose - Stored skeletal pose for rigging
  */
 export const BindPose = Pose.extend({
@@ -174,6 +209,18 @@ export const BindPose = Pose.extend({
     .boolean()
     .default(false)
     .describe("Whether this is the default bind pose"),
+});
+
+/**
+ * Rigging-specific blend shape
+ */
+export const BlendShape = CoreBlendShape.extend({
+  isGroupTarget: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Whether this is a target in a blend shape group"
+    ),
 });
 
 /**
@@ -314,3 +361,17 @@ export const JointLimits = BaseEntity.extend({
     .default(true)
     .describe("Whether joint limits are enabled"),
 });
+
+export const RigEntities = {
+  Joint,
+  Rig,
+  Skin,
+  RigControl,
+  Constraint,
+  IKChain,
+  BindPose,
+  BlendShape,
+  BlendShapeGroup,
+  SplineIK,
+  JointLimits,
+} as const;

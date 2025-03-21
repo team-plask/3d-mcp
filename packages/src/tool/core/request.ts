@@ -161,7 +161,6 @@ interface CompoundToolConfig<
   parameters: P;
   returns: R;
   execute: (params: z.infer<P>) => Promise<z.infer<R>>;
-  executeString: (params: z.infer<P>) => Promise<string>;
 }
 
 /**
@@ -177,7 +176,6 @@ function defineCompoundTool<
   parameters: P;
   returns: R;
   execute: (params: unknown) => Promise<z.infer<R>>;
-  executeString: (params: string) => Promise<string>;
 } {
   return {
     description: config.description,
@@ -189,17 +187,6 @@ function defineCompoundTool<
       // Parse and validate parameters using the tool's schema
       const validParams = config.parameters.parse(params);
       return config.execute(validParams);
-    },
-    executeString: async (
-      params: string
-    ): Promise<string> => {
-      // Parse and validate parameters using the tool's schema
-      const validParams = config.parameters.parse(
-        JSON.parse(params)
-      );
-      const response = await config.execute(validParams);
-      // Convert the response to a string
-      return JSON.stringify(response);
     },
   };
 }

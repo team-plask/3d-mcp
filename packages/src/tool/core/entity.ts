@@ -62,11 +62,7 @@ export const Tensor = {
 
   // Common value union for flexible APIs
   any: z
-    .union([
-      z.number(),
-      z.array(z.number()).min(2).max(16),
-      z.record(z.string(), z.number()),
-    ])
+    .array(z.number())
     .describe(
       "Generic tensor value (scalar, vector, matrix, or object)"
     ),
@@ -420,3 +416,24 @@ export const Pose = BaseEntity.extend({
     .default(false)
     .describe("Whether this is a bind/rest pose"),
 });
+
+export const CoreEntities = {
+  BaseEntity,
+  OperationResponse,
+  TensorType,
+  Tensor,
+  Transformable,
+  VisualProperties,
+  Hierarchical,
+  Bounds,
+  Color,
+  InterpolationType,
+  ExtrapolationType,
+  MaterialBase,
+  NodeBase,
+  Constraint,
+  IKChain,
+  BlendShape,
+  Joint,
+  Pose,
+} as const;

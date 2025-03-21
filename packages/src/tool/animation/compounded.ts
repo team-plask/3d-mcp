@@ -1,12 +1,14 @@
-import { z } from "zod";
-import { OperationResponse } from "../core/entity";
-import { TensorType } from "../core/entity";
 import { animationAtomicToolsWithExecute } from "./atomic";
-import { defineCompoundTool } from "../core/request";
+import {
+  coreAtomicToolsWithExecute,
+  coreCompoundedTools,
+} from "../core";
 
-const animationCompoundedTools = {} as const;
+const animationCompoundedTools = {};
 
 const tool = {
+  ...coreAtomicToolsWithExecute,
+  ...coreCompoundedTools,
   ...animationAtomicToolsWithExecute,
   ...animationCompoundedTools,
 };
