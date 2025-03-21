@@ -167,12 +167,6 @@ Entity schemas provide:
 └──────────────────────────────────────────────────────────────┘
 ```
 
-The CRUD architecture forms the core foundation of the system, with key implementations in:
-
-- [`utils.ts`](./packages/src/tool/core/utils.ts): CRUD generation utility
-- [`entity.ts`](./packages/src/tool/core/entity.ts): Core entity definitions
-- [`atomic.ts`](./packages/src/tool/core/atomic.ts): Atomic operations (exceptionally not CRUD)
-- [`plugin-codegen.ts`](./packages/scripts/plugin-codegen.ts): Code generation script
 
 ### 2. Compound Tool Architecture
 
