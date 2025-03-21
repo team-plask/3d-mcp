@@ -27,6 +27,39 @@ await tools.animation.createKeyframe({
 
 This architecture creates a **dependency inversion** where platform-specific implementation details are isolated to atomic operations, while the majority of the codebase remains platform-independent.
 
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                             LLM / User API                              │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Compound Operations                            │
+│                                                                         │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
+│  │ Modeling Tools  │  │ Animation Tools │  │ Rigging Tools          │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Atomic Operations                             │
+│                                                                         │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
+│  │ Entity CRUD     │  │ Transforms      │  │ Platform Operations     │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       Platform-Specific Adapters                        │
+│                                                                         │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
+│  │ Blender         │  │ Maya            │  │ Unreal Engine           │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Why These Design Decisions?
 
 **Entity-First Design** was chosen because:
@@ -38,7 +71,7 @@ This architecture creates a **dependency inversion** where platform-specific imp
 **CRUD Operations as Foundation** because:
 - They map cleanly to what 3D applications need to do with entities
 - Standardized patterns reduce cognitive overhead
-- Auto-generation eliminates repetitive code
+- Auto-generation eliminates repetitive code using `createCrudOperations`
 - Every entity automatically gets the same consistent interface
 
 **Atomic and Compound Tool Separation** because:
@@ -80,6 +113,67 @@ Entity schemas provide:
 - **Type Information**: Complete TypeScript types for IDE assistance
 - **Documentation**: Self-documenting API with descriptions
 - **Code Generation**: Templates for platform-specific implementations
+
+#### Entity Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                Core Entity Definitions                        │
+│                                                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐   │
+│  │ BaseEntity  │  │ NodeBase    │  │ Other Core Entities │   │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
+                           ▲
+                           │ extends
+                           │
+┌──────────────────────────────────────────────────────────────┐
+│                Domain-Specific Entities                       │
+│                                                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐   │
+│  │ Model       │  │ Animation   │  │ Rigging            │   │
+│  │ Entities    │  │ Entities    │  │ Entities           │   │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
+                           │
+                           │ input to
+                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                Automatic CRUD Generation                      │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │ createCrudOperations(Entities)                          │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+                           │
+                           │ generates
+                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     Atomic Operations                         │
+│                                                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐   │
+│  │ create*     │  │ get*        │  │ update*/delete*     │   │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
+                           │
+                           │ foundation for
+                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Compound Operations                        │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │ Higher-level domain-specific functionality              │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+```
+
+The CRUD architecture forms the core foundation of the system, with key implementations in:
+
+- utils.ts: CRUD generation utilities
+- entity.ts: Base entity definitions
+- entity.ts: Modeling-specific entities
+- entity.ts: Animation-specific entities 
+- entity.ts: Rigging-specific entities
 
 ### 2. Compound Tool Architecture
 
@@ -134,15 +228,64 @@ This architecture provides several technical advantages:
    - Implement higher-level domain concepts
    - Work on any platform without modification
 
+#### Tool Composition Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        High-Level Tool Definition                       │
+└──────────────────────────────────────┬──────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Compound Tool Pattern                           │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │ defineCompoundTool({                                             │  │
+│  │   description: string,                                           │  │
+│  │   parameters: zod.Schema,                                        │  │
+│  │   returns: zod.Schema,                                           │  │
+│  │   execute: async (params) => {                                   │  │
+│  │     // Composed entirely from atomic operations                  │  │
+│  │     await tool.atomicOperation1.execute({...});                  │  │
+│  │     await tool.atomicOperation2.execute({...});                  │  │
+│  │     return { success: true, ...results };                        │  │
+│  │   }                                                              │  │
+│  │ })                                                               │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Platform Adaptation                             │
+│                                                                         │
+│  ┌──────────────────────────┐  ┌─────────────────────────────────────┐ │
+│  │ Blender Implementation   │  │ Maya Implementation                 │ │
+│  │ of Atomic Operations     │  │ of Atomic Operations                │ │
+│  └──────────────────────────┘  └─────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+Key files for the compound tool architecture:
+- compounded.ts: Compound modeling tools
+- compounded.ts: Compound animation tools
+- compounded.ts: Compound rigging tools
+
 ### 3. Code Generation Pipeline
 
 The system automatically generates platform-specific implementations from TypeScript definitions:
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐
-│ Entity Schemas  │     │ Schema          │     │ Platform-Specific Code  │
-│ & Tools (TS)    │ ──> │ Extraction (TS) │ ──> │ (Python/C++/etc.)       │
-└─────────────────┘     └─────────────────┘     └─────────────────────────┘
+┌─────────────────┐     ┌────────────────────┐     ┌─────────────────────────┐
+│ Entity Schemas  │     │ Schema             │     │ Platform-Specific Code  │
+│ & Tools (TS)    │ ──> │ Extraction (TS)    │ ──> │ (Python/C++/etc.)       │
+└─────────────────┘     └────────────────────┘     └─────────────────────────┘
+      │                        │                             │
+      │                        │                             │
+      ▼                        ▼                             ▼
+┌─────────────────┐     ┌────────────────────┐     ┌─────────────────────────┐
+│ Type            │     │ Parameter          │     │ Implementation          │
+│ Definitions     │     │ Validation         │     │ Templates               │
+└─────────────────┘     └────────────────────┘     └─────────────────────────┘
 ```
 
 Key aspects of the generation system:
@@ -150,6 +293,12 @@ Key aspects of the generation system:
 - **Parameter Mapping**: Converts TypeScript types to platform-native types
 - **Validation Generation**: Creates parameter validation in target languages
 - **Implementation Templates**: Provides platform-specific code patterns
+
+The codegen system is implemented in:
+- plugin-codegen.ts: Main code generation script
+- blender: Blender-specific plugin templates
+- maya: Maya-specific plugin templates 
+- unreal: Unreal Engine-specific templates
 
 ### 4. Domain Organization
 
@@ -165,6 +314,72 @@ Each domain follows the same organizational pattern:
 - `entity.ts`: Domain-specific entity definitions
 - `atomic.ts`: Atomic operations for domain entities
 - `compounded.ts`: Higher-level operations built from atomic tools
+
+#### Domain Structure Diagram
+
+```
+packages/src/tool/
+│
+├── core/                  # Core shared components
+│   ├── entity.ts          # Base entities all domains use
+│   ├── utils.ts           # Shared utilities including CRUD generation
+│   └── ...
+│
+├── model/                 # Modeling domain
+│   ├── entity.ts          # Mesh, Vertex, Face, etc.
+│   ├── atomic.ts          # Atomic modeling operations
+│   ├── compounded.ts      # Higher-level modeling tools
+│   └── ...
+│
+├── animation/             # Animation domain
+│   ├── entity.ts          # Keyframe, AnimCurve, Clip, etc.
+│   ├── atomic.ts          # Atomic animation operations
+│   ├── compounded.ts      # Higher-level animation tools
+│   └── ...
+│
+├── rig/                   # Rigging domain
+│   ├── entity.ts          # Joint, IKChain, Control, etc.
+│   ├── atomic.ts          # Atomic rigging operations
+│   ├── compounded.ts      # Higher-level rigging tools
+│   └── ...
+│
+└── rendering/             # Rendering domain
+    ├── entity.ts          # Camera, Light, RenderSettings, etc.
+    ├── atomic.ts          # Atomic rendering operations
+    ├── compounded.ts      # Higher-level rendering tools
+    └── ...
+```
+
+### 5. Entity-Centric CRUD Architecture
+
+The system implements a sophisticated entity-centric approach where:
+
+1. **Entities as Domain Models**: Each domain (modeling, animation, rigging) defines its core entities that represent its fundamental concepts. These are implemented as Zod schemas with rich type information.
+
+2. **CRUD as Foundation**: Every entity automatically receives a complete set of CRUD operations (Create, Read, Update, Delete) through the `createCrudOperations` utility:
+
+```typescript
+// Each domain starts with CRUD operations for all its entities
+const entityCruds = createCrudOperations(ModelEntities);
+
+const modelAtomicTools = {
+  ...entityCruds,  // Foundation of all atomic tools
+  // Domain-specific operations build on this foundation
+}
+```
+
+3. **Entity Reuse and Inheritance**: Core entities defined in `core/entity.ts` are extended by domain-specific entities, promoting code reuse and consistent design across domains.
+
+4. **DDD-Inspired Architecture**: The system follows Domain-Driven Design principles by organizing code around domain entities and aggregates rather than technical concerns.
+
+This architecture provides several key benefits:
+
+- **Consistency**: All entities have the same patterns for basic operations
+- **Reduced Boilerplate**: CRUD operations are generated automatically  
+- **Clear Organization**: Tools are organized around domain entities
+- **Separation of Concerns**: Each domain manages its own entities while sharing common patterns
+
+The combination of rich entity models with automatic CRUD operations creates a robust foundation that simplifies development while maintaining flexibility for domain-specific operations.
 
 ## Getting Started
 
@@ -192,8 +407,13 @@ The architectural decisions in 3D-MCP make it uniquely extensible:
 
 1. **Add New Entities**: Define new entities and automatically get CRUD operations
 2. **Add New Compound Tools**: Combine existing atomic operations to create new functionality
-3. **Add New Platforms**: Implement the atomic tool in plug-in to support all functionality
+3. **Add New Platforms**: Implement the atomic tool interfaces in a new plugin
 
+See our contributing guide for more details on how to contribute.
+
+## License
+
+This project is licensed under the Apache License 2.0.
 
 ---
 
