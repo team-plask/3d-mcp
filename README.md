@@ -31,16 +31,16 @@ This architecture creates a **dependency inversion** where platform-specific imp
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                             LLM / User API                              │
 └───────────────────────────────────┬─────────────────────────────────────┘
-                                    │
+                                    │ MCP Tool API
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          Compound Operations                            │
 │                                                                         │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
-│  │ Modeling Tools  │  │ Animation Tools │  │ Rigging Tools          │  │
+│  │ Modeling Tools  │  │ Animation Tools │  │ Rigging Tools           │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │
 └───────────────────────────────────┬─────────────────────────────────────┘
-                                    │
+                                    │ Implemented by
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           Atomic Operations                             │
@@ -49,7 +49,7 @@ This architecture creates a **dependency inversion** where platform-specific imp
 │  │ Entity CRUD     │  │ Transforms      │  │ Platform Operations     │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │
 └───────────────────────────────────┬─────────────────────────────────────┘
-                                    │
+                                    │ Plug-in Server Request
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                       Platform-Specific Adapters                        │
@@ -118,7 +118,7 @@ Entity schemas provide:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                Core Entity Definitions                        │
+│                Core Entity Definitions                       │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐   │
 │  │ BaseEntity  │  │ NodeBase    │  │ Other Core Entities │   │
@@ -128,18 +128,18 @@ Entity schemas provide:
                            │ extends
                            │
 ┌──────────────────────────────────────────────────────────────┐
-│                Domain-Specific Entities                       │
+│                Domain-Specific Entities                      │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐   │
-│  │ Model       │  │ Animation   │  │ Rigging            │   │
-│  │ Entities    │  │ Entities    │  │ Entities           │   │
+│  │ Model       │  │ Animation   │  │ Rigging             │   │
+│  │ Entities    │  │ Entities    │  │ Entities            │   │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘   │
 └──────────────────────────────────────────────────────────────┘
                            │
                            │ input to
                            ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                Automatic CRUD Generation                      │
+│                Automatic CRUD Generation                     │
 │                                                              │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │ createCrudOperations(Entities)                          │ │
@@ -149,31 +149,30 @@ Entity schemas provide:
                            │ generates
                            ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                     Atomic Operations                         │
+│                     Atomic Operations                        │
 │                                                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐   │
-│  │ create*     │  │ get*        │  │ update*/delete*     │   │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘   │
+│  ┌─────────────────┐ ┌──────────────┐ ┌─────────────────┐    │
+│  │ create{Entity}s │ │ get{Entity}s │ │ update{Entity}s │ .. │
+│  └─────────────────┘ └──────────────┘ └─────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
                            │
                            │ foundation for
                            ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                    Compound Operations                        │
+│                    Compound Operations                       │
 │                                                              │
 │  ┌─────────────────────────────────────────────────────────┐ │
-│  │ Higher-level domain-specific functionality              │ │
+│  │ No need for platform-specific code. Use atomic ops only.│ │
 │  └─────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 The CRUD architecture forms the core foundation of the system, with key implementations in:
 
-- utils.ts: CRUD generation utilities
-- entity.ts: Base entity definitions
-- entity.ts: Modeling-specific entities
-- entity.ts: Animation-specific entities 
-- entity.ts: Rigging-specific entities
+- [`utils.ts`](./packages/src/tool/core/utils.ts): CRUD generation utility
+- [`entity.ts`](./packages/src/tool/core/entity.ts): Core entity definitions
+- [`atomic.ts`](./packages/src/tool/core/atomic.ts): Atomic operations (exceptionally not CRUD)
+- [`plugin-codegen.ts`](./packages/scripts/plugin-codegen.ts): Code generation script
 
 ### 2. Compound Tool Architecture
 
@@ -239,29 +238,29 @@ This architecture provides several technical advantages:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         Compound Tool Pattern                           │
 │                                                                         │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │ defineCompoundTool({                                             │  │
-│  │   description: string,                                           │  │
-│  │   parameters: zod.Schema,                                        │  │
-│  │   returns: zod.Schema,                                           │  │
-│  │   execute: async (params) => {                                   │  │
-│  │     // Composed entirely from atomic operations                  │  │
-│  │     await tool.atomicOperation1.execute({...});                  │  │
-│  │     await tool.atomicOperation2.execute({...});                  │  │
-│  │     return { success: true, ...results };                        │  │
-│  │   }                                                              │  │
-│  │ })                                                               │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ defineCompoundTool({                                             │   │
+│  │   description: string,                                           │   │
+│  │   parameters: zod.Schema,                                        │   │
+│  │   returns: zod.Schema,                                           │   │
+│  │   execute: async (params) => {                                   │   │
+│  │     // Composed entirely from atomic operations                  │   │
+│  │     await tool.atomicOperation1.execute({...});                  │   │
+│  │     await tool.atomicOperation2.execute({...});                  │   │
+│  │     return { success: true, ...results };                        │   │
+│  │   }                                                              │   │
+│  │ })                                                               │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
 └───────────────────────────────────┬─────────────────────────────────────┘
-                                    │
+                                    │ Plug-in Server Request
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         Platform Adaptation                             │
 │                                                                         │
-│  ┌──────────────────────────┐  ┌─────────────────────────────────────┐ │
-│  │ Blender Implementation   │  │ Maya Implementation                 │ │
-│  │ of Atomic Operations     │  │ of Atomic Operations                │ │
-│  └──────────────────────────┘  └─────────────────────────────────────┘ │
+│  ┌──────────────────────────┐  ┌─────────────────────────────────────┐  │
+│  │ Blender Implementation   │  │ Maya Implementation                 │  │
+│  │ of Atomic Operations     │  │ of Atomic Operations                │  │
+│  └──────────────────────────┘  └─────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -295,10 +294,8 @@ Key aspects of the generation system:
 - **Implementation Templates**: Provides platform-specific code patterns
 
 The codegen system is implemented in:
-- plugin-codegen.ts: Main code generation script
-- blender: Blender-specific plugin templates
-- maya: Maya-specific plugin templates 
-- unreal: Unreal Engine-specific templates
+- [plugin-codegen.ts](./packages/scripts/plugin-codegen.ts): Main code generation script
+- [extract-schemas.ts](./packages/scripts/extract-schemas.ts): Extracts Zod schemas from TypeScript files into temporary JSON files.
 
 ### 4. Domain Organization
 
@@ -311,9 +308,9 @@ The system is organized into domains that mirror 3D content creation workflows:
 - **Rendering**: Materials, lights, and render settings
 
 Each domain follows the same organizational pattern:
-- `entity.ts`: Domain-specific entity definitions
-- `atomic.ts`: Atomic operations for domain entities
-- `compounded.ts`: Higher-level operations built from atomic tools
+- [`entity.ts`](./packages/src/tool/animation/entity.ts): Domain-specific entity definitions
+- [`atomic.ts`](./packages/src/tool/animation/atomic.ts): Atomic operations for domain entities
+- [`compounded.ts`](./packages/src/tool/animation/compounded.ts): Higher-level operations built from atomic tools
 
 #### Domain Structure Diagram
 
@@ -410,10 +407,6 @@ The architectural decisions in 3D-MCP make it uniquely extensible:
 3. **Add New Platforms**: Implement the atomic tool interfaces in a new plugin
 
 See our contributing guide for more details on how to contribute.
-
-## License
-
-This project is licensed under the Apache License 2.0.
 
 ---
 
