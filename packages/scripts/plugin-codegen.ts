@@ -12,6 +12,10 @@ import {
   extractSchemas,
   SCHEMA_DIR,
 } from "./extract-schemas";
+import {
+  parseExistingPythonFunctions,
+  parseExistingUnrealFunctions,
+} from "./utils/diff";
 
 // ============================================================================
 // Configuration
@@ -29,6 +33,7 @@ interface PluginConfig {
   importStatements: string[];
   printFormat: string;
   errorFormat: string;
+  parseFunction: (fileContent: string) => Set<string>;
 }
 
 /**
@@ -45,6 +50,7 @@ const PLUGINS: PluginConfig[] = [
     printFormat:
       'print(f"Executing {tool_name} in Blender with params: {params}")',
     errorFormat: 'print(f"Error in {tool_name}: {str(e)}")',
+    parseFunction: parseExistingPythonFunctions,
   },
   {
     name: "unreal",
@@ -56,6 +62,8 @@ const PLUGINS: PluginConfig[] = [
       'UE_LOG(LogMCPPlugin, Display, TEXT("Executing {0} in Unreal Engine"))',
     errorFormat:
       'UE_LOG(LogMCPPlugin, Error, TEXT("Error in {0}: %s"), *FString(Exception.what()))',
+
+    parseFunction: parseExistingUnrealFunctions,
   },
   {
     name: "maya",
@@ -71,6 +79,7 @@ const PLUGINS: PluginConfig[] = [
     printFormat:
       'print(f"Executing {tool_name} in Maya with params: {params}")',
     errorFormat: 'print(f"Error in {tool_name}: {str(e)}")',
+    parseFunction: parseExistingPythonFunctions,
   },
 ];
 
@@ -897,10 +906,7 @@ export async function generatePluginCode(
 
       try {
         if (plugin.name === "unreal") {
-          // Unreal Engine requires header and cpp files
-          const { headerContent, cppContent } =
-            generateUnrealImplementation(category, tools);
-
+          // Suppose you have:
           const headerPath = join(
             pluginCategoryDir,
             `${capitalizeFirstLetter(category)}Tools.h`
@@ -910,21 +916,128 @@ export async function generatePluginCode(
             `${capitalizeFirstLetter(category)}Tools.cpp`
           );
 
-          writeFileSync(headerPath, headerContent);
-          writeFileSync(cppPath, cppContent);
-        } else if (plugin.lang === "python") {
-          // Python-based plugins (Blender, Maya)
-          const implementation =
-            generatePythonImplementation(
-              category,
-              tools,
-              plugin
+          let existingHeaderFunctions = new Set<string>();
+          let existingCppFunctions = new Set<string>();
+
+          if (existsSync(headerPath)) {
+            const oldHeader = readFileSync(
+              headerPath,
+              "utf8"
             );
+            existingHeaderFunctions =
+              parseExistingUnrealFunctions(oldHeader);
+          }
+          if (existsSync(cppPath)) {
+            const oldCpp = readFileSync(cppPath, "utf8");
+            existingCppFunctions =
+              parseExistingUnrealFunctions(oldCpp);
+          }
+
+          // Any function that shows up in either file is considered “already generated”
+          const newTools = tools.filter(
+            (tool) =>
+              !existingHeaderFunctions.has(tool.name) &&
+              !existingCppFunctions.has(tool.name)
+          );
+
+          if (newTools.length === 0) {
+            console.log(
+              `No new Unreal tools to generate for ${category}`
+            );
+            continue;
+          }
+
+          // Now generate only the new ones
+          const {
+            headerContent: newHeader,
+            cppContent: newCpp,
+          } = generateUnrealImplementation(
+            category,
+            newTools
+          );
+
+          // Merge with old content
+          let finalHeader = newHeader;
+          let finalCpp = newCpp;
+
+          if (existsSync(headerPath)) {
+            const oldHeader = readFileSync(
+              headerPath,
+              "utf8"
+            );
+            finalHeader =
+              oldHeader +
+              "\n// === NEWLY GENERATED ===\n" +
+              newHeader;
+          }
+          if (existsSync(cppPath)) {
+            const oldCpp = readFileSync(cppPath, "utf8");
+            finalCpp =
+              oldCpp +
+              "\n// === NEWLY GENERATED ===\n" +
+              newCpp;
+          }
+
+          writeFileSync(headerPath, finalHeader);
+          writeFileSync(cppPath, finalCpp);
+        } else if (plugin.lang === "python") {
           const filePath = join(
             pluginCategoryDir,
             `${category}_atomic.${plugin.ext}`
           );
-          writeFileSync(filePath, implementation);
+
+          let existingFunctions = new Set<string>();
+          let oldContent = "";
+          if (existsSync(filePath)) {
+            oldContent = readFileSync(filePath, "utf8");
+            // Parse out any existing function names
+            existingFunctions =
+              plugin.parseFunction(oldContent);
+
+            // remove import statements from the old content
+            const importRegex =
+              /import .+|from .+ import .+/g;
+            oldContent = oldContent
+              .replace(
+                importRegex,
+                ""
+
+                // remove generated comment
+              )
+              .replace(
+                /# Generated .+|# This file is generated - DO NOT EDIT DIRECTLY/g,
+                ""
+              );
+          }
+
+          // Now filter out any tools that already exist
+          const newTools = tools.filter(
+            (tool) => !existingFunctions.has(tool.name)
+          );
+
+          if (newTools.length === 0) {
+            // Nothing new to generate
+            continue;
+          }
+
+          // Otherwise generate only for the new tools
+          const newImplementation =
+            generatePythonImplementation(
+              category,
+              newTools,
+              plugin
+            );
+          // …and then merge/append
+
+          const separator = "#\n\n === NEWLY GENERATED ===";
+
+          const finalContent =
+            newImplementation +
+            separator +
+            oldContent +
+            (oldContent.trim() ? "\n\n" : "");
+
+          writeFileSync(filePath, finalContent);
         }
       } catch (err) {
         console.error(
