@@ -327,21 +327,21 @@ ${toolRegistrations}
                 return
             print(f"Received data: {data}")
             
-            // Check if this is an HTTP request
+            # Check if this is an HTTP request
             request_str = data.decode('utf-8', errors='ignore')
             
             if request_str.startswith('POST') or request_str.startswith('GET'):
                 print("Received HTTP request, extracting JSON body")
-                // Extract the JSON body from HTTP request (after the \\r\\n\\r\\n)
+                # Extract the JSON body from HTTP request (after the \\r\\n\\r\\n)
                 body_start = request_str.find('\\r\\n\\r\\n') + 4
-                if body_start > 4:  // Found the body separator
+                if body_start > 4:  # Found the body separator
                     json_body = request_str[body_start:]
                     print(f"Extracted JSON body: {json_body}")
                     request = json.loads(json_body)
                 else:
                     raise ValueError("Invalid HTTP request format, no body found")
             else:
-                // Regular JSON request
+                # Regular JSON request
                 request = json.loads(request_str)
             
             print(f"Parsed request: {request}")
@@ -350,11 +350,11 @@ ${toolRegistrations}
             
             if tool_name in self.tools:
                 print(f"Executing tool: {tool_name}")
-                // Unpack dictionary params into keyword arguments
+                # Unpack dictionary params into keyword arguments
                 result = self.tools[tool_name](**params)
                 response_data = json.dumps(result).encode("utf-8")
                 
-                // Check if we need to send HTTP response
+                # Check if we need to send HTTP response
                 if request_str.startswith('POST') or request_str.startswith('GET'):
                     response = (
                         b"HTTP/1.1 200 OK\\r\\n" +
@@ -370,7 +370,7 @@ ${toolRegistrations}
                 error_msg = {"success": False, "error": f"Unknown tool: {tool_name}"}
                 response_data = json.dumps(error_msg).encode("utf-8")
                 
-                // Check if we need to send HTTP response
+                # Check if we need to send HTTP response
                 if request_str.startswith('POST') or request_str.startswith('GET'):
                     response = (
                         b"HTTP/1.1 404 Not Found\\r\\n" +
@@ -390,7 +390,7 @@ ${toolRegistrations}
             error_msg = {"success": False, "error": str(e)}
             response_data = json.dumps(error_msg).encode("utf-8")
             
-            // Try to determine if this was an HTTP request
+            # Try to determine if this was an HTTP request
             try:
                 request_str = data.decode('utf-8', errors='ignore')
                 if request_str.startswith('POST') or request_str.startswith('GET'):
@@ -419,7 +419,7 @@ def main():
     args = parser.parse_args()
     
     server = MCPServer(host=args.host, port=args.port)
-    print(f"Starting MCP server on {args.host}:${this.port}")
+    print(f"Starting MCP server on {args.host}:{args.port}")
     server.register_all_tools()
     server.start()
 
