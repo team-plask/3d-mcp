@@ -13,22 +13,15 @@ import {
 export const Keyframe = BaseEntity.extend({
   time: z.number().describe("Time position in seconds"),
   value: Tensor.any.describe("Value at this keyframe"),
-  interpolationIn: InterpolationType.optional().describe(
-    "Interpolation method entering this keyframe"
-  ),
-  interpolationOut: InterpolationType.optional().describe(
-    "Interpolation method leaving this keyframe"
-  ),
+  channelId: z
+    .string()
+    .describe("ID of the channel this keyframe belongs to"),
   tangentIn: Tensor.VEC2.optional().describe(
     "Incoming tangent handle (for bezier/hermite)"
   ),
   tangentOut: Tensor.VEC2.optional().describe(
     "Outgoing tangent handle (for bezier/hermite)"
   ),
-  isBreakdown: z
-    .boolean()
-    .optional()
-    .describe("Whether this is a breakdown keyframe"),
 });
 
 /**
@@ -55,16 +48,6 @@ export const Channel = BaseEntity.extend({
     .boolean()
     .default(true)
     .describe("Whether this channel is active"),
-  muted: z
-    .boolean()
-    .default(false)
-    .describe(
-      "Whether this channel is temporarily disabled"
-    ),
-  locked: z
-    .boolean()
-    .default(false)
-    .describe("Whether this channel is locked for editing"),
   extrapolationPre: ExtrapolationType.default(
     "constant"
   ).describe("Behavior before first keyframe"),
@@ -118,18 +101,6 @@ export const Layer = BaseEntity.extend({
     .boolean()
     .default(false)
     .describe("Whether this layer adds to base pose"),
-  solo: z
-    .boolean()
-    .default(false)
-    .describe("Whether this layer is soloed"),
-  muted: z
-    .boolean()
-    .default(false)
-    .describe("Whether this layer is muted"),
-  locked: z
-    .boolean()
-    .default(false)
-    .describe("Whether this layer is locked for editing"),
   parentId: z
     .string()
     .optional()
@@ -138,28 +109,6 @@ export const Layer = BaseEntity.extend({
     .array(z.string())
     .default([])
     .describe("IDs of clips in this layer"),
-});
-
-/**
- * Curve - Mathematical representation of an animation curve
- */
-export const Curve = BaseEntity.extend({
-  channelId: z
-    .string()
-    .describe("ID of the related animation channel"),
-  interpolationType: InterpolationType.describe(
-    "Default interpolation type"
-  ),
-  preInfinity: ExtrapolationType.describe(
-    "Behavior before first keyframe"
-  ),
-  postInfinity: ExtrapolationType.describe(
-    "Behavior after last keyframe"
-  ),
-  weightedTangents: z
-    .boolean()
-    .default(false)
-    .describe("Whether tangents use weighting"),
 });
 
 /**
@@ -193,53 +142,6 @@ export const Driver = BaseEntity.extend({
     )
     .default([])
     .describe("Input variables for the expression"),
-  enabled: z
-    .boolean()
-    .default(true)
-    .describe("Whether this driver is active"),
-});
-
-/**
- * Skeletal rig structure for animation
- */
-export const Rig = BaseEntity.extend({
-  rootBoneId: z
-    .string()
-    .describe("ID of the root bone/joint"),
-  boneIds: z
-    .array(z.string())
-    .describe("IDs of all bones/joints in this rig"),
-});
-
-/**
- * IK Chain - Inverse Kinematics system
- */
-export const IKChain = BaseEntity.extend({
-  startBoneId: z
-    .string()
-    .describe("ID of the start bone/joint"),
-  endBoneId: z
-    .string()
-    .describe("ID of the end bone/joint"),
-  targetId: z
-    .string()
-    .describe("ID of the target object/node"),
-  poleVectorId: z
-    .string()
-    .optional()
-    .describe(
-      "ID of the pole vector object (for knee/elbow direction)"
-    ),
-  enabled: z
-    .boolean()
-    .default(true)
-    .describe("Whether this IK chain is active"),
-  influence: z
-    .number()
-    .min(0)
-    .max(1)
-    .default(1)
-    .describe("Strength of IK effect"),
 });
 
 // Export collected entities
@@ -248,8 +150,5 @@ export const AnimationEntities = {
   Channel,
   Clip,
   Layer,
-  Curve,
   Driver,
-  Rig,
-  IKChain,
 } as const;
