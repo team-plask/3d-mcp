@@ -9,11 +9,9 @@ import {
 import {
   extractSchemas,
   SCHEMA_DIR,
+  discoverDomains,
 } from "./extract-schemas";
-import {
-  PLUGINS,
-  TOOL_CATEGORIES,
-} from "./config/pluginsConfig";
+import { PLUGINS } from "./config/pluginsConfig";
 import { type IGenerator } from "./generators/IGenerator";
 import { PythonGenerator } from "./generators/python-generator";
 import { UnrealGenerator } from "./generators/unreal-generator";
@@ -94,6 +92,19 @@ function loadToolDefinitions(category: string): {
   return tools;
 }
 
+/**
+ * Get all available tool categories by scanning the schema directory
+ */
+function getAvailableCategories(): string[] {
+  if (!existsSync(SCHEMA_DIR)) {
+    return [];
+  }
+
+  return readdirSync(SCHEMA_DIR, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+}
+
 // ============================================================================
 // Main Function and Execution
 // ============================================================================
@@ -110,6 +121,20 @@ export async function generatePluginCode(
     await extractSchemas(true);
     console.log("Schemas extracted successfully");
   }
+
+  // Get all tool categories by scanning the schema directory
+  const toolCategories = getAvailableCategories();
+
+  if (toolCategories.length === 0) {
+    console.error(
+      "No tool categories found! Check schema extraction process."
+    );
+    return;
+  }
+
+  console.log(
+    `Found tool categories: ${toolCategories.join(", ")}`
+  );
 
   // Add plugin directories to .gitignore if they don't exist
   try {
@@ -131,7 +156,7 @@ export async function generatePluginCode(
   }
 
   // Process each tool category
-  for (const category of TOOL_CATEGORIES) {
+  for (const category of toolCategories) {
     // Load tools from the extracted schema files
     const tools = loadToolDefinitions(category);
 
@@ -181,7 +206,7 @@ export async function generatePluginCode(
       const generator = generatorMap[
         plugin.lang
       ] as PythonGenerator;
-      generator.generateServer(plugin, TOOL_CATEGORIES);
+      generator.generateServer(plugin, toolCategories);
     } catch (err) {
       console.error(
         `Error generating server for ${plugin.name}:`,

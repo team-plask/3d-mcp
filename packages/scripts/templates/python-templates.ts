@@ -120,7 +120,7 @@ function generatePythonParamValidation(
       if ((prop as any).enum) {
         const validValues = JSON.stringify(
           (prop as any).enum
-        );
+        ).replace(/"/g, "'");
         block += `\n        
         # Validate enum values for ${name}
         if ${name} is not None and ${name} not in ${validValues}:

@@ -18,21 +18,7 @@ const monitorAtomicTools = {
         .string()
         .optional()
         .describe(
-          `
-          Function that takes an object as input and returns a dict with display settings. See example below.
-
-          Example:
-            # Basic usage
-            create_view_screenshots()
-        
-            # Show names for all armatures but not for other objects
-            def custom_visibility(obj):
-                if obj.type == 'ARMATURE':
-                    return {'show_name': True, 'show_bones': True}
-                return {'show_name': False}
-            
-            create_view_screenshots(name_visibility_predicate=custom_visibility)
-            `
+          ` Function that takes an object as input and returns a dict with display settings. See example below.`
         ),
       auto_adjust_camera: z
         .boolean()

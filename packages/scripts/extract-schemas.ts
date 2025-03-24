@@ -1,21 +1,19 @@
 import { join } from "path";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readdirSync,
+} from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-// Import the animation atomic tools
-import { animationAtomicToolsWithExecute } from "../src/tool/animation/atomic";
-
-// Try to import any other tool categories defined in the project
-let renderTools: Record<string, any> = {};
-try {
-  const renderToolsModule = await import(
-    "../src/tool/render/atomic"
-  );
-  renderTools =
-    renderToolsModule.renderAtomicToolsWithExecute || {};
-} catch (e) {
-  console.log("No render tools found, skipping...");
-}
+// Import path to the tools directory
+const TOOLS_DIR = join(
+  process.cwd(),
+  "packages",
+  "src",
+  "tool"
+);
 
 // Directory to save extracted schemas
 export const SCHEMA_DIR = join(
@@ -105,32 +103,125 @@ async function extractCategorySchemas(
   }
 }
 
+/**
+ * Discover all domain directories in the tools directory
+ * and dynamically import their atomic tools
+ */
+export async function discoverDomains(
+  silent: boolean = false
+): Promise<string[]> {
+  if (!existsSync(TOOLS_DIR)) {
+    console.error(
+      `Tools directory not found: ${TOOLS_DIR}`
+    );
+    return [];
+  }
+
+  const domains = readdirSync(TOOLS_DIR, {
+    withFileTypes: true,
+  })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+
+  if (!silent) {
+    console.log(
+      `Discovered domains: ${domains.join(", ")}`
+    );
+  }
+
+  return domains;
+}
+
+/**
+ * Dynamically import atomic tools for a specific domain
+ */
+async function importDomainTools(
+  domain: string,
+  silent: boolean = false
+): Promise<Record<string, any>> {
+  try {
+    const atomicPath = `../src/tool/${domain}/atomic`;
+    const module = await import(atomicPath);
+
+    // Try to get the domain's atomic tools with execute property
+    // Different domains might use different naming conventions
+    const toolsExport =
+      module[`${domain}AtomicToolsWithExecute`] ||
+      module[
+        `${domain.replace(/s$/, "")}AtomicToolsWithExecute`
+      ];
+
+    if (
+      toolsExport &&
+      Object.keys(toolsExport).length > 0
+    ) {
+      if (!silent) {
+        console.log(
+          `Successfully imported atomic tools for ${domain}`
+        );
+      }
+      return toolsExport;
+    } else {
+      if (!silent) {
+        console.log(`No atomic tools found for ${domain}`);
+      }
+      return {};
+    }
+  } catch (e) {
+    if (!silent) {
+      console.log(
+        `Could not import atomic tools for ${domain}: ${e}`
+      );
+    }
+    return {};
+  }
+}
+
 export async function extractSchemas(
   silent: boolean = false
 ) {
   // Ensure the schema directory exists
   ensureDirectoryExists(SCHEMA_DIR);
 
-  // Extract schemas for animation tools
-  await extractCategorySchemas(
-    "animation",
-    animationAtomicToolsWithExecute,
-    silent
-  );
+  // Discover all domains in the tools directory
+  const domains = await discoverDomains(silent);
+  const processedDomains: string[] = [];
 
-  // Extract schemas for render tools (if available)
-  if (Object.keys(renderTools).length > 0) {
-    await extractCategorySchemas(
-      "render",
-      renderTools,
+  // Process each domain
+  for (const domain of domains) {
+    // Skip the 'core' domain as it typically contains base definitions
+    // and not actual tools to be extracted
+    if (domain === "core") continue;
+
+    // Import tools for this domain
+    const domainTools = await importDomainTools(
+      domain,
       silent
+    );
+
+    // Extract schemas if tools were found
+    if (Object.keys(domainTools).length > 0) {
+      await extractCategorySchemas(
+        domain,
+        domainTools,
+        silent
+      );
+      processedDomains.push(domain);
+    }
+  }
+
+  if (!silent && processedDomains.length > 0) {
+    console.log(
+      `Schema extraction completed successfully for domains: ${processedDomains.join(
+        ", "
+      )}`
+    );
+  } else if (!silent) {
+    console.log(
+      "No domains processed. Check that tool directories contain atomic.ts files."
     );
   }
 
-  if (!silent)
-    console.log(
-      "Schema extraction completed successfully!"
-    );
   return SCHEMA_DIR;
 }
 
