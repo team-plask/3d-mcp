@@ -325,30 +325,89 @@ ${toolRegistrations}
             data = client_socket.recv(4096)
             if not data:
                 return
-                
-            request = json.loads(data.decode('utf-8'))
+            print(f"Received data: {data}")
+            
+            // Check if this is an HTTP request
+            request_str = data.decode('utf-8', errors='ignore')
+            
+            if request_str.startswith('POST') or request_str.startswith('GET'):
+                print("Received HTTP request, extracting JSON body")
+                // Extract the JSON body from HTTP request (after the \\r\\n\\r\\n)
+                body_start = request_str.find('\\r\\n\\r\\n') + 4
+                if body_start > 4:  // Found the body separator
+                    json_body = request_str[body_start:]
+                    print(f"Extracted JSON body: {json_body}")
+                    request = json.loads(json_body)
+                else:
+                    raise ValueError("Invalid HTTP request format, no body found")
+            else:
+                // Regular JSON request
+                request = json.loads(request_str)
+            
+            print(f"Parsed request: {request}")
             tool_name = request.get("tool")
             params = request.get("params", {})
             
             if tool_name in self.tools:
                 print(f"Executing tool: {tool_name}")
-                # Unpack dictionary params into keyword arguments
+                // Unpack dictionary params into keyword arguments
                 result = self.tools[tool_name](**params)
-                response = json.dumps(result).encode('utf-8')
+                response_data = json.dumps(result).encode("utf-8")
+                
+                // Check if we need to send HTTP response
+                if request_str.startswith('POST') or request_str.startswith('GET'):
+                    response = (
+                        b"HTTP/1.1 200 OK\\r\\n" +
+                        b"Content-Type: application/json\\r\\n" +
+                        b"Access-Control-Allow-Origin: *\\r\\n" +
+                        b"Content-Length: " + str(len(response_data)).encode() + b"\\r\\n" +
+                        b"\\r\\n" +
+                        response_data
+                    )
+                else:
+                    response = response_data
             else:
-                response = json.dumps({
-                    "success": False,
-                    "error": f"Unknown tool: {tool_name}"
-                }).encode('utf-8')
+                error_msg = {"success": False, "error": f"Unknown tool: {tool_name}"}
+                response_data = json.dumps(error_msg).encode("utf-8")
+                
+                // Check if we need to send HTTP response
+                if request_str.startswith('POST') or request_str.startswith('GET'):
+                    response = (
+                        b"HTTP/1.1 404 Not Found\\r\\n" +
+                        b"Content-Type: application/json\\r\\n" +
+                        b"Access-Control-Allow-Origin: *\\r\\n" +
+                        b"Content-Length: " + str(len(response_data)).encode() + b"\\r\\n" +
+                        b"\\r\\n" +
+                        response_data
+                    )
+                else:
+                    response = response_data
                 
             client_socket.send(response)
             
         except Exception as e:
-            error_response = json.dumps({
-                "success": False,
-                "error": str(e)
-            }).encode('utf-8')
-            client_socket.send(error_response)
+            print(f"Error handling client request: {str(e)}")
+            error_msg = {"success": False, "error": str(e)}
+            response_data = json.dumps(error_msg).encode("utf-8")
+            
+            // Try to determine if this was an HTTP request
+            try:
+                request_str = data.decode('utf-8', errors='ignore')
+                if request_str.startswith('POST') or request_str.startswith('GET'):
+                    response = (
+                        b"HTTP/1.1 500 Internal Server Error\\r\\n" +
+                        b"Content-Type: application/json\\r\\n" +
+                        b"Access-Control-Allow-Origin: *\\r\\n" +
+                        b"Content-Length: " + str(len(response_data)).encode() + b"\\r\\n" +
+                        b"\\r\\n" +
+                        response_data
+                    )
+                else:
+                    response = response_data
+            except:
+                response = response_data
+                
+            client_socket.send(response)
         finally:
             client_socket.close()
 
@@ -360,7 +419,7 @@ def main():
     args = parser.parse_args()
     
     server = MCPServer(host=args.host, port=args.port)
-    print(f"Starting MCP server on {args.host}:{args.port}")
+    print(f"Starting MCP server on {args.host}:${this.port}")
     server.register_all_tools()
     server.start()
 
