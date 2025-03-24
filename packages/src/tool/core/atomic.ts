@@ -155,32 +155,21 @@ const coreAtomicTools = {
         .array(
           z.object({
             id: z.string().describe("Object identifier"),
-            propertyPath: z
-              .string()
-              .describe("Path to the property"),
-            value: z
-              .any()
-              .describe("Property value to set"),
+            entries: z
+              .array(
+                z.object({
+                  propertyPath: z
+                    .array(z.string())
+                    .describe("Property path to set"),
+                  value: z.any().describe("Value to set"),
+                })
+              )
+              .describe("Property entries to set"),
           })
         )
         .describe("Property assignments to make"),
     }),
     returns: OperationResponse,
-  },
-
-  getProperty: {
-    description: "Get a property value from an object",
-    parameters: z.object({
-      id: z.string().describe("Object identifier"),
-      propertyPath: z
-        .string()
-        .describe(
-          "Path to the property (e.g., 'material.color')"
-        ),
-    }),
-    returns: OperationResponse.extend({
-      value: z.any().describe("Property value"),
-    }),
   },
 
   batchGetProperty: {
@@ -192,8 +181,10 @@ const coreAtomicTools = {
           z.object({
             id: z.string().describe("Object identifier"),
             propertyPath: z
-              .string()
-              .describe("Path to the property"),
+              .array(z.string())
+              .describe(
+                "List of property paths to retrieve"
+              ),
           })
         )
         .describe("Property requests to make"),
@@ -263,28 +254,11 @@ const coreAtomicTools = {
         .describe(
           "Property values to match (path -> value)"
         ),
-      limit: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe("Maximum results to return"),
-      offset: z
-        .number()
-        .int()
-        .nonnegative()
-        .optional()
-        .describe("Starting offset for pagination"),
     }),
     returns: OperationResponse.extend({
       results: z
         .array(z.string())
         .describe("IDs of matching entities"),
-      totalCount: z
-        .number()
-        .int()
-        .nonnegative()
-        .describe("Total count matching query"),
     }),
   },
 
@@ -308,49 +282,6 @@ const coreAtomicTools = {
         .string()
         .optional()
         .describe("Name of the redone operation"),
-    }),
-  },
-
-  // Naming and metadata
-  rename: {
-    description: "Rename an entity",
-    parameters: z.object({
-      id: z.string().describe("Entity identifier"),
-      name: z.string().describe("New name"),
-    }),
-    returns: OperationResponse,
-  },
-
-  setMetadata: {
-    description: "Set metadata on an entity",
-    parameters: z.object({
-      id: z.string().describe("Entity identifier"),
-      metadata: z
-        .record(z.string(), z.any())
-        .describe("Metadata to set"),
-      merge: z
-        .boolean()
-        .default(true)
-        .describe(
-          "Whether to merge with existing metadata"
-        ),
-    }),
-    returns: OperationResponse,
-  },
-
-  getMetadata: {
-    description: "Get metadata from an entity",
-    parameters: z.object({
-      id: z.string().describe("Entity identifier"),
-      key: z
-        .string()
-        .optional()
-        .describe("Specific metadata key to retrieve"),
-    }),
-    returns: OperationResponse.extend({
-      metadata: z
-        .record(z.string(), z.any())
-        .describe("Entity metadata"),
     }),
   },
 } as const;
