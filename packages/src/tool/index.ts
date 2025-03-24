@@ -17,15 +17,23 @@ import {
   modelAtomicToolsWithExecute,
   ModelEntities,
 } from "./model";
-import { RigEntities } from "./rig/entity";
-import { rigAtomicToolsWithExecute } from "./rig/atomic";
+import {
+  rigTools,
+  rigAtomicToolsWithExecute,
+  RigEntities,
+} from "./rig";
+import {
+  monitorTools,
+  monitorAtomicToolsWithExecute,
+} from "./monitor";
 
 const tools = {
   ...animationTools,
   ...renderTools,
   ...coreTools,
   ...modelTools,
-  ...rigAtomicToolsWithExecute,
+  ...rigTools,
+  ...monitorTools,
 } as const;
 
 const atomicTools = {
@@ -34,6 +42,7 @@ const atomicTools = {
   ...coreAtomicToolsWithExecute,
   ...modelAtomicToolsWithExecute,
   ...rigAtomicToolsWithExecute,
+  ...monitorAtomicToolsWithExecute,
 } as const;
 
 const entities = {
