@@ -4,6 +4,7 @@ import {
   mkdirSync,
   writeFileSync,
   readdirSync,
+  rmSync,
 } from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
@@ -22,6 +23,19 @@ export const SCHEMA_DIR = join(
   "scripts",
   "schemas"
 );
+
+/**
+ * Clean up temporary schema files and directories
+ */
+export function cleanupSchemas() {
+  if (existsSync(SCHEMA_DIR)) {
+    console.log(
+      `Cleaning up temporary schema files in ${SCHEMA_DIR}`
+    );
+    rmSync(SCHEMA_DIR, { recursive: true, force: true });
+    console.log("Schema files removed");
+  }
+}
 
 // Ensure schema directory exists
 function ensureDirectoryExists(dir: string) {

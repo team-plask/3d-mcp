@@ -1,3 +1,4 @@
+import { OperationResponse } from "../core";
 import { createExecutableTools } from "../core/request";
 import { z } from "zod";
 const monitorAtomicTools = {
@@ -27,7 +28,7 @@ const monitorAtomicTools = {
           "Automatically adjust camera to fit the scene"
         ),
     }),
-    returns: z.object({
+    returns: OperationResponse.extend({
       image_path: z
         .array(z.string())
         .describe("Paths to the images of the quad view"),

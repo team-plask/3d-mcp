@@ -9,7 +9,7 @@ import {
 import {
   extractSchemas,
   SCHEMA_DIR,
-  discoverDomains,
+  cleanupSchemas,
 } from "./extract-schemas";
 import { PLUGINS } from "./config/pluginsConfig";
 import { type IGenerator } from "./generators/IGenerator";
@@ -32,19 +32,6 @@ const generatorMap: Record<string, IGenerator> = {
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Clean up temporary schema files and directories
- */
-function cleanupSchemas() {
-  if (existsSync(SCHEMA_DIR)) {
-    console.log(
-      `Cleaning up temporary schema files in ${SCHEMA_DIR}`
-    );
-    rmSync(SCHEMA_DIR, { recursive: true, force: true });
-    console.log("Schema files removed");
-  }
-}
 
 /**
  * Load tool definitions from the extracted schema files

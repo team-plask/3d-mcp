@@ -11,6 +11,30 @@ import {
 } from "fs";
 
 /**
+ * Generate parameter signature from schema
+ */
+function generatePythonParamSignature(schema: any): string {
+  if (!schema || !schema.properties) return "";
+
+  const requiredProps = new Set<string>(
+    schema.required || []
+  );
+  const parameters = Object.entries(schema.properties).map(
+    ([name, prop]) => {
+      const typeName = getTypeForLanguage(prop, "python");
+      if (requiredProps.has(name)) {
+        return `${name}: ${typeName}`;
+      } else {
+        // Set default to None for optional parameters
+        return `${name}: Optional[${typeName}] = None`;
+      }
+    }
+  );
+
+  return parameters.join(", ");
+}
+
+/**
  * Generate properly formatted Python docstring
  */
 function generatePythonDocstring(tool: any): string {
@@ -26,7 +50,7 @@ function generatePythonDocstring(tool: any): string {
         (prop as any).description ||
         `The ${name} parameter`;
       paramDocs.push(
-        `           ${name} (${typeName}): ${paramDesc}`
+        `    ${name} (${typeName}): ${paramDesc}`
       );
     }
   }
@@ -43,10 +67,10 @@ function generatePythonDocstring(tool: any): string {
             const desc =
               (prop as any).description ||
               `The ${name} return value`;
-            return `           ${name} (${typeName}): ${desc}`;
+            return `    ${name} (${typeName}): ${desc}`;
           })
           .join("\n")
-      : "           Dict[str, Any]: Operation response with success status";
+      : "    Dict[str, Any]: Operation response with success status";
 
   return `
     """
@@ -56,7 +80,7 @@ function generatePythonDocstring(tool: any): string {
 ${
   paramDocs.length > 0
     ? paramDocs.join("\n")
-    : "    params (Dict[str, Any]): Tool parameters"
+    : "    No parameters"
 }
         
     Returns:
@@ -65,76 +89,32 @@ ${returnDocs}
 }
 
 /**
- * Generate parameter validation code for Python with proper indentation
+ * Generate parameter validation code for Python with explicit parameters
  */
 function generatePythonParamValidation(
   schema: any
 ): string {
   if (!schema || !schema.properties) return "";
 
-  const requiredProps = new Set<string>(
-    schema.required || []
-  );
   const validationBlocks = [];
 
-  // First extract all required parameters
-  if (requiredProps.size > 0) {
-    const requiredChecks = [];
-    for (const name of requiredProps) {
-      const prop = schema.properties[name];
-      const desc =
-        (prop as any).description ||
-        `The ${name} parameter`;
-
-      requiredChecks.push(`
-        # Required parameter: ${desc}
-        if "${name}" not in params:
-            raise ValueError(f"Required parameter '${name}' is missing")
-        ${name} = params["${name}"]`);
-
-      // Add enum validation if applicable
-      if (prop.enum) {
-        const validValues = JSON.stringify(prop.enum);
-        requiredChecks.push(`
+  // Validate enum values where applicable
+  for (const [name, prop] of Object.entries(
+    schema.properties
+  )) {
+    if ((prop as any).enum) {
+      const validValues = JSON.stringify(
+        (prop as any).enum
+      ).replace(/"/g, "'");
+      validationBlocks.push(`
         # Validate enum values for ${name}
         if ${name} is not None and ${name} not in ${validValues}:
-            raise ValueError(f"Parameter '${name}' out of enum range")`);
-      }
+            raise ValueError(f"Parameter '${name}' must be one of ${validValues}, got {${name}}")
+      `);
     }
-    validationBlocks.push(requiredChecks.join("\n\n"));
   }
 
-  // Then extract all optional parameters
-  const optionalParams = Object.entries(schema.properties)
-    .filter(([name]) => !requiredProps.has(name))
-    .map(([name, prop]) => {
-      const desc =
-        (prop as any).description ||
-        `The ${name} parameter`;
-
-      let block = `
-        # Optional parameter: ${desc}
-        ${name} = params.get("${name}")`;
-
-      // Add enum validation if applicable
-      if ((prop as any).enum) {
-        const validValues = JSON.stringify(
-          (prop as any).enum
-        ).replace(/"/g, "'");
-        block += `\n        
-        # Validate enum values for ${name}
-        if ${name} is not None and ${name} not in ${validValues}:
-            raise ValueError(f"Parameter '${name}' must be one of ${validValues}, got ${name}")`;
-      }
-
-      return block;
-    });
-
-  if (optionalParams.length > 0) {
-    validationBlocks.push(optionalParams.join("\n\n"));
-  }
-
-  return validationBlocks.join("\n\n");
+  return validationBlocks.join("\n");
 }
 
 /**
@@ -151,6 +131,8 @@ function generatePythonImplementation(
       const returnJsonSchema = tool.returns;
       const toolName = tool.name;
       const docstring = generatePythonDocstring(tool);
+      const paramSignature =
+        generatePythonParamSignature(paramJsonSchema);
       const paramValidation =
         generatePythonParamValidation(paramJsonSchema);
 
@@ -166,9 +148,21 @@ function generatePythonImplementation(
         })
         .join(", # TODO: Implement  \n                ");
 
-      return `def ${toolName}(params: Dict[str, Any]) -> Dict[str, Any]:
+      // Create dictionary of parameters for logging
+      const buildParamsDict = Object.keys(
+        paramJsonSchema?.properties || {}
+      )
+        .map((param) => `"${param}": ${param}`)
+        .join(", ");
+
+      const paramsDict = buildParamsDict
+        ? `{${buildParamsDict}}`
+        : "{}";
+
+      return `def ${toolName}(${paramSignature}) -> Dict[str, Any]:
 ${docstring}
     tool_name = "${toolName}"  # Define tool name for logging
+    params = ${paramsDict}  # Create params dict for logging
     ${plugin.printFormat}
     
     try:
@@ -338,7 +332,8 @@ ${toolRegistrations}
             
             if tool_name in self.tools:
                 print(f"Executing tool: {tool_name}")
-                result = self.tools[tool_name](params)
+                # Unpack dictionary params into keyword arguments
+                result = self.tools[tool_name](**params)
                 response = json.dumps(result).encode('utf-8')
             else:
                 response = json.dumps({
@@ -379,4 +374,5 @@ export {
   generatePythonServer,
   generatePythonDocstring,
   generatePythonParamValidation,
+  generatePythonParamSignature,
 };

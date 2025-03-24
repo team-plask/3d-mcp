@@ -1,13 +1,143 @@
 import { join } from "path";
 import { exec, execSync } from "child_process";
-import { existsSync, readdirSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import { generatePluginCode } from "../plugin-codegen";
+import {
+  SCHEMA_DIR,
+  extractSchemas,
+  cleanupSchemas,
+  discoverDomains,
+} from "../extract-schemas";
 
 // Configuration
 const PLUGINS_DIR = join(process.cwd(), "packages/plugins");
 const TIMEOUT = 30000; // 30 seconds for longer tests
 
+/**
+ * Generate default value based on parameter type
+ */
+function generateDefaultValue(paramSchema: any): any {
+  if (!paramSchema) return null;
+
+  const type = paramSchema.type;
+
+  switch (type) {
+    case "string":
+      return paramSchema.enum ? paramSchema.enum[0] : "";
+    case "number":
+    case "integer":
+      return 0;
+    case "boolean":
+      return false;
+    case "array":
+      return [];
+    case "object":
+      const result: Record<string, any> = {};
+      if (paramSchema.properties) {
+        for (const [propName, propSchema] of Object.entries(
+          paramSchema.properties
+        )) {
+          result[propName] = generateDefaultValue(
+            propSchema as any
+          );
+        }
+      }
+      return result;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Extract a tool schema and generate default parameters
+ */
+async function extractToolDefaultParams(
+  category: string
+): Promise<{ tool: string; params: any }> {
+  // Ensure schemas are extracted and available
+  await extractSchemas(true);
+
+  // Get list of tool schema files in the category
+  const categoryDir = join(SCHEMA_DIR, category);
+  if (!existsSync(categoryDir)) {
+    throw new Error(
+      `Schema directory not found for ${category}`
+    );
+  }
+
+  const schemaFiles = readdirSync(categoryDir).filter(
+    (file) => file.endsWith(".json")
+  );
+
+  if (schemaFiles.length === 0) {
+    throw new Error(`No schema files found in ${category}`);
+  }
+
+  // Select a random tool schema
+  const schemaFile =
+    schemaFiles[
+      Math.floor(Math.random() * schemaFiles.length)
+    ]!;
+  const schemaPath = join(categoryDir, schemaFile);
+  const schema = JSON.parse(
+    readFileSync(schemaPath, "utf8")
+  );
+
+  // Generate default parameters based on the schema
+  const defaultParams: Record<string, any> = {};
+
+  if (schema.parameters && schema.parameters.properties) {
+    for (const [paramName, paramSchema] of Object.entries(
+      schema.parameters.properties
+    )) {
+      defaultParams[paramName] =
+        generateDefaultValue(paramSchema);
+    }
+  }
+
+  console.log(
+    `Generated default params for ${
+      schema.name
+    }: ${JSON.stringify(defaultParams)}`
+  );
+
+  return {
+    tool: schema.name,
+    params: defaultParams,
+  };
+}
+
+/**
+ * Discover and select a random domain for testing
+ */
+async function getRandomDomain(): Promise<string> {
+  // Get all available domains
+  const domains = await discoverDomains(true);
+
+  // Filter out the 'core' domain as it typically doesn't have tools
+  const toolDomains = domains.filter(
+    (domain) => domain !== "core"
+  );
+
+  if (toolDomains.length === 0) {
+    throw new Error(
+      "No valid tool domains found for testing!"
+    );
+  }
+
+  // Select a random domain
+  return toolDomains[
+    Math.floor(Math.random() * toolDomains.length)
+  ]!;
+}
+
 describe("Plugin Code Generation Tests", () => {
+  // Clean up schemas after all tests
+  afterAll(async () => {
+    console.log("Cleaning up schema files after tests");
+    cleanupSchemas();
+  });
+
   // Test if code generation completes successfully
   test(
     "generatePluginCode runs without errors",
@@ -137,6 +267,53 @@ describe("Plugin Code Generation Tests", () => {
     async () => {
       let serverTestsFailed = false;
 
+      // Extract a test tool with default parameters using a random domain
+      let testRequest;
+      try {
+        // Get a random domain for testing
+        const randomDomain = await getRandomDomain();
+        console.log(
+          `Using random domain for testing: ${randomDomain}`
+        );
+
+        testRequest = await extractToolDefaultParams(
+          randomDomain
+        );
+        console.log(
+          `Using test tool: ${testRequest.tool} from domain: ${randomDomain}`
+        );
+      } catch (error) {
+        console.error(
+          `Failed to extract tool schema from primary domain: ${error}`
+        );
+        try {
+          // Try another random domain as fallback
+          const fallbackDomain = await getRandomDomain();
+          console.log(
+            `Using fallback domain: ${fallbackDomain}`
+          );
+
+          testRequest = await extractToolDefaultParams(
+            fallbackDomain
+          );
+          console.log(
+            `Using fallback test tool: ${testRequest.tool} from domain: ${fallbackDomain}`
+          );
+        } catch (fallbackError) {
+          console.error(
+            `Failed to extract fallback tool schema: ${fallbackError}`
+          );
+          // Last resort - use a simple test request
+          testRequest = {
+            tool: "test",
+            params: {},
+          };
+          console.log(
+            `Using last resort test tool: ${testRequest.tool}`
+          );
+        }
+      }
+
       // Test for Maya server
       console.log("Starting Maya server test...");
       const mayaPort = 8001; // Use different ports for each server
@@ -154,7 +331,8 @@ describe("Plugin Code Generation Tests", () => {
         try {
           const response = await sendTestRequest(
             "localhost",
-            mayaPort
+            mayaPort,
+            testRequest
           );
           console.log("Maya server response:", response);
 
@@ -170,7 +348,9 @@ describe("Plugin Code Generation Tests", () => {
           serverTestsFailed = true;
           // Now we want to fail the test if connection fails
           throw new Error(
-            `Maya server test failed: ${error.message}`
+            `Maya server test failed: ${
+              (error as any).message
+            }`
           );
         }
       } finally {
@@ -196,7 +376,8 @@ describe("Plugin Code Generation Tests", () => {
         try {
           const response = await sendTestRequest(
             "localhost",
-            blenderPort
+            blenderPort,
+            testRequest
           );
           console.log("Blender server response:", response);
 
@@ -212,7 +393,9 @@ describe("Plugin Code Generation Tests", () => {
           serverTestsFailed = true;
           // Now we want to fail the test if connection fails
           throw new Error(
-            `Blender server test failed: ${error.message}`
+            `Blender server test failed: ${
+              (error as any).message
+            }`
           );
         }
       } finally {
@@ -335,7 +518,8 @@ function startPythonServer(
 
 function sendTestRequest(
   host: string,
-  port: number
+  port: number,
+  request?: { tool: string; params: any }
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     const net = require("net");
@@ -343,18 +527,18 @@ function sendTestRequest(
 
     console.log(`Connecting to ${host}:${port}...`);
 
+    // Default request if none provided
+    const testRequest = request || {
+      tool: "test",
+      params: {},
+    };
+
     client.connect(port, host, () => {
       console.log(
-        `Connected to ${host}:${port}, sending test request`
+        `Connected to ${host}:${port}, sending test request for tool: ${testRequest.tool}`
       );
-      // Use an actual tool from the render category instead of the 'test' tool
-      const request = {
-        tool: "batchLayerSetWeight",
-        params: {
-          items: [],
-        },
-      };
-      client.write(JSON.stringify(request));
+
+      client.write(JSON.stringify(testRequest));
 
       // Close the connection after sending the request
       setTimeout(() => {
