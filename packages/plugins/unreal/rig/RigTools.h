@@ -37,14 +37,6 @@ public:
     TSharedPtr<FJsonObject> deleteJoints(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Get multiple IKChains by IDs
-     * * @param ids - IKChain identifiers (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> getIKChains(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * Update multiple Joints in a single operation
      * * @param items - Array of Joints to update with their IDs (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
@@ -62,14 +54,6 @@ public:
      */
     UFUNCTION()
     TSharedPtr<FJsonObject> listJoints(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * Delete multiple IKChains
-     * * @param ids - IKChain identifiers to delete (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> deleteIKChains(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * List all Constraints
@@ -118,14 +102,6 @@ public:
     TSharedPtr<FJsonObject> listBlendShapes(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Create multiple IKChains
-     * * @param items - Array of IKChains to create (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> createIKChains(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * Get multiple Constraints by IDs
      * * @param ids - Constraint identifiers (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
@@ -150,14 +126,6 @@ public:
     TSharedPtr<FJsonObject> deleteBlendShapes(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Update multiple IKChains in a single operation
-     * * @param items - Array of IKChains to update with their IDs (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> updateIKChains(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * Create multiple Constraints
      * * @param items - Array of Constraints to create (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
@@ -180,15 +148,4 @@ public:
      */
     UFUNCTION()
     TSharedPtr<FJsonObject> getBlendShapes(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * List all IKChains
-     * * @param parentId - Optional parent ID to filter by (FString)
-     * @param filters - Optional filters to apply (TSharedPtr<FJsonObject>)
-     * @param limit - Maximum number of results (int32)
-     * @param offset - Starting offset for pagination (int32)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> listIKChains(const TSharedPtr<FJsonObject>& Params);
 };

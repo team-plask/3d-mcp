@@ -14,24 +14,19 @@ void UMCPRigTools::RegisterTools()
 {
     FMCPProtocolHandler::Get().RegisterTool("createJoints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::createJoints));
     FMCPProtocolHandler::Get().RegisterTool("deleteJoints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::deleteJoints));
-    FMCPProtocolHandler::Get().RegisterTool("getIKChains", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::getIKChains));
     FMCPProtocolHandler::Get().RegisterTool("updateJoints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::updateJoints));
     FMCPProtocolHandler::Get().RegisterTool("listJoints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::listJoints));
-    FMCPProtocolHandler::Get().RegisterTool("deleteIKChains", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::deleteIKChains));
     FMCPProtocolHandler::Get().RegisterTool("listConstraints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::listConstraints));
     FMCPProtocolHandler::Get().RegisterTool("updateConstraints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::updateConstraints));
     FMCPProtocolHandler::Get().RegisterTool("updateBlendShapes", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::updateBlendShapes));
     FMCPProtocolHandler::Get().RegisterTool("getJoints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::getJoints));
     FMCPProtocolHandler::Get().RegisterTool("listBlendShapes", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::listBlendShapes));
-    FMCPProtocolHandler::Get().RegisterTool("createIKChains", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::createIKChains));
     FMCPProtocolHandler::Get().RegisterTool("getConstraints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::getConstraints));
     FMCPProtocolHandler::Get().RegisterTool("createBlendShapes", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::createBlendShapes));
     FMCPProtocolHandler::Get().RegisterTool("deleteBlendShapes", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::deleteBlendShapes));
-    FMCPProtocolHandler::Get().RegisterTool("updateIKChains", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::updateIKChains));
     FMCPProtocolHandler::Get().RegisterTool("createConstraints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::createConstraints));
     FMCPProtocolHandler::Get().RegisterTool("deleteConstraints", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::deleteConstraints));
     FMCPProtocolHandler::Get().RegisterTool("getBlendShapes", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::getBlendShapes));
-    FMCPProtocolHandler::Get().RegisterTool("listIKChains", FMCPToolDelegate::CreateUObject(this, &UMCPRigTools::listIKChains));
 }
 
 TSharedPtr<FJsonObject> UMCPRigTools::createJoints(const TSharedPtr<FJsonObject>& Params)
@@ -97,41 +92,6 @@ TSharedPtr<FJsonObject> UMCPRigTools::deleteJoints(const TSharedPtr<FJsonObject>
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteJoints: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPRigTools::getIKChains(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing getIKChains in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter ids
-        if (!Params->HasField("ids")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter ids is missing");
-            return Response;
-        }
-        // Extract complex parameter ids 
-        const TSharedPtr<FJsonValue>* idsValue = nullptr;
-        if (Params->TryGetField("ids", idsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for getIKChains
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex items value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in getIKChains: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -212,41 +172,6 @@ TSharedPtr<FJsonObject> UMCPRigTools::listJoints(const TSharedPtr<FJsonObject>& 
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in listJoints: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPRigTools::deleteIKChains(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteIKChains in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter ids
-        if (!Params->HasField("ids")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter ids is missing");
-            return Response;
-        }
-        // Extract complex parameter ids 
-        const TSharedPtr<FJsonValue>* idsValue = nullptr;
-        if (Params->TryGetField("ids", idsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for deleteIKChains
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteIKChains: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -449,41 +374,6 @@ TSharedPtr<FJsonObject> UMCPRigTools::listBlendShapes(const TSharedPtr<FJsonObje
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPRigTools::createIKChains(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createIKChains in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for createIKChains
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex ids value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createIKChains: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
 TSharedPtr<FJsonObject> UMCPRigTools::getConstraints(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing getConstraints in Unreal Engine"));
@@ -589,41 +479,6 @@ TSharedPtr<FJsonObject> UMCPRigTools::deleteBlendShapes(const TSharedPtr<FJsonOb
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPRigTools::updateIKChains(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing updateIKChains in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for updateIKChains
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in updateIKChains: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
 TSharedPtr<FJsonObject> UMCPRigTools::createConstraints(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing createConstraints in Unreal Engine"));
@@ -722,51 +577,6 @@ TSharedPtr<FJsonObject> UMCPRigTools::getBlendShapes(const TSharedPtr<FJsonObjec
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in getBlendShapes: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPRigTools::listIKChains(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing listIKChains in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {
-        // Extract parentId (FString)
-        FString parentId;
-        if (Params->TryGetStringField("parentId", parentId)) {
-        }
-
-        // Extract complex parameter filters 
-        const TSharedPtr<FJsonValue>* filtersValue = nullptr;
-        if (Params->TryGetField("filters", filtersValue)) {
-        }
-
-        // Extract limit (int32)
-        int32 limit = 0;
-        if (Params->TryGetNumberField("limit", limit)) {
-        }
-
-        // Extract offset (int32)
-        int32 offset = 0;
-        if (Params->TryGetNumberField("offset", offset)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for listIKChains
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex items value
-        Response->SetNumberField("totalCount", 0); // TODO: Set actual totalCount value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in listIKChains: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }

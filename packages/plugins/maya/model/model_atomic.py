@@ -2,7 +2,7 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def createEdges(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
@@ -10,7 +10,7 @@ def createEdges(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Edges
     
     Args:
-    items (List[Dict[str, Any]]): Array of Edges to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges to create
         
     Returns:
     success (bool): Operation success status
@@ -45,7 +45,7 @@ def getGroups(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Groups objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups objects
     """
     tool_name = "getGroups"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -72,11 +72,11 @@ def bridge(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create bridges between face loops
     
     Args:
-    items (List[Dict[str, Any]]): Bridge operations
+    items (List[Dict[str, Any] with keys {"meshId": str, "faceLoopA": List[str], "faceLoopB": List[str], "twist": int, "smooth": bool}]): Bridge operations
         
     Returns:
     success (bool): Operation success status
-    results (List[Dict[str, Any]]): Bridge results
+    results (List[Dict[str, Any] with keys {"meshId": str, "bridgeFaceIds": List[str], "bridgeEdgeIds": List[str]}]): Bridge results
     """
     tool_name = "bridge"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
@@ -103,7 +103,7 @@ def setEdgeCreases(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Set crease weights for edges
     
     Args:
-    items (List[Dict[str, Any]]): Edge crease operations
+    items (List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}]): Edge crease operations
         
     Returns:
     success (bool): Operation success status
@@ -136,7 +136,7 @@ def getMeshs(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Meshs objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs objects
     """
     tool_name = "getMeshs"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -186,13 +186,44 @@ def deleteMaterials(ids: List[str]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
+def getSubdivisionModifiers(ids: List[str]) -> Dict[str, Any]:
+
+    """
+    Get multiple SubdivisionModifiers by IDs
+    
+    Args:
+    ids (List[str]): SubdivisionModifier identifiers
+        
+    Returns:
+    success (bool): Operation success status
+    items (List[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers objects
+    """
+    tool_name = "getSubdivisionModifiers"  # Define tool name for logging
+    params = {"ids": ids}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "items": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
 def createCurves(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
     Create multiple Curves
     
     Args:
-    items (List[Dict[str, Any]]): Array of Curves to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves to create
         
     Returns:
     success (bool): Operation success status
@@ -227,7 +258,7 @@ def getFaces(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Faces objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces objects
     """
     tool_name = "getFaces"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -283,7 +314,7 @@ def updateCurves(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Curves in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Curves to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -306,37 +337,6 @@ def updateCurves(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def exportGeometry(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Export geometry collections to external formats
-    
-    Args:
-    items (List[Dict[str, Any]]): Geometry export operations
-        
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any]]): Export results
-    """
-    tool_name = "exportGeometry"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "results": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
 def listCurves(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
 
     """
@@ -350,7 +350,7 @@ def listCurves(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]]
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Curves objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listCurves"  # Define tool name for logging
@@ -379,7 +379,7 @@ def createFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Faces
     
     Args:
-    items (List[Dict[str, Any]]): Array of Faces to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces to create
         
     Returns:
     success (bool): Operation success status
@@ -410,11 +410,11 @@ def extrudeFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Extrude faces
     
     Args:
-    items (List[Dict[str, Any]]): Face extrusion operations
+    items (List[Dict[str, Any] with keys {"faceIds": List[str], "distance": float, "direction": Literal["normal", "custom"], "customDirection": List[float], "createCaps": bool, "individualFaces": bool}]): Face extrusion operations
         
     Returns:
     success (bool): Operation success status
-    results (List[Dict[str, Any]]): Extrusion results
+    results (List[Dict[str, Any] with keys {"faceIds": List[str], "newFaceIds": List[str], "newEdgeIds": List[str]}]): Extrusion results
     """
     tool_name = "extrudeFaces"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
@@ -441,7 +441,7 @@ def createMeshs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Meshs
     
     Args:
-    items (List[Dict[str, Any]]): Array of Meshs to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs to create
         
     Returns:
     success (bool): Operation success status
@@ -476,7 +476,7 @@ def getEdges(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Edges objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges objects
     """
     tool_name = "getEdges"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -510,7 +510,7 @@ def listMeshs(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] 
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Meshs objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listMeshs"  # Define tool name for logging
@@ -539,7 +539,7 @@ def updateMeshs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Meshs in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Meshs to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -568,7 +568,7 @@ def transformUVs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Transform UV coordinates for vertices
     
     Args:
-    items (List[Dict[str, Any]]): UV transformation operations
+    items (List[Dict[str, Any] with keys {"meshId": str, "channel": int, "vertexTransforms": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float, "offsetU": float, "offsetV": float}]}]): UV transformation operations
         
     Returns:
     success (bool): Operation success status
@@ -604,7 +604,7 @@ def listUVMaps(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]]
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of UVMaps objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listUVMaps"  # Define tool name for logging
@@ -633,11 +633,11 @@ def splitMeshes(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Split meshes into separate objects
     
     Args:
-    items (List[Dict[str, Any]]): Meshes to split
+    items (List[Dict[str, Any] with keys {"meshId": str, "method": Literal["byMaterial", "byUnconnected", "bySelection"], "namePattern": str}]): Meshes to split
         
     Returns:
     success (bool): Operation success status
-    results (List[Dict[str, Any]]): Split results by mesh
+    results (List[Dict[str, Any] with keys {"originalMeshId": str, "resultMeshIds": List[str]}]): Split results by mesh
     """
     tool_name = "splitMeshes"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
@@ -671,7 +671,7 @@ def listFaces(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] 
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Faces objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listFaces"  # Define tool name for logging
@@ -704,7 +704,7 @@ def getVertexs(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Vertexs objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs objects
     """
     tool_name = "getVertexs"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -725,71 +725,13 @@ def getVertexs(ids: List[str]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def setSubdivisionLevels(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Set subdivision levels for surfaces
-    
-    Args:
-    items (List[Dict[str, Any]]): Subdivision level operations
-        
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "setSubdivisionLevels"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def editCurveControlPoints(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Edit control points of curves
-    
-    Args:
-    items (List[Dict[str, Any]]): Curve control point edits
-        
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "editCurveControlPoints"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
 def assignMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
     Assign materials to meshes or specific faces
     
     Args:
-    items (List[Dict[str, Any]]): Material assignments to make
+    items (List[Dict[str, Any] with keys {"materialId": str, "meshId": str, "faceIds": List[str]}]): Material assignments to make
         
     Returns:
     success (bool): Operation success status
@@ -818,7 +760,7 @@ def updateFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Faces in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Faces to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -847,42 +789,13 @@ def updateUVMaps(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple UVMaps in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of UVMaps to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps to update with their IDs
         
     Returns:
     success (bool): Operation success status
     """
     tool_name = "updateUVMaps"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def deleteSubdivisionSurfaces(ids: List[str]) -> Dict[str, Any]:
-
-    """
-    Delete multiple SubdivisionSurfaces
-    
-    Args:
-    ids (List[str]): SubdivisionSurface identifiers to delete
-        
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteSubdivisionSurfaces"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
     print(f"Executing {tool_name} in Maya with params: {params}")
     
     try:
@@ -912,7 +825,7 @@ def listMaterials(parentId: Optional[str] = None, filters: Optional[Dict[str, An
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Materials objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listMaterials"  # Define tool name for logging
@@ -929,37 +842,6 @@ def listMaterials(parentId: Optional[str] = None, filters: Optional[Dict[str, An
             "success": True, # TODO: Implement  
                 "items": None  , # TODO: Implement  
                 "totalCount": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def triangulate(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Convert n-gons to triangles
-    
-    Args:
-    items (List[Dict[str, Any]]): Triangulation operations
-        
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any]]): Triangulation results
-    """
-    tool_name = "triangulate"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "results": None  
         }
         
     except Exception as e:
@@ -1001,7 +883,7 @@ def createMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Materials
     
     Args:
-    items (List[Dict[str, Any]]): Array of Materials to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials to create
         
     Returns:
     success (bool): Operation success status
@@ -1032,7 +914,7 @@ def createUVMaps(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple UVMaps
     
     Args:
-    items (List[Dict[str, Any]]): Array of UVMaps to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps to create
         
     Returns:
     success (bool): Operation success status
@@ -1063,7 +945,7 @@ def transformVertices(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Transform multiple vertices
     
     Args:
-    items (List[Dict[str, Any]]): Vertex transformations to apply
+    items (List[Dict[str, Any] with keys {"vertexId": str, "position": List[float], "offset": List[float], "normal": List[float]}]): Vertex transformations to apply
         
     Returns:
     success (bool): Operation success status
@@ -1092,7 +974,7 @@ def updateEdges(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Edges in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Edges to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -1121,11 +1003,11 @@ def unwrapUVs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Generate UV coordinates using automatic unwrapping
     
     Args:
-    items (List[Dict[str, Any]]): UV unwrapping operations
+    items (List[Dict[str, Any] with keys {"meshId": str, "method": Literal["angle", "conformal", "lscm", "abf", "sphere", "box", "cylinder"], "channel": int, "packIslands": bool, "normalizeUVs": bool, "margin": float}]): UV unwrapping operations
         
     Returns:
     success (bool): Operation success status
-    results (List[Dict[str, Any]]): Unwrapping results
+    results (List[Dict[str, Any] with keys {"meshId": str, "uvMapId": str}]): Unwrapping results
     """
     tool_name = "unwrapUVs"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
@@ -1159,7 +1041,7 @@ def listEdges(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] 
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Edges objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listEdges"  # Define tool name for logging
@@ -1182,37 +1064,6 @@ def listEdges(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] 
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def getSubdivisionSurfaces(ids: List[str]) -> Dict[str, Any]:
-
-    """
-    Get multiple SubdivisionSurfaces by IDs
-    
-    Args:
-    ids (List[str]): SubdivisionSurface identifiers
-        
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of SubdivisionSurfaces objects
-    """
-    tool_name = "getSubdivisionSurfaces"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "items": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
 def listGroups(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
 
     """
@@ -1226,7 +1077,7 @@ def listGroups(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]]
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Groups objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listGroups"  # Define tool name for logging
@@ -1262,7 +1113,7 @@ def listVertexs(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Vertexs objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listVertexs"  # Define tool name for logging
@@ -1320,7 +1171,7 @@ def updateMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Materials in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Materials to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -1343,44 +1194,13 @@ def updateMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def importGeometry(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Import geometry data sources
-    
-    Args:
-    items (List[Dict[str, Any]]): Geometry sources to import
-        
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any]]): Import results
-    """
-    tool_name = "importGeometry"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "results": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
 def updateGroups(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
     Update multiple Groups in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Groups to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -1403,19 +1223,19 @@ def updateGroups(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def quadrangulate(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+def createSubdivisionModifiers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
-    Convert triangles to quads
+    Create multiple SubdivisionModifiers
     
     Args:
-    items (List[Dict[str, Any]]): Quadrangulation operations
+    items (List[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers to create
         
     Returns:
     success (bool): Operation success status
-    results (List[Dict[str, Any]]): Quadrangulation results
+    ids (List[str]): IDs of the created SubdivisionModifiers
     """
-    tool_name = "quadrangulate"  # Define tool name for logging
+    tool_name = "createSubdivisionModifiers"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
     print(f"Executing {tool_name} in Maya with params: {params}")
     
@@ -1427,7 +1247,7 @@ def quadrangulate(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         
         return {
             "success": True, # TODO: Implement  
-                "results": None  
+                "ids": None  
         }
         
     except Exception as e:
@@ -1440,7 +1260,7 @@ def createVertexs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Vertexs
     
     Args:
-    items (List[Dict[str, Any]]): Array of Vertexs to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs to create
         
     Returns:
     success (bool): Operation success status
@@ -1475,7 +1295,7 @@ def getCurves(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Curves objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves objects
     """
     tool_name = "getCurves"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -1496,6 +1316,35 @@ def getCurves(ids: List[str]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
+def deleteSubdivisionModifiers(ids: List[str]) -> Dict[str, Any]:
+
+    """
+    Delete multiple SubdivisionModifiers
+    
+    Args:
+    ids (List[str]): SubdivisionModifier identifiers to delete
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteSubdivisionModifiers"  # Define tool name for logging
+    params = {"ids": ids}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
 def getMaterials(ids: List[str]) -> Dict[str, Any]:
 
     """
@@ -1506,7 +1355,7 @@ def getMaterials(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Materials objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials objects
     """
     tool_name = "getMaterials"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -1562,7 +1411,7 @@ def createGroups(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Groups
     
     Args:
-    items (List[Dict[str, Any]]): Array of Groups to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups to create
         
     Returns:
     success (bool): Operation success status
@@ -1587,119 +1436,18 @@ def createGroups(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def createSubdivisionSurfaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+def updateSubdivisionModifiers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
-    Create multiple SubdivisionSurfaces
+    Update multiple SubdivisionModifiers in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of SubdivisionSurfaces to create
-        
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created SubdivisionSurfaces
-    """
-    tool_name = "createSubdivisionSurfaces"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "ids": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def listSubdivisionSurfaces(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-
-    """
-    List all SubdivisionSurfaces
-    
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-        
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of SubdivisionSurfaces objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listSubdivisionSurfaces"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit, "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "items": None  , # TODO: Implement  
-                "totalCount": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def performGroupOperations(operation: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Perform operations on object groups
-    
-    Args:
-    operation (str): Operation to perform
-    items (List[Dict[str, Any]]): Group operations to perform
+    items (List[Dict[str, Any] with keys {"ids": List[str], "type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers to update with their IDs
         
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "performGroupOperations"  # Define tool name for logging
-    params = {"operation": operation, "items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-
-        # Validate enum values for operation
-        if operation is not None and operation not in ['add','remove','move','nest']:
-            raise ValueError(f"Parameter 'operation' must be one of ['add','remove','move','nest'], got {operation}")
-      
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def updateSubdivisionSurfaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-
-    """
-    Update multiple SubdivisionSurfaces in a single operation
-    
-    Args:
-    items (List[Dict[str, Any]]): Array of SubdivisionSurfaces to update with their IDs
-        
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateSubdivisionSurfaces"  # Define tool name for logging
+    tool_name = "updateSubdivisionModifiers"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
     print(f"Executing {tool_name} in Maya with params: {params}")
     
@@ -1756,7 +1504,7 @@ def getUVMaps(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of UVMaps objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps objects
     """
     tool_name = "getUVMaps"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -1812,11 +1560,11 @@ def bevel(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Bevel edges or vertices
     
     Args:
-    items (List[Dict[str, Any]]): Bevel operations
+    items (List[Dict[str, Any] with keys {"meshId": str, "edgeIds": List[str], "vertexIds": List[str], "amount": float, "segments": int, "shape": float}]): Bevel operations
         
     Returns:
     success (bool): Operation success status
-    results (List[Dict[str, Any]]): Bevel results
+    results (List[Dict[str, Any] with keys {"meshId": str, "newFaceIds": List[str], "newEdgeIds": List[str], "newVertexIds": List[str]}]): Bevel results
     """
     tool_name = "bevel"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
@@ -1831,6 +1579,42 @@ def bevel(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {
             "success": True, # TODO: Implement  
                 "results": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def listSubdivisionModifiers(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
+
+    """
+    List all SubdivisionModifiers
+    
+    Args:
+    parentId (str): Optional parent ID to filter by
+    filters (Dict[str, Any]): Optional filters to apply
+    limit (int): Maximum number of results
+    offset (int): Starting offset for pagination
+        
+    Returns:
+    success (bool): Operation success status
+    items (List[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers objects
+    totalCount (int): Total count for pagination
+    """
+    tool_name = "listSubdivisionModifiers"  # Define tool name for logging
+    params = {"parentId": parentId, "filters": filters, "limit": limit, "offset": offset}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "items": None  , # TODO: Implement  
+                "totalCount": None  
         }
         
     except Exception as e:
@@ -1872,7 +1656,7 @@ def updateVertexs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Vertexs in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Vertexs to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs to update with their IDs
         
     Returns:
     success (bool): Operation success status

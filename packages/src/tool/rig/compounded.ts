@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  OperationResponse,
-  Color,
-  Tensor,
-} from "../core/entity";
+import {} from "../core/entity";
 import { defineCompoundTool } from "../core/request";
 import { coreAtomicToolsWithExecute } from "../core/atomic";
 import { rigAtomicToolsWithExecute } from "./atomic";

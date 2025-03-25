@@ -475,7 +475,7 @@ function startPythonServer(
   const serverPath = join(
     PLUGINS_DIR,
     pluginName,
-    "mcp_server.py"
+    "__init__.py"
   );
   console.log(
     `Starting ${pluginName} server: python ${serverPath} --port ${port}`

@@ -2,15 +2,15 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
-def getQuadView(shading_mode: Optional[str] = None, name_visibility_predicate: Optional[str] = None, auto_adjust_camera: Optional[bool] = None) -> Dict[str, Any]:
+def getQuadView(shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None, name_visibility_predicate: Optional[str] = None, auto_adjust_camera: Optional[bool] = None) -> Dict[str, Any]:
 
     """
     Get top, front, right, and perspective views of the scene.
     
     Args:
-    shading_mode (str): Shading mode for the viewports
+    shading_mode (Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]): Shading mode for the viewports
     name_visibility_predicate (str):  Function that takes an object as input and returns a dict with display settings. See example below.
     auto_adjust_camera (bool): Automatically adjust camera to fit the scene
         

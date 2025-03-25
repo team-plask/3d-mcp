@@ -1,4 +1,4 @@
-# Generated blender MCP server
+# Generated maya MCP server
 # This file is generated - DO NOT EDIT DIRECTLY
 
 bl_info = {
@@ -12,11 +12,18 @@ bl_info = {
 }
 
 try:
-    import bpy
+    import maya.cmds as cmds
     HAS_APP_LIBS = True
 except ImportError:
-    print(f"Warning: Could not import bpy. Running in mock mode.")
+    print(f"Warning: Could not import maya.cmds. Running in mock mode.")
     HAS_APP_LIBS = False
+try:
+    import maya.mel as mel
+    HAS_APP_LIBS = True
+except ImportError:
+    print(f"Warning: Could not import maya.mel. Running in mock mode.")
+    HAS_APP_LIBS = False
+import json
 
 import json
 import inspect

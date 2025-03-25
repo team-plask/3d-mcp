@@ -18,11 +18,11 @@ void UMCPModelTools::RegisterTools()
     FMCPProtocolHandler::Get().RegisterTool("setEdgeCreases", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setEdgeCreases));
     FMCPProtocolHandler::Get().RegisterTool("getMeshs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getMeshs));
     FMCPProtocolHandler::Get().RegisterTool("deleteMaterials", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteMaterials));
+    FMCPProtocolHandler::Get().RegisterTool("getSubdivisionModifiers", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getSubdivisionModifiers));
     FMCPProtocolHandler::Get().RegisterTool("createCurves", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createCurves));
     FMCPProtocolHandler::Get().RegisterTool("getFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getFaces));
     FMCPProtocolHandler::Get().RegisterTool("deleteCurves", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteCurves));
     FMCPProtocolHandler::Get().RegisterTool("updateCurves", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateCurves));
-    FMCPProtocolHandler::Get().RegisterTool("exportGeometry", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::exportGeometry));
     FMCPProtocolHandler::Get().RegisterTool("listCurves", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listCurves));
     FMCPProtocolHandler::Get().RegisterTool("createFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createFaces));
     FMCPProtocolHandler::Get().RegisterTool("extrudeFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::extrudeFaces));
@@ -35,14 +35,10 @@ void UMCPModelTools::RegisterTools()
     FMCPProtocolHandler::Get().RegisterTool("splitMeshes", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::splitMeshes));
     FMCPProtocolHandler::Get().RegisterTool("listFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listFaces));
     FMCPProtocolHandler::Get().RegisterTool("getVertexs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getVertexs));
-    FMCPProtocolHandler::Get().RegisterTool("setSubdivisionLevels", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setSubdivisionLevels));
-    FMCPProtocolHandler::Get().RegisterTool("editCurveControlPoints", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::editCurveControlPoints));
     FMCPProtocolHandler::Get().RegisterTool("assignMaterials", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::assignMaterials));
     FMCPProtocolHandler::Get().RegisterTool("updateFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateFaces));
     FMCPProtocolHandler::Get().RegisterTool("updateUVMaps", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateUVMaps));
-    FMCPProtocolHandler::Get().RegisterTool("deleteSubdivisionSurfaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteSubdivisionSurfaces));
     FMCPProtocolHandler::Get().RegisterTool("listMaterials", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listMaterials));
-    FMCPProtocolHandler::Get().RegisterTool("triangulate", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::triangulate));
     FMCPProtocolHandler::Get().RegisterTool("deleteUVMaps", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteUVMaps));
     FMCPProtocolHandler::Get().RegisterTool("createMaterials", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createMaterials));
     FMCPProtocolHandler::Get().RegisterTool("createUVMaps", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createUVMaps));
@@ -50,27 +46,24 @@ void UMCPModelTools::RegisterTools()
     FMCPProtocolHandler::Get().RegisterTool("updateEdges", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateEdges));
     FMCPProtocolHandler::Get().RegisterTool("unwrapUVs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::unwrapUVs));
     FMCPProtocolHandler::Get().RegisterTool("listEdges", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listEdges));
-    FMCPProtocolHandler::Get().RegisterTool("getSubdivisionSurfaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getSubdivisionSurfaces));
     FMCPProtocolHandler::Get().RegisterTool("listGroups", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listGroups));
     FMCPProtocolHandler::Get().RegisterTool("listVertexs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listVertexs));
     FMCPProtocolHandler::Get().RegisterTool("deleteVertexs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteVertexs));
     FMCPProtocolHandler::Get().RegisterTool("updateMaterials", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateMaterials));
-    FMCPProtocolHandler::Get().RegisterTool("importGeometry", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::importGeometry));
     FMCPProtocolHandler::Get().RegisterTool("updateGroups", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateGroups));
-    FMCPProtocolHandler::Get().RegisterTool("quadrangulate", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::quadrangulate));
+    FMCPProtocolHandler::Get().RegisterTool("createSubdivisionModifiers", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createSubdivisionModifiers));
     FMCPProtocolHandler::Get().RegisterTool("createVertexs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createVertexs));
     FMCPProtocolHandler::Get().RegisterTool("getCurves", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getCurves));
+    FMCPProtocolHandler::Get().RegisterTool("deleteSubdivisionModifiers", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteSubdivisionModifiers));
     FMCPProtocolHandler::Get().RegisterTool("getMaterials", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getMaterials));
     FMCPProtocolHandler::Get().RegisterTool("deleteGroups", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteGroups));
     FMCPProtocolHandler::Get().RegisterTool("createGroups", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createGroups));
-    FMCPProtocolHandler::Get().RegisterTool("createSubdivisionSurfaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createSubdivisionSurfaces));
-    FMCPProtocolHandler::Get().RegisterTool("listSubdivisionSurfaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listSubdivisionSurfaces));
-    FMCPProtocolHandler::Get().RegisterTool("performGroupOperations", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::performGroupOperations));
-    FMCPProtocolHandler::Get().RegisterTool("updateSubdivisionSurfaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateSubdivisionSurfaces));
+    FMCPProtocolHandler::Get().RegisterTool("updateSubdivisionModifiers", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateSubdivisionModifiers));
     FMCPProtocolHandler::Get().RegisterTool("deleteFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteFaces));
     FMCPProtocolHandler::Get().RegisterTool("getUVMaps", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getUVMaps));
     FMCPProtocolHandler::Get().RegisterTool("deleteMeshs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteMeshs));
     FMCPProtocolHandler::Get().RegisterTool("bevel", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::bevel));
+    FMCPProtocolHandler::Get().RegisterTool("listSubdivisionModifiers", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::listSubdivisionModifiers));
     FMCPProtocolHandler::Get().RegisterTool("deleteEdges", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteEdges));
     FMCPProtocolHandler::Get().RegisterTool("updateVertexs", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::updateVertexs));
     FMCPProtocolHandler::Get().RegisterTool("combineMeshes", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::combineMeshes));
@@ -286,6 +279,41 @@ TSharedPtr<FJsonObject> UMCPModelTools::deleteMaterials(const TSharedPtr<FJsonOb
     return Response;
 }
 
+TSharedPtr<FJsonObject> UMCPModelTools::getSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing getSubdivisionModifiers in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter ids
+        if (!Params->HasField("ids")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter ids is missing");
+            return Response;
+        }
+        // Extract complex parameter ids 
+        const TSharedPtr<FJsonValue>* idsValue = nullptr;
+        if (Params->TryGetField("ids", idsValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for getSubdivisionModifiers
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        // TODO: Set complex items value
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in getSubdivisionModifiers: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
 TSharedPtr<FJsonObject> UMCPModelTools::createCurves(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing createCurves in Unreal Engine"));
@@ -419,41 +447,6 @@ TSharedPtr<FJsonObject> UMCPModelTools::updateCurves(const TSharedPtr<FJsonObjec
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in updateCurves: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPModelTools::exportGeometry(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing exportGeometry in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for exportGeometry
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex results value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in exportGeometry: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -921,76 +914,6 @@ TSharedPtr<FJsonObject> UMCPModelTools::getVertexs(const TSharedPtr<FJsonObject>
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPModelTools::setSubdivisionLevels(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setSubdivisionLevels in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for setSubdivisionLevels
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setSubdivisionLevels: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPModelTools::editCurveControlPoints(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing editCurveControlPoints in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for editCurveControlPoints
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in editCurveControlPoints: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
 TSharedPtr<FJsonObject> UMCPModelTools::assignMaterials(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing assignMaterials in Unreal Engine"));
@@ -1096,41 +1019,6 @@ TSharedPtr<FJsonObject> UMCPModelTools::updateUVMaps(const TSharedPtr<FJsonObjec
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPModelTools::deleteSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteSubdivisionSurfaces in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter ids
-        if (!Params->HasField("ids")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter ids is missing");
-            return Response;
-        }
-        // Extract complex parameter ids 
-        const TSharedPtr<FJsonValue>* idsValue = nullptr;
-        if (Params->TryGetField("ids", idsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for deleteSubdivisionSurfaces
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteSubdivisionSurfaces: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
 TSharedPtr<FJsonObject> UMCPModelTools::listMaterials(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing listMaterials in Unreal Engine"));
@@ -1169,41 +1057,6 @@ TSharedPtr<FJsonObject> UMCPModelTools::listMaterials(const TSharedPtr<FJsonObje
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in listMaterials: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPModelTools::triangulate(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing triangulate in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for triangulate
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex results value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in triangulate: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -1466,41 +1319,6 @@ TSharedPtr<FJsonObject> UMCPModelTools::listEdges(const TSharedPtr<FJsonObject>&
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPModelTools::getSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing getSubdivisionSurfaces in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter ids
-        if (!Params->HasField("ids")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter ids is missing");
-            return Response;
-        }
-        // Extract complex parameter ids 
-        const TSharedPtr<FJsonValue>* idsValue = nullptr;
-        if (Params->TryGetField("ids", idsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for getSubdivisionSurfaces
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex items value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in getSubdivisionSurfaces: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
 TSharedPtr<FJsonObject> UMCPModelTools::listGroups(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing listGroups in Unreal Engine"));
@@ -1661,41 +1479,6 @@ TSharedPtr<FJsonObject> UMCPModelTools::updateMaterials(const TSharedPtr<FJsonOb
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPModelTools::importGeometry(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing importGeometry in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for importGeometry
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex results value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in importGeometry: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
 TSharedPtr<FJsonObject> UMCPModelTools::updateGroups(const TSharedPtr<FJsonObject>& Params)
 {
     UE_LOG(LogMCPPlugin, Display, TEXT("Executing updateGroups in Unreal Engine"));
@@ -1731,9 +1514,9 @@ TSharedPtr<FJsonObject> UMCPModelTools::updateGroups(const TSharedPtr<FJsonObjec
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPModelTools::quadrangulate(const TSharedPtr<FJsonObject>& Params)
+TSharedPtr<FJsonObject> UMCPModelTools::createSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params)
 {
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing quadrangulate in Unreal Engine"));
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createSubdivisionModifiers in Unreal Engine"));
     
     TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
     
@@ -1750,15 +1533,15 @@ TSharedPtr<FJsonObject> UMCPModelTools::quadrangulate(const TSharedPtr<FJsonObje
         if (Params->TryGetField("items", itemsValue)) {
         }
         
-        // TODO: Implement actual Unreal Engine API calls for quadrangulate
+        // TODO: Implement actual Unreal Engine API calls for createSubdivisionModifiers
         // This is a placeholder implementation
         
         Response->SetBoolField("success", true);
-        // TODO: Set complex results value
+        // TODO: Set complex ids value
     }
     catch (const std::exception& Exception)
     {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in quadrangulate: %s"), *FString(Exception.what()));
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createSubdivisionModifiers: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -1829,6 +1612,41 @@ TSharedPtr<FJsonObject> UMCPModelTools::getCurves(const TSharedPtr<FJsonObject>&
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in getCurves: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::deleteSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteSubdivisionModifiers in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter ids
+        if (!Params->HasField("ids")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter ids is missing");
+            return Response;
+        }
+        // Extract complex parameter ids 
+        const TSharedPtr<FJsonValue>* idsValue = nullptr;
+        if (Params->TryGetField("ids", idsValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for deleteSubdivisionModifiers
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteSubdivisionModifiers: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -1941,9 +1759,9 @@ TSharedPtr<FJsonObject> UMCPModelTools::createGroups(const TSharedPtr<FJsonObjec
     return Response;
 }
 
-TSharedPtr<FJsonObject> UMCPModelTools::createSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params)
+TSharedPtr<FJsonObject> UMCPModelTools::updateSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params)
 {
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createSubdivisionSurfaces in Unreal Engine"));
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing updateSubdivisionModifiers in Unreal Engine"));
     
     TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
     
@@ -1960,106 +1778,7 @@ TSharedPtr<FJsonObject> UMCPModelTools::createSubdivisionSurfaces(const TSharedP
         if (Params->TryGetField("items", itemsValue)) {
         }
         
-        // TODO: Implement actual Unreal Engine API calls for createSubdivisionSurfaces
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex ids value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createSubdivisionSurfaces: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPModelTools::listSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing listSubdivisionSurfaces in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {
-        // Extract parentId (FString)
-        FString parentId;
-        if (Params->TryGetStringField("parentId", parentId)) {
-        }
-
-        // Extract complex parameter filters 
-        const TSharedPtr<FJsonValue>* filtersValue = nullptr;
-        if (Params->TryGetField("filters", filtersValue)) {
-        }
-
-        // Extract limit (int32)
-        int32 limit = 0;
-        if (Params->TryGetNumberField("limit", limit)) {
-        }
-
-        // Extract offset (int32)
-        int32 offset = 0;
-        if (Params->TryGetNumberField("offset", offset)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for listSubdivisionSurfaces
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        // TODO: Set complex items value
-        Response->SetNumberField("totalCount", 0); // TODO: Set actual totalCount value
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in listSubdivisionSurfaces: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPModelTools::performGroupOperations(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing performGroupOperations in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter operation
-        if (!Params->HasField("operation")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter operation is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter operation is missing");
-            return Response;
-        }
-        // Extract operation (FString)
-        FString operation;
-        if (Params->TryGetStringField("operation", operation)) {
-            // Validate enum value for operation
-            static const TArray<FString> ValidoperationValues = {TEXT("add"), TEXT("remove"), TEXT("move"), TEXT("nest")};
-            if (!ValidoperationValues.Contains(operation)) {
-                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid operation value: %s"), *operation);
-                Response->SetBoolField("success", false);
-                Response->SetStringField("error", "Invalid operation value");
-                return Response;
-            }
-        }
-        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for performGroupOperations
+        // TODO: Implement actual Unreal Engine API calls for updateSubdivisionModifiers
         // This is a placeholder implementation
         
         Response->SetBoolField("success", true);
@@ -2067,42 +1786,7 @@ TSharedPtr<FJsonObject> UMCPModelTools::performGroupOperations(const TSharedPtr<
     }
     catch (const std::exception& Exception)
     {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in performGroupOperations: %s"), *FString(Exception.what()));
-        Response->SetBoolField("success", false);
-        Response->SetStringField("error", Exception.what());
-    }
-    
-    return Response;
-}
-
-TSharedPtr<FJsonObject> UMCPModelTools::updateSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params)
-{
-    UE_LOG(LogMCPPlugin, Display, TEXT("Executing updateSubdivisionSurfaces in Unreal Engine"));
-    
-    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
-    
-    try
-    {        // Check required parameter items
-        if (!Params->HasField("items")) {
-            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
-            Response->SetBoolField("success", false);
-            Response->SetStringField("error", "Required parameter items is missing");
-            return Response;
-        }
-        // Extract complex parameter items 
-        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
-        if (Params->TryGetField("items", itemsValue)) {
-        }
-        
-        // TODO: Implement actual Unreal Engine API calls for updateSubdivisionSurfaces
-        // This is a placeholder implementation
-        
-        Response->SetBoolField("success", true);
-        
-    }
-    catch (const std::exception& Exception)
-    {
-        UE_LOG(LogMCPPlugin, Error, TEXT("Error in updateSubdivisionSurfaces: %s"), *FString(Exception.what()));
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in updateSubdivisionModifiers: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }
@@ -2243,6 +1927,51 @@ TSharedPtr<FJsonObject> UMCPModelTools::bevel(const TSharedPtr<FJsonObject>& Par
     catch (const std::exception& Exception)
     {
         UE_LOG(LogMCPPlugin, Error, TEXT("Error in bevel: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::listSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing listSubdivisionModifiers in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        // Extract parentId (FString)
+        FString parentId;
+        if (Params->TryGetStringField("parentId", parentId)) {
+        }
+
+        // Extract complex parameter filters 
+        const TSharedPtr<FJsonValue>* filtersValue = nullptr;
+        if (Params->TryGetField("filters", filtersValue)) {
+        }
+
+        // Extract limit (int32)
+        int32 limit = 0;
+        if (Params->TryGetNumberField("limit", limit)) {
+        }
+
+        // Extract offset (int32)
+        int32 offset = 0;
+        if (Params->TryGetNumberField("offset", offset)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for listSubdivisionModifiers
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        // TODO: Set complex items value
+        Response->SetNumberField("totalCount", 0); // TODO: Set actual totalCount value
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in listSubdivisionModifiers: %s"), *FString(Exception.what()));
         Response->SetBoolField("success", false);
         Response->SetStringField("error", Exception.what());
     }

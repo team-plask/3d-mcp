@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createExecutableTools } from "./request";
-import { OperationResponse, Tensor } from "./entity";
+import { _OperationResponse, _Tensor } from "./entity";
 
 /**
  * Core atomic tools that provide fundamental operations applicable across domains
@@ -24,7 +24,7 @@ const coreAtomicTools = {
           "Optional domain to restrict selection (e.g., 'mesh', 'animation')"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       selectedIds: z
         .array(z.string())
         .describe(
@@ -43,7 +43,7 @@ const coreAtomicTools = {
           "Optional domain to restrict clearing (e.g., 'mesh', 'animation')"
         ),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   getSelection: {
@@ -56,7 +56,7 @@ const coreAtomicTools = {
           "Optional domain to filter results (e.g., 'mesh', 'animation')"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       selectedIds: z
         .array(z.string())
         .describe("Currently selected object IDs"),
@@ -71,22 +71,24 @@ const coreAtomicTools = {
         .array(
           z.object({
             id: z.string().describe("Object identifier"),
-            position: Tensor.VEC3.optional().describe(
+            position: _Tensor.VEC3.optional().describe(
               "New absolute position [x, y, z]"
             ),
-            rotation: Tensor.QUAT.optional().describe(
+            rotation: _Tensor.QUAT.optional().describe(
               "New absolute rotation quaternion [x, y, z, w]"
             ),
-            scale: Tensor.VEC3.optional().describe(
+            scale: _Tensor.VEC3.optional().describe(
               "New absolute scale [x, y, z]"
             ),
-            positionOffset: Tensor.VEC3.optional().describe(
-              "Relative position offset to apply [dx, dy, dz]"
-            ),
-            rotationOffset: Tensor.QUAT.optional().describe(
-              "Relative rotation to apply as quaternion [x, y, z, w]"
-            ),
-            scaleOffset: Tensor.VEC3.optional().describe(
+            positionOffset:
+              _Tensor.VEC3.optional().describe(
+                "Relative position offset to apply [dx, dy, dz]"
+              ),
+            rotationOffset:
+              _Tensor.QUAT.optional().describe(
+                "Relative rotation to apply as quaternion [x, y, z, w]"
+              ),
+            scaleOffset: _Tensor.VEC3.optional().describe(
               "Relative scale to apply [sx, sy, sz]"
             ),
             space: z
@@ -99,7 +101,7 @@ const coreAtomicTools = {
         )
         .describe("Transformations to apply"),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   batchSetParent: {
@@ -125,7 +127,7 @@ const coreAtomicTools = {
           "Whether to preserve world transforms after reparenting"
         ),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   getChildren: {
@@ -141,7 +143,7 @@ const coreAtomicTools = {
         .optional()
         .describe("Filter by object types"),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       childIds: z
         .array(z.string())
         .describe("Child object IDs"),
@@ -169,7 +171,7 @@ const coreAtomicTools = {
         )
         .describe("Property assignments to make"),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   batchGetProperty: {
@@ -193,7 +195,7 @@ const coreAtomicTools = {
         .default(false)
         .describe("Whether to include all descendants"),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       values: z
         .array(
           z.object({
@@ -227,7 +229,7 @@ const coreAtomicTools = {
           "Whether to duplicate dependencies (materials, etc.)"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       newId: z
         .string()
         .describe("ID of the duplicated entity"),
@@ -255,7 +257,7 @@ const coreAtomicTools = {
           "Property values to match (path -> value). Skip to get all entities of the type"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       results: z
         .array(z.string())
         .describe("IDs of matching entities"),
@@ -266,7 +268,7 @@ const coreAtomicTools = {
   undo: {
     description: "Undo the last operation",
     parameters: z.object({}),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       operationName: z
         .string()
         .optional()
@@ -277,7 +279,7 @@ const coreAtomicTools = {
   redo: {
     description: "Redo the previously undone operation",
     parameters: z.object({}),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       operationName: z
         .string()
         .optional()

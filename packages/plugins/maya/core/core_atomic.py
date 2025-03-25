@@ -2,7 +2,7 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def batchSetProperty(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
@@ -10,7 +10,7 @@ def batchSetProperty(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Set properties on multiple objects
     
     Args:
-    items (List[Dict[str, Any]]): Property assignments to make
+    items (List[Dict[str, Any] with keys {"id": str, "entries": List[Dict[str, Any] with keys {"propertyPath": List[str], "value": Any}]}]): Property assignments to make
         
     Returns:
     success (bool): Operation success status
@@ -40,7 +40,7 @@ def query(type: Optional[str] = None, properties: Optional[Dict[str, Any]] = Non
     
     Args:
     type (str): Entity type to filter by
-    properties (Dict[str, Any]): Property values to match (path -> value)
+    properties (Dict[str, Any]): Property values to match (path -> value). Skip to get all entities of the type
         
     Returns:
     success (bool): Operation success status
@@ -195,12 +195,12 @@ def batchGetProperty(items: List[Dict[str, Any]], recursive: Optional[bool] = No
     Get property values from multiple objects
     
     Args:
-    items (List[Dict[str, Any]]): Property requests to make
+    items (List[Dict[str, Any] with keys {"id": str, "propertyPath": List[str]}]): Property requests to make
     recursive (bool): Whether to include all descendants
         
     Returns:
     success (bool): Operation success status
-    values (List[Dict[str, Any]]): Property values retrieved
+    values (List[Dict[str, Any] with keys {"id": str, "propertyPath": str, "value": Any}]): Property values retrieved
     """
     tool_name = "batchGetProperty"  # Define tool name for logging
     params = {"items": items, "recursive": recursive}  # Create params dict for logging
@@ -227,7 +227,7 @@ def batchTransform(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Apply transformations to multiple objects
     
     Args:
-    items (List[Dict[str, Any]]): Transformations to apply
+    items (List[Dict[str, Any] with keys {"id": str, "position": List[float], "rotation": List[float], "scale": List[float], "positionOffset": List[float], "rotationOffset": List[float], "scaleOffset": List[float], "space": Literal["local", "world", "parent"]}]): Transformations to apply
         
     Returns:
     success (bool): Operation success status
@@ -256,7 +256,7 @@ def batchSetParent(items: List[Dict[str, Any]], maintainWorldTransform: Optional
     Set parent for multiple objects
     
     Args:
-    items (List[Dict[str, Any]]): Parent assignments to make
+    items (List[Dict[str, Any] with keys {"id": str, "parentId": str}]): Parent assignments to make
     maintainWorldTransform (bool): Whether to preserve world transforms after reparenting
         
     Returns:
@@ -347,14 +347,14 @@ def duplicate(id: str, newName: Optional[str] = None, duplicateChildren: Optiona
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def select(ids: List[str], mode: Optional[str] = None, domain: Optional[str] = None) -> Dict[str, Any]:
+def select(ids: List[str], mode: Optional[Literal["replace", "add", "remove", "toggle"]] = None, domain: Optional[str] = None) -> Dict[str, Any]:
 
     """
     Select one or more objects
     
     Args:
     ids (List[str]): Object identifiers to select
-    mode (str): Selection mode operation
+    mode (Literal["replace", "add", "remove", "toggle"]): Selection mode operation
     domain (str): Optional domain to restrict selection (e.g., 'mesh', 'animation')
         
     Returns:

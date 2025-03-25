@@ -2,7 +2,7 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def test() -> Dict[str, Any]:
 
@@ -13,7 +13,7 @@ def test() -> Dict[str, Any]:
     No parameters
         
     Returns:
-    Dict[str, Any]: Operation response with success status
+    Dict[str, bool]: Operation response with success status
     """
     tool_name = "test"  # Define tool name for logging
     params = {}  # Create params dict for logging

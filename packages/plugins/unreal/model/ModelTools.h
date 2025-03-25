@@ -69,6 +69,14 @@ public:
     TSharedPtr<FJsonObject> deleteMaterials(const TSharedPtr<FJsonObject>& Params);
 
     /**
+     * Get multiple SubdivisionModifiers by IDs
+     * * @param ids - SubdivisionModifier identifiers (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> getSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params);
+
+    /**
      * Create multiple Curves
      * * @param items - Array of Curves to create (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
@@ -99,14 +107,6 @@ public:
      */
     UFUNCTION()
     TSharedPtr<FJsonObject> updateCurves(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * Export geometry collections to external formats
-     * * @param items - Geometry export operations (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> exportGeometry(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * List all Curves
@@ -217,22 +217,6 @@ public:
     TSharedPtr<FJsonObject> getVertexs(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Set subdivision levels for surfaces
-     * * @param items - Subdivision level operations (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> setSubdivisionLevels(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * Edit control points of curves
-     * * @param items - Curve control point edits (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> editCurveControlPoints(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * Assign materials to meshes or specific faces
      * * @param items - Material assignments to make (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
@@ -257,14 +241,6 @@ public:
     TSharedPtr<FJsonObject> updateUVMaps(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Delete multiple SubdivisionSurfaces
-     * * @param ids - SubdivisionSurface identifiers to delete (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> deleteSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * List all Materials
      * * @param parentId - Optional parent ID to filter by (FString)
      * @param filters - Optional filters to apply (TSharedPtr<FJsonObject>)
@@ -274,14 +250,6 @@ public:
      */
     UFUNCTION()
     TSharedPtr<FJsonObject> listMaterials(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * Convert n-gons to triangles
-     * * @param items - Triangulation operations (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> triangulate(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * Delete multiple UVMaps
@@ -343,14 +311,6 @@ public:
     TSharedPtr<FJsonObject> listEdges(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Get multiple SubdivisionSurfaces by IDs
-     * * @param ids - SubdivisionSurface identifiers (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> getSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * List all Groups
      * * @param parentId - Optional parent ID to filter by (FString)
      * @param filters - Optional filters to apply (TSharedPtr<FJsonObject>)
@@ -389,14 +349,6 @@ public:
     TSharedPtr<FJsonObject> updateMaterials(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Import geometry data sources
-     * * @param items - Geometry sources to import (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> importGeometry(const TSharedPtr<FJsonObject>& Params);
-
-    /**
      * Update multiple Groups in a single operation
      * * @param items - Array of Groups to update with their IDs (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
@@ -405,12 +357,12 @@ public:
     TSharedPtr<FJsonObject> updateGroups(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Convert triangles to quads
-     * * @param items - Quadrangulation operations (TArray<TSharedPtr<FJsonValue>>)
+     * Create multiple SubdivisionModifiers
+     * * @param items - Array of SubdivisionModifiers to create (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
      */
     UFUNCTION()
-    TSharedPtr<FJsonObject> quadrangulate(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> createSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * Create multiple Vertexs
@@ -427,6 +379,14 @@ public:
      */
     UFUNCTION()
     TSharedPtr<FJsonObject> getCurves(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Delete multiple SubdivisionModifiers
+     * * @param ids - SubdivisionModifier identifiers to delete (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> deleteSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * Get multiple Materials by IDs
@@ -453,40 +413,12 @@ public:
     TSharedPtr<FJsonObject> createGroups(const TSharedPtr<FJsonObject>& Params);
 
     /**
-     * Create multiple SubdivisionSurfaces
-     * * @param items - Array of SubdivisionSurfaces to create (TArray<TSharedPtr<FJsonValue>>)
+     * Update multiple SubdivisionModifiers in a single operation
+     * * @param items - Array of SubdivisionModifiers to update with their IDs (TArray<TSharedPtr<FJsonValue>>)
      * @return Response object with operation results
      */
     UFUNCTION()
-    TSharedPtr<FJsonObject> createSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * List all SubdivisionSurfaces
-     * * @param parentId - Optional parent ID to filter by (FString)
-     * @param filters - Optional filters to apply (TSharedPtr<FJsonObject>)
-     * @param limit - Maximum number of results (int32)
-     * @param offset - Starting offset for pagination (int32)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> listSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * Perform operations on object groups
-     * * @param operation - Operation to perform (FString)
-     * @param items - Group operations to perform (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> performGroupOperations(const TSharedPtr<FJsonObject>& Params);
-
-    /**
-     * Update multiple SubdivisionSurfaces in a single operation
-     * * @param items - Array of SubdivisionSurfaces to update with their IDs (TArray<TSharedPtr<FJsonValue>>)
-     * @return Response object with operation results
-     */
-    UFUNCTION()
-    TSharedPtr<FJsonObject> updateSubdivisionSurfaces(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> updateSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * Delete multiple Faces
@@ -519,6 +451,17 @@ public:
      */
     UFUNCTION()
     TSharedPtr<FJsonObject> bevel(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * List all SubdivisionModifiers
+     * * @param parentId - Optional parent ID to filter by (FString)
+     * @param filters - Optional filters to apply (TSharedPtr<FJsonObject>)
+     * @param limit - Maximum number of results (int32)
+     * @param offset - Starting offset for pagination (int32)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> listSubdivisionModifiers(const TSharedPtr<FJsonObject>& Params);
 
     /**
      * Delete multiple Edges

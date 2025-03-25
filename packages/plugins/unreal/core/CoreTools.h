@@ -31,7 +31,7 @@ public:
     /**
      * Query entities based on criteria
      * * @param type - Entity type to filter by (FString)
-     * @param properties - Property values to match (path -> value) (TSharedPtr<FJsonObject>)
+     * @param properties - Property values to match (path -> value). Skip to get all entities of the type (TSharedPtr<FJsonObject>)
      * @return Response object with operation results
      */
     UFUNCTION()

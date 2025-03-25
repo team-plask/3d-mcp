@@ -2,7 +2,7 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def createChannels(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
@@ -10,7 +10,7 @@ def createChannels(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Channels
     
     Args:
-    items (List[Dict[str, Any]]): Array of Channels to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "path": str, "type": Literal["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4", "QUAT"], "nodeId": str, "clipId": str, "defaultValue": Any, "enabled": bool, "extrapolationPre": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"], "extrapolationPost": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"]}]): Array of Channels to create
         
     Returns:
     success (bool): Operation success status
@@ -41,7 +41,7 @@ def updateChannels(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Channels in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Channels to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "path": str, "type": Literal["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4", "QUAT"], "nodeId": str, "clipId": str, "defaultValue": Any, "enabled": bool, "extrapolationPre": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"], "extrapolationPost": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"]}]): Array of Channels to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -77,7 +77,7 @@ def listChannels(parentId: Optional[str] = None, filters: Optional[Dict[str, Any
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Channels objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "path": str, "type": Literal["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4", "QUAT"], "nodeId": str, "clipId": str, "defaultValue": Any, "enabled": bool, "extrapolationPre": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"], "extrapolationPost": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"]}]): Array of Channels objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listChannels"  # Define tool name for logging
@@ -110,7 +110,7 @@ def getDrivers(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Drivers objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "targetNodeId": str, "targetPath": str, "expression": str, "variables": List[Dict[str, Any] with keys {"name": str, "sourceNodeId": str, "sourcePath": str, "transform": str}]}]): Array of Drivers objects
     """
     tool_name = "getDrivers"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -137,7 +137,7 @@ def updateKeyframes(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Keyframes in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Keyframes to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "time": float, "value": List[float], "channelId": str, "tangentIn": List[float], "tangentOut": List[float]}]): Array of Keyframes to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -170,7 +170,7 @@ def getLayers(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Layers objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "weight": float, "additive": bool, "parentId": str, "clipIds": List[str]}]): Array of Layers objects
     """
     tool_name = "getLayers"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -230,7 +230,7 @@ def getKeyframes(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Keyframes objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "time": float, "value": List[float], "channelId": str, "tangentIn": List[float], "tangentOut": List[float]}]): Array of Keyframes objects
     """
     tool_name = "getKeyframes"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -264,7 +264,7 @@ def listKeyframes(parentId: Optional[str] = None, filters: Optional[Dict[str, An
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Keyframes objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "time": float, "value": List[float], "channelId": str, "tangentIn": List[float], "tangentOut": List[float]}]): Array of Keyframes objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listKeyframes"  # Define tool name for logging
@@ -293,7 +293,7 @@ def createClips(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Clips
     
     Args:
-    items (List[Dict[str, Any]]): Array of Clips to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "duration": float, "frameRate": float, "startTime": float, "loop": bool, "speed": float, "enabled": bool}]): Array of Clips to create
         
     Returns:
     success (bool): Operation success status
@@ -353,7 +353,7 @@ def updateDrivers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Drivers in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Drivers to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "targetNodeId": str, "targetPath": str, "expression": str, "variables": List[Dict[str, Any] with keys {"name": str, "sourceNodeId": str, "sourcePath": str, "transform": str}]}]): Array of Drivers to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -382,7 +382,7 @@ def createKeyframes(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Keyframes
     
     Args:
-    items (List[Dict[str, Any]]): Array of Keyframes to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "time": float, "value": List[float], "channelId": str, "tangentIn": List[float], "tangentOut": List[float]}]): Array of Keyframes to create
         
     Returns:
     success (bool): Operation success status
@@ -417,7 +417,7 @@ def getClips(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Clips objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "duration": float, "frameRate": float, "startTime": float, "loop": bool, "speed": float, "enabled": bool}]): Array of Clips objects
     """
     tool_name = "getClips"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -444,7 +444,7 @@ def updateLayers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Layers in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Layers to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "weight": float, "additive": bool, "parentId": str, "clipIds": List[str]}]): Array of Layers to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -480,7 +480,7 @@ def listLayers(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]]
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Layers objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "weight": float, "additive": bool, "parentId": str, "clipIds": List[str]}]): Array of Layers objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listLayers"  # Define tool name for logging
@@ -545,7 +545,7 @@ def listClips(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] 
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Clips objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "duration": float, "frameRate": float, "startTime": float, "loop": bool, "speed": float, "enabled": bool}]): Array of Clips objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listClips"  # Define tool name for logging
@@ -581,7 +581,7 @@ def listDrivers(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Drivers objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "targetNodeId": str, "targetPath": str, "expression": str, "variables": List[Dict[str, Any] with keys {"name": str, "sourceNodeId": str, "sourcePath": str, "transform": str}]}]): Array of Drivers objects
     totalCount (int): Total count for pagination
     """
     tool_name = "listDrivers"  # Define tool name for logging
@@ -639,7 +639,7 @@ def updateClips(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Update multiple Clips in a single operation
     
     Args:
-    items (List[Dict[str, Any]]): Array of Clips to update with their IDs
+    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "duration": float, "frameRate": float, "startTime": float, "loop": bool, "speed": float, "enabled": bool}]): Array of Clips to update with their IDs
         
     Returns:
     success (bool): Operation success status
@@ -672,7 +672,7 @@ def getChannels(ids: List[str]) -> Dict[str, Any]:
         
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any]]): Array of Channels objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "path": str, "type": Literal["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4", "QUAT"], "nodeId": str, "clipId": str, "defaultValue": Any, "enabled": bool, "extrapolationPre": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"], "extrapolationPost": Literal["constant", "linear", "cycle", "cycleWithOffset", "oscillate"]}]): Array of Channels objects
     """
     tool_name = "getChannels"  # Define tool name for logging
     params = {"ids": ids}  # Create params dict for logging
@@ -699,7 +699,7 @@ def createLayers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Layers
     
     Args:
-    items (List[Dict[str, Any]]): Array of Layers to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "weight": float, "additive": bool, "parentId": str, "clipIds": List[str]}]): Array of Layers to create
         
     Returns:
     success (bool): Operation success status
@@ -759,7 +759,7 @@ def createDrivers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Create multiple Drivers
     
     Args:
-    items (List[Dict[str, Any]]): Array of Drivers to create
+    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "targetNodeId": str, "targetPath": str, "expression": str, "variables": List[Dict[str, Any] with keys {"name": str, "sourceNodeId": str, "sourcePath": str, "transform": str}]}]): Array of Drivers to create
         
     Returns:
     success (bool): Operation success status
