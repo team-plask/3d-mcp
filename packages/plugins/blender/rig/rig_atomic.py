@@ -1,7 +1,7 @@
 # Generated blender implementation for rig atomic tools
 # This file is generated - DO NOT EDIT DIRECTLY
 
-
+import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def createJoints(items: List[Dict[str, Any]]) -> Dict[str, Any]:

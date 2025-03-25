@@ -188,10 +188,12 @@ ${paramValidation || "        # No parameters to validate"}
     })
     .join("\n\n");
 
-  return `# Generated ${plugin.name} implementation for ${category} atomic tools
+  return `# Generated ${
+    plugin.name
+  } implementation for ${category} atomic tools
 # This file is generated - DO NOT EDIT DIRECTLY
 
-
+${plugin.importStatements.join("\n")}
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 ${toolsImplementation}

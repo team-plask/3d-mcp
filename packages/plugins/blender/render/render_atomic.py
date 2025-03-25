@@ -1,7 +1,7 @@
 # Generated blender implementation for render atomic tools
 # This file is generated - DO NOT EDIT DIRECTLY
 
-
+import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def test() -> Dict[str, Any]:

@@ -1,7 +1,9 @@
 # Generated maya implementation for render atomic tools
 # This file is generated - DO NOT EDIT DIRECTLY
 
-
+import maya.cmds as cmds
+import maya.mel as mel
+import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def test() -> Dict[str, Any]:

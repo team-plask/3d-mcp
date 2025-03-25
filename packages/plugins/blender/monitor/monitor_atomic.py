@@ -1,7 +1,7 @@
 # Generated blender implementation for monitor atomic tools
 # This file is generated - DO NOT EDIT DIRECTLY
 
-
+import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 def getQuadView(shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None, name_visibility_predicate: Optional[str] = None, auto_adjust_camera: Optional[bool] = None) -> Dict[str, Any]:
