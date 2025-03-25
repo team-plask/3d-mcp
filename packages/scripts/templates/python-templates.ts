@@ -271,6 +271,16 @@ if 'HAS_APP_LIBS' not in globals():
 # Import all atomic tool modules
 ${imports}
 
+bl_info = {
+    "name": "3D MCP",
+    "author": "Plask",
+    "version": (0, 2),
+    "blender": (3, 0, 0),
+    "location": "View3D > Sidebar > 3dMCP",
+    "description": "Connect 3D Tools to LLM via MCP",
+    "category": "Interface",
+}
+
 class MCPServer:
     """
     Server component that receives MCP tool requests and routes them to appropriate functions

@@ -252,7 +252,7 @@ const coreAtomicTools = {
         .record(z.string(), z.any())
         .optional()
         .describe(
-          "Property values to match (path -> value)"
+          "Property values to match (path -> value). Skip to get all entities of the type"
         ),
     }),
     returns: OperationResponse.extend({
