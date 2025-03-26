@@ -74,15 +74,15 @@ export const _Tensor = {
  * Common transformable object properties
  */
 export const _Transformable = z.object({
-  position: _Tensor.VEC3.default([0, 0, 0]).describe(
-    "Position [x, y, z]"
-  ),
-  rotation: _Tensor.QUAT.default([0, 0, 0, 1]).describe(
-    "Rotation quaternion [x, y, z, w]"
-  ),
-  scale: _Tensor.VEC3.default([1, 1, 1]).describe(
-    "Scale [x, y, z]"
-  ),
+  position: z
+    .array(z.number())
+    .describe("Position in 3D space [x, y, z]"),
+  rotation: z
+    .array(z.number())
+    .describe("Rotation in 3D space [x, y, z, w]"),
+  scale: z
+    .array(z.number())
+    .describe("Scale factors in 3D space [x, y, z]"),
 });
 
 /**
@@ -118,8 +118,7 @@ export const _VisualProperties = z.object({
 export const _Hierarchical = z.object({
   parentId: z
     .string()
-    .nullable()
-    .default(null)
+    .optional()
     .describe("Parent object ID"),
   childIds: z
     .array(z.string())
@@ -169,7 +168,6 @@ export const _ExtrapolationType = z.enum([
  */
 export const _NodeBase = _BaseEntity.extend({
   ..._Transformable.shape,
-  ..._VisualProperties.shape,
   ..._Hierarchical.shape,
 });
 
@@ -203,11 +201,9 @@ export const Constraint = _BaseEntity.extend({
     .number()
     .min(0)
     .max(1)
-    .default(1)
     .describe("Constraint influence strength"),
   maintainOffset: z
     .boolean()
-    .default(true)
     .describe("Whether to maintain initial offset"),
   skipRotation: z
     .array(z.enum(["x", "y", "z"]))
@@ -223,7 +219,6 @@ export const Constraint = _BaseEntity.extend({
     .describe("Scale axes to skip"),
   space: z
     .enum(["world", "local", "custom"])
-    .default("world")
     .describe("Space in which constraint operates"),
   customSpaceId: z
     .string()
@@ -231,7 +226,6 @@ export const Constraint = _BaseEntity.extend({
     .describe("Custom space reference object ID"),
   active: z
     .boolean()
-    .default(true)
     .describe("Whether constraint is active"),
 });
 
