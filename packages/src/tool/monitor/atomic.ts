@@ -1,18 +1,12 @@
 import { _OperationResponse } from "../core";
-import { createExecutableTools } from "../core/request";
+import { createExecutableTools } from "../utils/request";
 import { z } from "zod";
 const monitorAtomicTools = {
   getQuadView: {
-    description:
-      "Get top, front, right, and perspective views of the scene.",
+    description: "Get top, front, right, and perspective views of the scene.",
     parameters: z.object({
       shading_mode: z
-        .enum([
-          "WIREFRAME",
-          "RENDERED",
-          "SOLID",
-          "MATERIAL",
-        ])
+        .enum(["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"])
         .default("WIREFRAME")
         .describe("Shading mode for the viewports"),
       name_visibility_predicate: z
@@ -24,9 +18,7 @@ const monitorAtomicTools = {
       auto_adjust_camera: z
         .boolean()
         .default(true)
-        .describe(
-          "Automatically adjust camera to fit the scene"
-        ),
+        .describe("Automatically adjust camera to fit the scene"),
     }),
     returns: _OperationResponse.extend({
       image_path: z
@@ -37,8 +29,6 @@ const monitorAtomicTools = {
 } as const;
 
 export type MonitorAtomicTool = typeof monitorAtomicTools;
-const monitorAtomicToolsWithExecute = createExecutableTools(
-  monitorAtomicTools
-);
+const monitorAtomicToolsWithExecute = createExecutableTools(monitorAtomicTools);
 
 export { monitorAtomicToolsWithExecute };

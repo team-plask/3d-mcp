@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createExecutableTools } from "../core/request";
-import { createCrudOperations } from "../core/utils";
+import { createExecutableTools } from "../utils/request";
+import { createCrudOperations } from "../utils/utils";
 import { RigEntities } from "./entity";
 
 const entityCruds = createCrudOperations(RigEntities);
@@ -13,7 +13,6 @@ const rigAtomicTools = {
 export type RigAtomicTool = keyof typeof rigAtomicTools;
 
 // This preserves the specific parameter and return types
-const rigAtomicToolsWithExecute =
-  createExecutableTools(rigAtomicTools);
+const rigAtomicToolsWithExecute = createExecutableTools(rigAtomicTools);
 
 export { rigAtomicToolsWithExecute };

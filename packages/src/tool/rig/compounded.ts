@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {} from "../core/entity";
-import { defineCompoundTool } from "../core/request";
+import { defineCompoundTool } from "../utils/request";
 import { coreAtomicToolsWithExecute } from "../core/atomic";
 import { rigAtomicToolsWithExecute } from "./atomic";
 

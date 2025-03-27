@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createExecutableTools } from "../core/request";
+import { createExecutableTools } from "../utils/request";
 
 const renderAtomicTools = {
   test: {
@@ -13,8 +13,6 @@ const renderAtomicTools = {
   },
 } as const;
 
-const renderAtomicToolsWithExecute = createExecutableTools(
-  renderAtomicTools
-);
+const renderAtomicToolsWithExecute = createExecutableTools(renderAtomicTools);
 
 export { renderAtomicToolsWithExecute };

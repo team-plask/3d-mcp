@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { createExecutableTools } from "../core/request";
+import { createExecutableTools } from "../utils/request";
 import { _OperationResponse } from "../core/entity";
-import { createCrudOperations } from "../core/utils";
+import { createCrudOperations } from "../utils/utils";
 import { ModelEntities } from "./entity";
 import { _Tensor } from "../core/entity";
 
@@ -15,29 +15,18 @@ const modelAtomicTools = {
 
   // Mesh operations
   combineMeshes: {
-    description:
-      "Combine multiple meshes into a single mesh",
+    description: "Combine multiple meshes into a single mesh",
     parameters: z.object({
-      meshIds: z
-        .array(z.string())
-        .min(2)
-        .describe("IDs of meshes to combine"),
-      name: z
-        .string()
-        .optional()
-        .describe("Name for the combined mesh"),
+      meshIds: z.array(z.string()).min(2).describe("IDs of meshes to combine"),
+      name: z.string().optional().describe("Name for the combined mesh"),
       preserveSubMeshes: z
         .boolean()
         .default(false)
-        .describe(
-          "Whether to preserve material assignments as submeshes"
-        ),
+        .describe("Whether to preserve material assignments as submeshes"),
       worldSpace: z
         .boolean()
         .default(true)
-        .describe(
-          "Whether to combine in world space or local space"
-        ),
+        .describe("Whether to combine in world space or local space"),
     }),
     returns: _OperationResponse.extend({
       combinedMeshId: z
@@ -54,11 +43,7 @@ const modelAtomicTools = {
           z.object({
             meshId: z.string().describe("Mesh identifier"),
             method: z
-              .enum([
-                "byMaterial",
-                "byUnconnected",
-                "bySelection",
-              ])
+              .enum(["byMaterial", "byUnconnected", "bySelection"])
               .describe("Splitting method"),
             namePattern: z
               .string()
@@ -73,14 +58,10 @@ const modelAtomicTools = {
       results: z
         .array(
           z.object({
-            originalMeshId: z
-              .string()
-              .describe("Original mesh ID"),
+            originalMeshId: z.string().describe("Original mesh ID"),
             resultMeshIds: z
               .array(z.string())
-              .describe(
-                "IDs of the newly created split meshes"
-              ),
+              .describe("IDs of the newly created split meshes"),
           })
         )
         .describe("Split results by mesh"),
@@ -94,9 +75,7 @@ const modelAtomicTools = {
       items: z
         .array(
           z.object({
-            vertexId: z
-              .string()
-              .describe("Vertex identifier"),
+            vertexId: z.string().describe("Vertex identifier"),
             position: _Tensor.VEC3.optional().describe(
               "New position [x, y, z]"
             ),
@@ -140,20 +119,15 @@ const modelAtomicTools = {
       items: z
         .array(
           z.object({
-            faceIds: z
-              .array(z.string())
-              .describe("Face identifiers"),
-            distance: z
-              .number()
-              .describe("Extrusion distance"),
+            faceIds: z.array(z.string()).describe("Face identifiers"),
+            distance: z.number().describe("Extrusion distance"),
             direction: z
               .enum(["normal", "custom"])
               .default("normal")
               .describe("Extrusion direction method"),
-            customDirection:
-              _Tensor.VEC3.optional().describe(
-                "Custom direction vector when using 'custom' direction"
-              ),
+            customDirection: _Tensor.VEC3.optional().describe(
+              "Custom direction vector when using 'custom' direction"
+            ),
             createCaps: z
               .boolean()
               .default(true)
@@ -161,9 +135,7 @@ const modelAtomicTools = {
             individualFaces: z
               .boolean()
               .default(false)
-              .describe(
-                "Whether to extrude faces individually"
-              ),
+              .describe("Whether to extrude faces individually"),
           })
         )
         .describe("Face extrusion operations"),
@@ -172,9 +144,7 @@ const modelAtomicTools = {
       results: z
         .array(
           z.object({
-            faceIds: z
-              .array(z.string())
-              .describe("Original face identifiers"),
+            faceIds: z.array(z.string()).describe("Original face identifiers"),
             newFaceIds: z
               .array(z.string())
               .describe("IDs of newly created faces"),
@@ -189,8 +159,7 @@ const modelAtomicTools = {
 
   // UVMap operations
   unwrapUVs: {
-    description:
-      "Generate UV coordinates using automatic unwrapping",
+    description: "Generate UV coordinates using automatic unwrapping",
     parameters: z.object({
       items: z
         .array(
@@ -217,15 +186,11 @@ const modelAtomicTools = {
             packIslands: z
               .boolean()
               .default(true)
-              .describe(
-                "Whether to pack UV islands efficiently"
-              ),
+              .describe("Whether to pack UV islands efficiently"),
             normalizeUVs: z
               .boolean()
               .default(true)
-              .describe(
-                "Whether to normalize UVs to 0-1 range"
-              ),
+              .describe("Whether to normalize UVs to 0-1 range"),
             margin: z
               .number()
               .min(0)
@@ -241,11 +206,7 @@ const modelAtomicTools = {
         .array(
           z.object({
             meshId: z.string().describe("Mesh identifier"),
-            uvMapId: z
-              .string()
-              .describe(
-                "ID of the created or updated UV map"
-              ),
+            uvMapId: z.string().describe("ID of the created or updated UV map"),
           })
         )
         .describe("Unwrapping results"),
@@ -268,25 +229,11 @@ const modelAtomicTools = {
             vertexTransforms: z
               .array(
                 z.object({
-                  vertexId: z
-                    .string()
-                    .describe("Vertex identifier"),
-                  u: z
-                    .number()
-                    .optional()
-                    .describe("New U coordinate"),
-                  v: z
-                    .number()
-                    .optional()
-                    .describe("New V coordinate"),
-                  offsetU: z
-                    .number()
-                    .optional()
-                    .describe("U offset to apply"),
-                  offsetV: z
-                    .number()
-                    .optional()
-                    .describe("V offset to apply"),
+                  vertexId: z.string().describe("Vertex identifier"),
+                  u: z.number().optional().describe("New U coordinate"),
+                  v: z.number().optional().describe("New V coordinate"),
+                  offsetU: z.number().optional().describe("U offset to apply"),
+                  offsetV: z.number().optional().describe("V offset to apply"),
                 })
               )
               .describe("Per-vertex UV transformations"),
@@ -299,15 +246,12 @@ const modelAtomicTools = {
 
   // Material operations
   assignMaterials: {
-    description:
-      "Assign materials to meshes or specific faces",
+    description: "Assign materials to meshes or specific faces",
     parameters: z.object({
       items: z
         .array(
           z.object({
-            materialId: z
-              .string()
-              .describe("Material identifier"),
+            materialId: z.string().describe("Material identifier"),
             meshId: z.string().describe("Mesh identifier"),
             faceIds: z
               .array(z.string())
@@ -338,10 +282,7 @@ const modelAtomicTools = {
               .array(z.string())
               .optional()
               .describe("Vertex IDs to bevel"),
-            amount: z
-              .number()
-              .positive()
-              .describe("Bevel amount"),
+            amount: z.number().positive().describe("Bevel amount"),
             segments: z
               .number()
               .int()
@@ -385,19 +326,13 @@ const modelAtomicTools = {
         .array(
           z.object({
             meshId: z.string().describe("Mesh identifier"),
-            faceLoopA: z
-              .array(z.string())
-              .describe("First face loop"),
-            faceLoopB: z
-              .array(z.string())
-              .describe("Second face loop"),
+            faceLoopA: z.array(z.string()).describe("First face loop"),
+            faceLoopB: z.array(z.string()).describe("Second face loop"),
             twist: z
               .number()
               .int()
               .default(0)
-              .describe(
-                "Twist offset for bridge connections"
-              ),
+              .describe("Twist offset for bridge connections"),
             smooth: z
               .boolean()
               .default(true)
@@ -411,12 +346,8 @@ const modelAtomicTools = {
         .array(
           z.object({
             meshId: z.string().describe("Mesh identifier"),
-            bridgeFaceIds: z
-              .array(z.string())
-              .describe("IDs of bridge faces"),
-            bridgeEdgeIds: z
-              .array(z.string())
-              .describe("IDs of bridge edges"),
+            bridgeFaceIds: z.array(z.string()).describe("IDs of bridge faces"),
+            bridgeEdgeIds: z.array(z.string()).describe("IDs of bridge edges"),
           })
         )
         .describe("Bridge results"),
@@ -426,8 +357,6 @@ const modelAtomicTools = {
 
 export type ModelingTool = keyof typeof modelAtomicTools;
 
-const modelAtomicToolsWithExecute = createExecutableTools(
-  modelAtomicTools
-);
+const modelAtomicToolsWithExecute = createExecutableTools(modelAtomicTools);
 
 export { modelAtomicToolsWithExecute };
