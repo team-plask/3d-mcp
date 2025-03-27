@@ -15,7 +15,7 @@ interface PluginConfig {
 const PLUGINS: Record<string, PluginConfig> = {
   blender: {
     name: "blender",
-    url: "localhost",
+    url: "127.0.0.1",
     port: 8002,
   },
   maya: {
@@ -49,14 +49,11 @@ function getPluginForTool(toolName: string): PluginConfig {
 
   // Try to determine the category from the tool name
   // This is a simple implementation - in a real system you might have a more robust way to map tools to plugins
-  const category = Object.keys(TOOL_PLUGIN_MAP).find(
-    (cat) =>
-      toolName.toLowerCase().includes(cat.toLowerCase())
+  const category = Object.keys(TOOL_PLUGIN_MAP).find((cat) =>
+    toolName.toLowerCase().includes(cat.toLowerCase())
   );
 
-  const pluginName = category
-    ? TOOL_PLUGIN_MAP[category]
-    : "blender"; // Default to blender if no match
+  const pluginName = category ? TOOL_PLUGIN_MAP[category] : "blender"; // Default to blender if no match
   return PLUGINS[pluginName!]!;
 }
 
@@ -65,31 +62,35 @@ function getPluginForTool(toolName: string): PluginConfig {
  * @param params Request parameters
  * @returns Response data
  */
-async function request<
-  T extends { toolName: string; parameters: any }
->(params: T): Promise<unknown> {
+async function request<T extends { toolName: string; parameters: any }>(
+  params: T,
+  log: any
+): Promise<unknown> {
   // Determine which plugin to use based on the tool name
   const plugin = getPluginForTool(params.toolName);
   const url = `http://${plugin.url}:${plugin.port}`;
+  log.info(`Request to ${url} with tool ${params.toolName}`);
+  try {
+    const result = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tool: params.toolName,
+        params: params.parameters,
+      }),
+    });
 
-  const result = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      tool: params.toolName,
-      params: params.parameters,
-    }),
-  });
+    log.info(result);
+    if (!result.ok) {
+      throw new Error(`Request failed: ${result.status} ${result.statusText}`);
+    }
 
-  if (!result.ok) {
-    throw new Error(
-      `Request failed: ${result.status} ${result.statusText}`
-    );
+    return await result.json();
+  } catch (e) {
+    log.info(e);
   }
-
-  return await result.json();
 }
 
 /**
@@ -113,11 +114,13 @@ function createExecutableTools<
       parameters: T[K]["parameters"];
       returns: T[K]["returns"];
       execute: (
-        args: z.infer<T[K]["parameters"]>
+        args: z.infer<T[K]["parameters"]>,
+        extContext: { log: (msg: string) => void }
       ) => Promise<z.infer<T[K]["returns"]>>;
 
       executeString: (
-        args: z.infer<T[K]["parameters"]>
+        args: z.infer<T[K]["parameters"]>,
+        extContext: { log: (msg: string) => void }
       ) => Promise<string>;
     };
   };
@@ -127,20 +130,25 @@ function createExecutableTools<
   for (const toolName in toolDefs) {
     executableTools[toolName] = {
       ...toolDefs[toolName],
-      execute: async (args) => {
-        const response = await request({
-          toolName,
-          parameters: args,
-        });
-        const parsedResponse =
-          toolDefs[toolName]!.returns.parse(response);
+      execute: async (args, { log }) => {
+        const response = await request(
+          {
+            toolName,
+            parameters: args,
+          },
+          log
+        );
+        const parsedResponse = toolDefs[toolName]!.returns.parse(response);
         return parsedResponse;
       },
-      executeString: async (args) => {
-        const response = await request({
-          toolName,
-          parameters: args,
-        });
+      executeString: async (args, { log }) => {
+        const response = await request(
+          {
+            toolName,
+            parameters: args,
+          },
+          log
+        );
 
         return JSON.stringify(response);
       },
@@ -153,10 +161,7 @@ function createExecutableTools<
 /**
  * Interface for tool configuration
  */
-interface CompoundToolConfig<
-  P extends z.ZodType,
-  R extends z.ZodType
-> {
+interface CompoundToolConfig<P extends z.ZodType, R extends z.ZodType> {
   description: string;
   parameters: P;
   returns: R;
@@ -166,10 +171,7 @@ interface CompoundToolConfig<
 /**
  * Helper function to define a compound tool with proper typing
  */
-function defineCompoundTool<
-  P extends z.ZodType,
-  R extends z.ZodType
->(
+function defineCompoundTool<P extends z.ZodType, R extends z.ZodType>(
   config: CompoundToolConfig<P, R>
 ): {
   description: string;
@@ -181,9 +183,7 @@ function defineCompoundTool<
     description: config.description,
     parameters: config.parameters,
     returns: config.returns,
-    execute: async (
-      params: unknown
-    ): Promise<z.infer<R>> => {
+    execute: async (params: unknown): Promise<z.infer<R>> => {
       // Parse and validate parameters using the tool's schema
       const validParams = config.parameters.parse(params);
       return config.execute(validParams);
