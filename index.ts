@@ -11,7 +11,7 @@ Object.entries(tools).forEach(([toolName, tool]) => {
     name: toolName,
     description: tool.description,
     parameters: tool.parameters,
-    execute: tool.executeString,
+    execute: tool.executeString as any,
   });
 });
 

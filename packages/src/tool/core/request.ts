@@ -20,12 +20,12 @@ const PLUGINS: Record<string, PluginConfig> = {
   },
   maya: {
     name: "maya",
-    url: "localhost",
+    url: "127.0.0.1",
     port: 8001,
   },
   unreal: {
     name: "unreal",
-    url: "localhost",
+    url: "127.0.0.1",
     port: 8000,
   },
 };
@@ -82,7 +82,6 @@ async function request<T extends { toolName: string; parameters: any }>(
       }),
     });
 
-    log.info(result);
     if (!result.ok) {
       throw new Error(`Request failed: ${result.status} ${result.statusText}`);
     }
