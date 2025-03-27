@@ -2,7 +2,7 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 bl_info = {
-    "name": "3D MCP",
+    "name": "3D-MCP",
     "author": "Plask",
     "version": (0, 3),
     "blender": (3, 0, 0),
@@ -13,6 +13,7 @@ bl_info = {
 
 try:
     import bpy
+
     HAS_APP_LIBS = True
 except ImportError:
     print(f"Warning: Could not import bpy. Running in mock mode.")
@@ -421,4 +422,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-  
