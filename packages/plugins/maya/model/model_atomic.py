@@ -6,6 +6,46 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def getGeometry() -> Dict[str, Any]:
+
+    """
+    Get geometry data for the current edited mesh
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    geometryData (Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str], "vertices": List[List[float]], "edges": List[List[int]], "faces": List[int]}): Geometry data
+    """
+    tool_name = "getGeometry"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "geometryData": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
 def delete(ids: List[str], type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
 
     """
@@ -2107,4 +2147,6 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
 
 
  # === NEWLY GENERATED ===
+
+
 

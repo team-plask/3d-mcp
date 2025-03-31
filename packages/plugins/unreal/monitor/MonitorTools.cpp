@@ -61,3 +61,46 @@ TSharedPtr<FJsonObject> UMCPMonitorTools::getQuadView(const TSharedPtr<FJsonObje
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for monitor atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "MonitorTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPMonitorTools::UMCPMonitorTools()
+{
+    RegisterTools();
+}
+
+void UMCPMonitorTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("getSceneGraph", FMCPToolDelegate::CreateUObject(this, &UMCPMonitorTools::getSceneGraph));
+}
+
+TSharedPtr<FJsonObject> UMCPMonitorTools::getSceneGraph(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing getSceneGraph in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for getSceneGraph
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        // TODO: Set complex scene_graph value
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in getSceneGraph: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

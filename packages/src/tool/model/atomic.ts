@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createExecutableTools } from "../core/request";
 import { _OperationResponse } from "../core/entity";
 import { createCrudOperations } from "../core/utils";
-import { ModelEntities } from "./entity";
+import { Mesh, ModelEntities } from "./entity";
 import { _Tensor } from "../core/entity";
 
 const entityCruds = createCrudOperations(ModelEntities);
@@ -26,12 +26,19 @@ const modelAtomicTools = {
     parameters: z.object({}),
     returns: _OperationResponse,
   },
+  getGeometry: {
+    description: "Get geometry data for the current edited mesh",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      geometryData: Mesh.describe("Geometry data"),
+    }),
+  },
 
   // Edit mesh operations
 
   // Selection operations
   setSelect: {
-    description: "Select or deselect geometry structures",
+    description: "Select or deselect vertices, edges, or faces",
     parameters: z.object({
       ids: z.array(z.string()).describe("IDs of structures to select"),
       type: z.enum(["vertex", "edge", "face"]),
@@ -43,7 +50,7 @@ const modelAtomicTools = {
     returns: _OperationResponse,
   },
   getSelect: {
-    description: "Get selected geometry structures",
+    description: "Get selected vertices, edges, or faces",
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
     }),

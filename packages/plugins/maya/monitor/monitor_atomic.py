@@ -6,6 +6,46 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def getSceneGraph() -> Dict[str, Any]:
+
+    """
+    Get the scene graph of the current scene.
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    scene_graph (Dict[str, Any] with keys {"name": str, "children": List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str]}]}): Scene graph of the current scene
+    """
+    tool_name = "getSceneGraph"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "scene_graph": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
 def getQuadView(shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None, name_visibility_predicate: Optional[str] = None, auto_adjust_camera: Optional[bool] = None) -> Dict[str, Any]:
 
     """
@@ -45,3 +85,4 @@ def getQuadView(shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID",
 
 
  # === NEWLY GENERATED ===
+
