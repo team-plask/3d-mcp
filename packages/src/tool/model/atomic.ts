@@ -112,13 +112,7 @@ const modelAtomicTools = {
   inset: {
     description: "Inset selected faces",
     parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            amount: z.number().describe("Inset amount"),
-          })
-        )
-        .describe("Inset operations"),
+      amount: z.number().describe("Inset amount"),
     }),
     returns: _OperationResponse,
   },

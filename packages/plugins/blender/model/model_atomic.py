@@ -5,6 +5,50 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
+def inset(amount: float) -> Dict[str, Any]:
+    """
+    Inset selected faces
+
+    Args:
+    amount (float): Inset amount
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "inset"  # Define tool name for logging
+    params = {"amount": amount}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        import bmesh
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to perform an inset operation.")
+
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Perform the inset operation
+        bmesh.ops.inset_region(
+            bm,
+            faces=[f for f in bm.faces if f.select],
+            thickness=amount
+        )
+
+        # Update the mesh to reflect changes
+        bmesh.update_edit_mesh(obj.data)
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
 def getGeometry() -> Dict[str, Any]:
     """
     Get geometry data for the current edited mesh
@@ -21,7 +65,6 @@ def getGeometry() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
 
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -348,37 +391,6 @@ def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def inset(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Inset selected faces
-
-    Args:
-    items (List[Dict[str, Any] with keys {"amount": float}]): Inset operations
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "inset"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError("You must be in edit mode to inset faces.")
-
-        # Perform the inset operation
-        for item in items:
-            amount = item.get("amount", 0.0)
-            bpy.ops.mesh.inset(thickness=amount)
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     """
     Sets the current geometry structure to edit (vertex, edge, face)
@@ -428,6 +440,7 @@ def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Opt
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -444,18 +457,28 @@ def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Opt
 
         # Get the active mesh
         obj = bpy.context.object
-        mesh = obj.data
+        mesh = bmesh.from_edit_mesh(obj.data)
+
+        if type == "vertex":
+            bpy.ops.mesh.select_mode(type='VERTEX')
+        elif type == "edge":
+            bpy.ops.mesh.select_mode(type='EDGE')
+        elif type == "face":
+            bpy.ops.mesh.select_mode(type='FACE')
 
         # Map selection mode
         select = mode != "remove"
         for id in ids:
             index = int(id)
             if type == "vertex":
-                mesh.vertices[index].select = select
+                mesh.verts[index].select_set(select)
             elif type == "edge":
-                mesh.edges[index].select = select
+                mesh.edges[index].select_set(select)
             elif type == "face":
-                mesh.polygons[index].select = select
+                mesh.faces[index].select_set(select)
+
+        # Update the mesh to reflect changes
+        bmesh.update_edit_mesh(obj.data)
 
         return {"success": True}
 
