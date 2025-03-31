@@ -4,6 +4,394 @@
 import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def delete(ids: List[str], type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Delete selected vertices, edges, or faces
+    
+    Args:
+    ids (List[str]): IDs of structures to delete
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "delete"  # Define tool name for logging
+    params = {"ids": ids, "type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteOnlyEdges() -> Dict[str, Any]:
+
+    """
+    Delete only selected edges, keeping vertices
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteOnlyEdges"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteOnlyFaces() -> Dict[str, Any]:
+
+    """
+    Delete only selected faces, keeping edges and vertices
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteOnlyFaces"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def dissolve(ids: List[str], type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Dissolve selected vertices, edges, or faces
+    
+    Args:
+    ids (List[str]): IDs of structures to dissolve
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "dissolve"  # Define tool name for logging
+    params = {"ids": ids, "type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def editStart(meshIds: List[str]) -> Dict[str, Any]:
+
+    """
+    Starts a modeling operation
+    
+    Args:
+    meshIds (List[str]): The meshIds parameter
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "editStart"  # Define tool name for logging
+    params = {"meshIds": meshIds}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def editStop() -> Dict[str, Any]:
+
+    """
+    Stops a modeling operation
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "editStop"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def extrude(offset: List[float]) -> Dict[str, Any]:
+
+    """
+    Extrude selected vertices, edges, or faces
+    
+    Args:
+    offset (List[float]): Extrusion offset vector
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "extrude"  # Define tool name for logging
+    params = {"offset": offset}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Get selected geometry structures
+    
+    Args:
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    selectedIds (List[str]): IDs of selected structures
+    type (Literal["vertex", "edge", "face"]): The type return value
+    """
+    tool_name = "getSelect"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "selectedIds": None  , # TODO: Implement  
+                "type": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def inset(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    """
+    Inset selected faces
+    
+    Args:
+    items (List[Dict[str, Any] with keys {"amount": float}]): Inset operations
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "inset"  # Define tool name for logging
+    params = {"items": items}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Sets the current geometry structure to edit (vertex, edge, face)
+    
+    Args:
+    mode (Literal["vertex", "edge", "face"]): The mode parameter
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setMode"  # Define tool name for logging
+    params = {"mode": mode}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+
+        # Validate enum values for mode
+        if mode is not None and mode not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'mode' must be one of ['vertex','edge','face'], got {mode}")
+      
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Optional[Literal["replace", "add", "remove"]] = None) -> Dict[str, Any]:
+
+    """
+    Select or deselect geometry structures
+    
+    Args:
+    ids (List[str]): IDs of structures to select
+    type (Literal["vertex", "edge", "face"]): The type parameter
+    mode (Literal["replace", "add", "remove"]): Selection mode
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setSelect"  # Define tool name for logging
+    params = {"ids": ids, "type": type, "mode": mode}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+
+        # Validate enum values for mode
+        if mode is not None and mode not in ['replace','add','remove']:
+            raise ValueError(f"Parameter 'mode' must be one of ['replace','add','remove'], got {mode}")
+      
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def subdivide(count: Optional[int] = None) -> Dict[str, Any]:
+
+    """
+    Subdivide selected edges or faces
+    
+    Args:
+    count (int): Number of subdivisions
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "subdivide"  # Define tool name for logging
+    params = {"count": count}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
 def createEdges(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
@@ -1715,3 +2103,4 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
 
 
  # === NEWLY GENERATED ===
+

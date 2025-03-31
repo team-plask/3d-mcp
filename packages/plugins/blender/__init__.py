@@ -2,7 +2,7 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 bl_info = {
-    "name": "3D-MCP",
+    "name": "3D MCP",
     "author": "Plask",
     "version": (0, 3),
     "blender": (3, 0, 0),
@@ -13,7 +13,6 @@ bl_info = {
 
 try:
     import bpy
-
     HAS_APP_LIBS = True
 except ImportError:
     print(f"Warning: Could not import bpy. Running in mock mode.")
@@ -33,12 +32,12 @@ import time
 import uuid
 import queue
 
-from .monitor import monitor_atomic
-from .core import core_atomic
-from .render import render_atomic
 from .animation import animation_atomic
-from .rig import rig_atomic
+from .core import core_atomic
 from .model import model_atomic
+from .monitor import monitor_atomic
+from .render import render_atomic
+from .rig import rig_atomic
 
 
 # Global variables - this will store tools
@@ -115,8 +114,8 @@ def register_all_tools():
     """Register all available tool functions"""
     print("Registering all tools...")
 
-    # Register monitor tools
-    for name, func in inspect.getmembers(monitor_atomic, inspect.isfunction):
+    # Register animation tools
+    for name, func in inspect.getmembers(animation_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
@@ -125,23 +124,23 @@ def register_all_tools():
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
+    # Register model tools
+    for name, func in inspect.getmembers(model_atomic, inspect.isfunction):
+        print(f"Registering tool: {name}")
+        register_tool(name, func)
+
+    # Register monitor tools
+    for name, func in inspect.getmembers(monitor_atomic, inspect.isfunction):
+        print(f"Registering tool: {name}")
+        register_tool(name, func)
+
     # Register render tools
     for name, func in inspect.getmembers(render_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
-    # Register animation tools
-    for name, func in inspect.getmembers(animation_atomic, inspect.isfunction):
-        print(f"Registering tool: {name}")
-        register_tool(name, func)
-
     # Register rig tools
     for name, func in inspect.getmembers(rig_atomic, inspect.isfunction):
-        print(f"Registering tool: {name}")
-        register_tool(name, func)
-
-    # Register model tools
-    for name, func in inspect.getmembers(model_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
@@ -422,3 +421,4 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+  

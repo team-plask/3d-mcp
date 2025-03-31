@@ -2098,3 +2098,503 @@ TSharedPtr<FJsonObject> UMCPModelTools::combineMeshes(const TSharedPtr<FJsonObje
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("delete", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::delete));
+    FMCPProtocolHandler::Get().RegisterTool("deleteOnlyEdges", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteOnlyEdges));
+    FMCPProtocolHandler::Get().RegisterTool("deleteOnlyFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteOnlyFaces));
+    FMCPProtocolHandler::Get().RegisterTool("dissolve", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::dissolve));
+    FMCPProtocolHandler::Get().RegisterTool("editStart", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::editStart));
+    FMCPProtocolHandler::Get().RegisterTool("editStop", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::editStop));
+    FMCPProtocolHandler::Get().RegisterTool("extrude", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::extrude));
+    FMCPProtocolHandler::Get().RegisterTool("getSelect", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getSelect));
+    FMCPProtocolHandler::Get().RegisterTool("inset", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::inset));
+    FMCPProtocolHandler::Get().RegisterTool("setMode", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setMode));
+    FMCPProtocolHandler::Get().RegisterTool("setSelect", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setSelect));
+    FMCPProtocolHandler::Get().RegisterTool("subdivide", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::subdivide));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::delete(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing delete in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter ids
+        if (!Params->HasField("ids")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter ids is missing");
+            return Response;
+        }
+        // Extract complex parameter ids 
+        const TSharedPtr<FJsonValue>* idsValue = nullptr;
+        if (Params->TryGetField("ids", idsValue)) {
+        }
+        // Check required parameter type
+        if (!Params->HasField("type")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter type is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter type is missing");
+            return Response;
+        }
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("vertex"), TEXT("edge"), TEXT("face")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for delete
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in delete: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::deleteOnlyEdges(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteOnlyEdges in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for deleteOnlyEdges
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteOnlyEdges: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::deleteOnlyFaces(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteOnlyFaces in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for deleteOnlyFaces
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteOnlyFaces: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::dissolve(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing dissolve in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter ids
+        if (!Params->HasField("ids")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter ids is missing");
+            return Response;
+        }
+        // Extract complex parameter ids 
+        const TSharedPtr<FJsonValue>* idsValue = nullptr;
+        if (Params->TryGetField("ids", idsValue)) {
+        }
+        // Check required parameter type
+        if (!Params->HasField("type")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter type is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter type is missing");
+            return Response;
+        }
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("vertex"), TEXT("edge"), TEXT("face")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for dissolve
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in dissolve: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::editStart(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing editStart in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter meshIds
+        if (!Params->HasField("meshIds")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter meshIds is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter meshIds is missing");
+            return Response;
+        }
+        // Extract complex parameter meshIds 
+        const TSharedPtr<FJsonValue>* meshIdsValue = nullptr;
+        if (Params->TryGetField("meshIds", meshIdsValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for editStart
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in editStart: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::editStop(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing editStop in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for editStop
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in editStop: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::extrude(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing extrude in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter offset
+        if (!Params->HasField("offset")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter offset is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter offset is missing");
+            return Response;
+        }
+        // Extract complex parameter offset 
+        const TSharedPtr<FJsonValue>* offsetValue = nullptr;
+        if (Params->TryGetField("offset", offsetValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for extrude
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in extrude: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::getSelect(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing getSelect in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter type
+        if (!Params->HasField("type")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter type is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter type is missing");
+            return Response;
+        }
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("vertex"), TEXT("edge"), TEXT("face")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for getSelect
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        // TODO: Set complex selectedIds value
+        Response->SetStringField("type", TEXT("TODO")); // TODO: Set actual type value
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in getSelect: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::inset(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing inset in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter items
+        if (!Params->HasField("items")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter items is missing");
+            return Response;
+        }
+        // Extract complex parameter items 
+        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
+        if (Params->TryGetField("items", itemsValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for inset
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in inset: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::setMode(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setMode in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter mode
+        if (!Params->HasField("mode")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter mode is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter mode is missing");
+            return Response;
+        }
+        // Extract mode (FString)
+        FString mode;
+        if (Params->TryGetStringField("mode", mode)) {
+            // Validate enum value for mode
+            static const TArray<FString> ValidmodeValues = {TEXT("vertex"), TEXT("edge"), TEXT("face")};
+            if (!ValidmodeValues.Contains(mode)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid mode value: %s"), *mode);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid mode value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setMode
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setMode: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::setSelect(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setSelect in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter ids
+        if (!Params->HasField("ids")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter ids is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter ids is missing");
+            return Response;
+        }
+        // Extract complex parameter ids 
+        const TSharedPtr<FJsonValue>* idsValue = nullptr;
+        if (Params->TryGetField("ids", idsValue)) {
+        }
+        // Check required parameter type
+        if (!Params->HasField("type")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter type is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter type is missing");
+            return Response;
+        }
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("vertex"), TEXT("edge"), TEXT("face")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+
+        // Extract mode (FString)
+        FString mode;
+        if (Params->TryGetStringField("mode", mode)) {
+            // Validate enum value for mode
+            static const TArray<FString> ValidmodeValues = {TEXT("replace"), TEXT("add"), TEXT("remove")};
+            if (!ValidmodeValues.Contains(mode)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid mode value: %s"), *mode);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid mode value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setSelect
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setSelect: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::subdivide(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing subdivide in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        // Extract count (int32)
+        int32 count = 0;
+        if (Params->TryGetNumberField("count", count)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for subdivide
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in subdivide: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

@@ -490,3 +490,127 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> combineMeshes(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Delete selected vertices, edges, or faces
+     * * @param ids - IDs of structures to delete (TArray<TSharedPtr<FJsonValue>>)
+     * @param type - The type parameter (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> delete(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Delete only selected edges, keeping vertices
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> deleteOnlyEdges(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Delete only selected faces, keeping edges and vertices
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> deleteOnlyFaces(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Dissolve selected vertices, edges, or faces
+     * * @param ids - IDs of structures to dissolve (TArray<TSharedPtr<FJsonValue>>)
+     * @param type - The type parameter (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> dissolve(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Starts a modeling operation
+     * * @param meshIds - The meshIds parameter (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> editStart(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Stops a modeling operation
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> editStop(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Extrude selected vertices, edges, or faces
+     * * @param offset - Extrusion offset vector (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> extrude(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Get selected geometry structures
+     * * @param type - The type parameter (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> getSelect(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Inset selected faces
+     * * @param items - Inset operations (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> inset(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Sets the current geometry structure to edit (vertex, edge, face)
+     * * @param mode - The mode parameter (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setMode(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Select or deselect geometry structures
+     * * @param ids - IDs of structures to select (TArray<TSharedPtr<FJsonValue>>)
+     * @param type - The type parameter (FString)
+     * @param mode - Selection mode (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setSelect(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Subdivide selected edges or faces
+     * * @param count - Number of subdivisions (int32)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> subdivide(const TSharedPtr<FJsonObject>& Params);
+};
