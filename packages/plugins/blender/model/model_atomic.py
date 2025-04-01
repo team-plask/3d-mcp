@@ -4,6 +4,311 @@
 import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def addPrimitives(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
+
+    """
+    Add primitive shapes to the scene
+    
+    Args:
+    type (Literal["sphere", "cube", "cylinder", "plane"]): Type of primitive to add
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "addPrimitives"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['sphere','cube','cylinder','plane']:
+            raise ValueError(f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
+      
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def addSubsurfModifierLevel(meshId: str, level: int) -> Dict[str, Any]:
+
+    """
+    Add a subsurface modifier to a mesh and set its level
+    
+    Args:
+    meshId (str): ID of the mesh to modify
+    level (int): Subdivision level
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "addSubsurfModifierLevel"  # Define tool name for logging
+    params = {"meshId": meshId, "level": level}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def bridgeEdgeLoops() -> Dict[str, Any]:
+
+    """
+    Bridge two selected edge loops to create faces
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "bridgeEdgeLoops"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def createEdge() -> Dict[str, Any]:
+
+    """
+    Create an edge between two selected vertices
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createEdge"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
+
+    """
+    Create an edge loop on a mesh
+    
+    Args:
+    edgeId (str): ID of the edge to create a loop from
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createEdgeLoop"  # Define tool name for logging
+    params = {"edgeId": edgeId}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def createFace() -> Dict[str, Any]:
+
+    """
+    Create a face from selected vertices or edges
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createFace"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
+
+    """
+    Slide selected edges along their adjacent edges
+    
+    Args:
+    edgeId (str): IDs of edge to slide along
+    factor (float): Sliding factor (-1 to 1)
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "edgeSlide"  # Define tool name for logging
+    params = {"edgeId": edgeId, "factor": factor}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
+
+    """
+    Select an edge loop
+    
+    Args:
+    edgeId (str): ID of an edge in the loop
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "selectEdgeLoop"  # Define tool name for logging
+    params = {"edgeId": edgeId}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
+
+    """
+    Select an edge ring
+    
+    Args:
+    edgeId (str): ID of an edge in the ring
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "selectEdgeRing"  # Define tool name for logging
+    params = {"edgeId": edgeId}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None) -> Dict[str, Any]:
+
+    """
+    Apply transformations (translate, rotate, scale) to selected elements
+    
+    Args:
+    translation (List[float]): Translation vector
+    rotation (List[float]): Rotation vector (Euler angles)
+    scale (List[float]): Scaling vector
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "transform"  # Define tool name for logging
+    params = {"translation": translation, "rotation": rotation, "scale": scale}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
 
 def delete(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     """
@@ -103,7 +408,7 @@ def inset(amount: float) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
+        
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -2265,3 +2570,5 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
+
+

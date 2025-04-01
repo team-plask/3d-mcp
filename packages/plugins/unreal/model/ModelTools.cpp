@@ -2684,3 +2684,384 @@ TSharedPtr<FJsonObject> UMCPModelTools::deleteOnlyEdgesAndFaces(const TSharedPtr
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("addPrimitives", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::addPrimitives));
+    FMCPProtocolHandler::Get().RegisterTool("addSubsurfModifierLevel", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::addSubsurfModifierLevel));
+    FMCPProtocolHandler::Get().RegisterTool("bridgeEdgeLoops", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::bridgeEdgeLoops));
+    FMCPProtocolHandler::Get().RegisterTool("createEdge", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createEdge));
+    FMCPProtocolHandler::Get().RegisterTool("createEdgeLoop", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createEdgeLoop));
+    FMCPProtocolHandler::Get().RegisterTool("createFace", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createFace));
+    FMCPProtocolHandler::Get().RegisterTool("edgeSlide", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::edgeSlide));
+    FMCPProtocolHandler::Get().RegisterTool("selectEdgeLoop", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::selectEdgeLoop));
+    FMCPProtocolHandler::Get().RegisterTool("selectEdgeRing", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::selectEdgeRing));
+    FMCPProtocolHandler::Get().RegisterTool("transform", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::transform));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::addPrimitives(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing addPrimitives in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter type
+        if (!Params->HasField("type")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter type is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter type is missing");
+            return Response;
+        }
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("sphere"), TEXT("cube"), TEXT("cylinder"), TEXT("plane")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for addPrimitives
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in addPrimitives: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::addSubsurfModifierLevel(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing addSubsurfModifierLevel in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter meshId
+        if (!Params->HasField("meshId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter meshId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter meshId is missing");
+            return Response;
+        }
+        // Extract meshId (FString)
+        FString meshId;
+        if (Params->TryGetStringField("meshId", meshId)) {
+        }
+        // Check required parameter level
+        if (!Params->HasField("level")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter level is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter level is missing");
+            return Response;
+        }
+        // Extract level (int32)
+        int32 level = 0;
+        if (Params->TryGetNumberField("level", level)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for addSubsurfModifierLevel
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in addSubsurfModifierLevel: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::bridgeEdgeLoops(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing bridgeEdgeLoops in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for bridgeEdgeLoops
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in bridgeEdgeLoops: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::createEdge(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createEdge in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for createEdge
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createEdge: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::createEdgeLoop(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createEdgeLoop in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter edgeId
+        if (!Params->HasField("edgeId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter edgeId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter edgeId is missing");
+            return Response;
+        }
+        // Extract edgeId (FString)
+        FString edgeId;
+        if (Params->TryGetStringField("edgeId", edgeId)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for createEdgeLoop
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createEdgeLoop: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::createFace(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createFace in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for createFace
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createFace: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::edgeSlide(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing edgeSlide in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter edgeId
+        if (!Params->HasField("edgeId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter edgeId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter edgeId is missing");
+            return Response;
+        }
+        // Extract edgeId (FString)
+        FString edgeId;
+        if (Params->TryGetStringField("edgeId", edgeId)) {
+        }
+        // Check required parameter factor
+        if (!Params->HasField("factor")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter factor is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter factor is missing");
+            return Response;
+        }
+        // Extract factor (double)
+        double factor = 0;
+        if (Params->TryGetNumberField("factor", factor)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for edgeSlide
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in edgeSlide: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::selectEdgeLoop(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing selectEdgeLoop in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter edgeId
+        if (!Params->HasField("edgeId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter edgeId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter edgeId is missing");
+            return Response;
+        }
+        // Extract edgeId (FString)
+        FString edgeId;
+        if (Params->TryGetStringField("edgeId", edgeId)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for selectEdgeLoop
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in selectEdgeLoop: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::selectEdgeRing(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing selectEdgeRing in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter edgeId
+        if (!Params->HasField("edgeId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter edgeId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter edgeId is missing");
+            return Response;
+        }
+        // Extract edgeId (FString)
+        FString edgeId;
+        if (Params->TryGetStringField("edgeId", edgeId)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for selectEdgeRing
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in selectEdgeRing: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::transform(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing transform in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        // Extract complex parameter translation 
+        const TSharedPtr<FJsonValue>* translationValue = nullptr;
+        if (Params->TryGetField("translation", translationValue)) {
+        }
+
+        // Extract complex parameter rotation 
+        const TSharedPtr<FJsonValue>* rotationValue = nullptr;
+        if (Params->TryGetField("rotation", rotationValue)) {
+        }
+
+        // Extract complex parameter scale 
+        const TSharedPtr<FJsonValue>* scaleValue = nullptr;
+        if (Params->TryGetField("scale", scaleValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for transform
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in transform: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

@@ -678,3 +678,111 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> deleteOnlyEdgesAndFaces(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Add primitive shapes to the scene
+     * * @param type - Type of primitive to add (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> addPrimitives(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Add a subsurface modifier to a mesh and set its level
+     * * @param meshId - ID of the mesh to modify (FString)
+     * @param level - Subdivision level (int32)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> addSubsurfModifierLevel(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Bridge two selected edge loops to create faces
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> bridgeEdgeLoops(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Create an edge between two selected vertices
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> createEdge(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Create an edge loop on a mesh
+     * * @param edgeId - ID of the edge to create a loop from (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> createEdgeLoop(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Create a face from selected vertices or edges
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> createFace(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Slide selected edges along their adjacent edges
+     * * @param edgeId - IDs of edge to slide along (FString)
+     * @param factor - Sliding factor (-1 to 1) (double)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> edgeSlide(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Select an edge loop
+     * * @param edgeId - ID of an edge in the loop (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> selectEdgeLoop(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Select an edge ring
+     * * @param edgeId - ID of an edge in the ring (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> selectEdgeRing(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Apply transformations (translate, rotate, scale) to selected elements
+     * * @param translation - Translation vector (TArray<TSharedPtr<FJsonValue>>)
+     * @param rotation - Rotation vector (Euler angles) (TArray<TSharedPtr<FJsonValue>>)
+     * @param scale - Scaling vector (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> transform(const TSharedPtr<FJsonObject>& Params);
+};

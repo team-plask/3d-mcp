@@ -124,6 +124,79 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
+  transform: {
+    description:
+      "Apply transformations (translate, rotate, scale) to selected elements",
+    parameters: z.object({
+      translation: _Tensor.VEC3.optional().describe("Translation vector"),
+      rotation: _Tensor.VEC3.optional().describe(
+        "Rotation vector (Euler angles)"
+      ),
+      scale: _Tensor.VEC3.optional().describe("Scaling vector"),
+    }),
+    returns: _OperationResponse,
+  },
+  edgeSlide: {
+    description: "Slide selected edges along their adjacent edges",
+    parameters: z.object({
+      edgeId: z.string().describe("IDs of edge to slide along"),
+      factor: z.number().describe("Sliding factor (-1 to 1)"),
+    }),
+    returns: _OperationResponse,
+  },
+  createEdgeLoop: {
+    description: "Create an edge loop on a mesh",
+    parameters: z.object({
+      edgeId: z.string().describe("ID of the edge to create a loop from"),
+    }),
+    returns: _OperationResponse,
+  },
+  selectEdgeLoop: {
+    description: "Select an edge loop",
+    parameters: z.object({
+      edgeId: z.string().describe("ID of an edge in the loop"),
+    }),
+    returns: _OperationResponse,
+  },
+  selectEdgeRing: {
+    description: "Select an edge ring",
+    parameters: z.object({
+      edgeId: z.string().describe("ID of an edge in the ring"),
+    }),
+    returns: _OperationResponse,
+  },
+  bridgeEdgeLoops: {
+    description: "Bridge two selected edge loops to create faces",
+    parameters: z.object({}),
+    returns: _OperationResponse,
+  },
+  createFace: {
+    description: "Create a face from selected vertices or edges",
+    parameters: z.object({}),
+    returns: _OperationResponse,
+  },
+  createEdge: {
+    description: "Create an edge between two selected vertices",
+    parameters: z.object({}),
+    returns: _OperationResponse,
+  },
+  addPrimitives: {
+    description: "Add primitive shapes to the scene",
+    parameters: z.object({
+      type: z
+        .enum(["sphere", "cube", "cylinder", "plane"])
+        .describe("Type of primitive to add"),
+    }),
+    returns: _OperationResponse,
+  },
+  addSubsurfModifierLevel: {
+    description: "Add a subsurface modifier to a mesh and set its level",
+    parameters: z.object({
+      meshId: z.string().describe("ID of the mesh to modify"),
+      level: z.number().int().min(1).max(6).describe("Subdivision level"),
+    }),
+    returns: _OperationResponse,
+  },
 
   // Mesh operations
   combineMeshes: {
