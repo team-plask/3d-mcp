@@ -6,7 +6,8 @@
   "scripts": {
     "extract-schemas": "bun run packages/scripts/extract-schemas.ts",
     "codegen": "bun --silent run packages/scripts/plugin-codegen.ts",
-    "update-blender": "bun run packages/scripts/update-blender.ts"
+    "update-blender": "bun run packages/scripts/update-blender.ts",
+    "inspect": "fastmcp inspect index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

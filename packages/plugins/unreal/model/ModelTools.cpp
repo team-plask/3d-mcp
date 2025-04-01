@@ -2641,3 +2641,46 @@ TSharedPtr<FJsonObject> UMCPModelTools::getGeometry(const TSharedPtr<FJsonObject
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("deleteOnlyEdgesAndFaces", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteOnlyEdgesAndFaces));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::deleteOnlyEdgesAndFaces(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteOnlyEdgesAndFaces in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for deleteOnlyEdgesAndFaces
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteOnlyEdgesAndFaces: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

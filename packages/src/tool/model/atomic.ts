@@ -80,7 +80,6 @@ const modelAtomicTools = {
   delete: {
     description: "Delete selected vertices, edges, or faces",
     parameters: z.object({
-      ids: z.array(z.string()).describe("IDs of structures to delete"),
       type: z.enum(["vertex", "edge", "face"]),
     }),
     returns: _OperationResponse,
@@ -90,20 +89,15 @@ const modelAtomicTools = {
     parameters: z.object({}),
     returns: _OperationResponse,
   },
-  deleteOnlyEdges: {
-    description: "Delete only selected edges, keeping vertices",
+  deleteOnlyEdgesAndFaces: {
+    description: "Delete only selected edges and faces, keeping vertices",
     parameters: z.object({}),
     returns: _OperationResponse,
   },
   subdivide: {
     description: "Subdivide selected edges or faces",
     parameters: z.object({
-      count: z
-        .number()
-        .int()
-        .min(1)
-        .default(1)
-        .describe("Number of subdivisions"),
+      count: z.number().describe("Number of subdivisions"),
     }),
     returns: _OperationResponse,
   },
@@ -186,26 +180,6 @@ const modelAtomicTools = {
     }),
   },
 
-  // Edge operations
-  setEdgeCreases: {
-    description: "Set crease weights for edges",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            edgeId: z.string().describe("Edge identifier"),
-            creaseWeight: z
-              .number()
-              .min(0)
-              .max(10)
-              .describe("Crease weight value"),
-          })
-        )
-        .describe("Edge crease operations"),
-    }),
-    returns: _OperationResponse,
-  },
-
   // UVMap operations
   unwrapUVs: {
     description: "Generate UV coordinates using automatic unwrapping",
@@ -262,36 +236,36 @@ const modelAtomicTools = {
     }),
   },
 
-  transformUVs: {
-    description: "Transform UV coordinates for vertices",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            meshId: z.string().describe("Mesh identifier"),
-            channel: z
-              .number()
-              .int()
-              .nonnegative()
-              .default(0)
-              .describe("Target UV channel"),
-            vertexTransforms: z
-              .array(
-                z.object({
-                  vertexId: z.string().describe("Vertex identifier"),
-                  u: z.number().optional().describe("New U coordinate"),
-                  v: z.number().optional().describe("New V coordinate"),
-                  offsetU: z.number().optional().describe("U offset to apply"),
-                  offsetV: z.number().optional().describe("V offset to apply"),
-                })
-              )
-              .describe("Per-vertex UV transformations"),
-          })
-        )
-        .describe("UV transformation operations"),
-    }),
-    returns: _OperationResponse,
-  },
+  // transformUVs: {
+  //   description: "Transform UV coordinates for vertices",
+  //   parameters: z.object({
+  //     items: z
+  //       .array(
+  //         z.object({
+  //           meshId: z.string().describe("Mesh identifier"),
+  //           channel: z
+  //             .number()
+  //             .int()
+  //             .nonnegative()
+  //             .default(0)
+  //             .describe("Target UV channel"),
+  //           vertexTransforms: z
+  //             .array(
+  //               z.object({
+  //                 vertexId: z.string().describe("Vertex identifier"),
+  //                 u: z.number().optional().describe("New U coordinate"),
+  //                 v: z.number().optional().describe("New V coordinate"),
+  //                 offsetU: z.number().optional().describe("U offset to apply"),
+  //                 offsetV: z.number().optional().describe("V offset to apply"),
+  //               })
+  //             )
+  //             .describe("Per-vertex UV transformations"),
+  //         })
+  //       )
+  //       .describe("UV transformation operations"),
+  //   }),
+  //   returns: _OperationResponse,
+  // },
 
   // Material operations
   assignMaterials: {

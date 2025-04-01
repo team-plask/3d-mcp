@@ -5,6 +5,89 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
+def delete(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+    """
+    Delete selected vertices, edges, or faces
+
+    Args:
+    type (Literal["vertex", "edge", "face"]): The type parameter
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "delete"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError("You must be in edit mode to delete geometry.")
+
+        # Map the type to Blender's delete operation
+        type_map = {
+            "vertex": "VERT",
+            "edge": "EDGE",
+            "face": "FACE"
+        }
+
+        if type not in type_map:
+            raise ValueError(f"Invalid type: {type}")
+
+        bpy.ops.ed.undo_push(message="Delete Operation")
+
+        # Perform the delete operation
+        bpy.ops.mesh.delete(type=type_map[type])
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def deleteOnlyEdgesAndFaces() -> Dict[str, Any]:
+    """
+    Delete only selected edges and faces, keeping vertices
+
+    Args:
+    No parameters
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteOnlyEdgesAndFaces"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to delete edges and faces.")
+
+        # Perform the delete operation for edges and faces only
+        bpy.ops.mesh.delete(type='EDGE_FACE')
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
 def inset(amount: float) -> Dict[str, Any]:
     """
     Inset selected faces
@@ -32,15 +115,13 @@ def inset(amount: float) -> Dict[str, Any]:
 
         bm = bmesh.from_edit_mesh(obj.data)
 
+        bpy.ops.ed.undo_push(message="Inset Operation")
+
         # Perform the inset operation
-        bmesh.ops.inset_region(
-            bm,
-            faces=[f for f in bm.faces if f.select],
-            thickness=amount
-        )
+        bpy.ops.mesh.inset(thickness=amount, release_confirm=False)
 
         # Update the mesh to reflect changes
-        bmesh.update_edit_mesh(obj.data)
+        # bmesh.update_edit_mesh(obj.data)
 
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
@@ -100,76 +181,6 @@ def getGeometry() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
-
-
-def delete(ids: List[str], type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
-    """
-    Delete selected vertices, edges, or faces
-
-    Args:
-    ids (List[str]): IDs of structures to delete
-    type (Literal["vertex", "edge", "face"]): The type parameter
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "delete"  # Define tool name for logging
-    params = {"ids": ids, "type": type}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-
-        # Validate enum values for type
-        if type is not None and type not in ['vertex', 'edge', 'face']:
-            raise ValueError(
-                f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
-
-        # Check if we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You have to start editing the mesh before performing that operation.")
-
-        bpy.ops.mesh.delete(type=type.upper())  # 'VERT', 'EDGE', or 'FACE'
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteOnlyEdges() -> Dict[str, Any]:
-    """
-    Delete only selected edges, keeping vertices
-
-    Args:
-    No parameters
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteOnlyEdges"  # Define tool name for logging
-    params = {}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You have to start editing the mesh to delete edges.")
-
-        # Perform the delete operation for edges only
-        bpy.ops.mesh.delete(type='ONLY_EDGE')
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
 
 
 def deleteOnlyFaces() -> Dict[str, Any]:
@@ -329,7 +340,7 @@ def extrude(offset: List[float]) -> Dict[str, Any]:
 
         # Perform the extrusion
         bpy.ops.mesh.extrude_region_move(
-            TRANSFORM_OT_translate={"value": offset})
+            TRANSFORM_OT_translate={"value": (offset[0], offset[1], offset[2])})
 
         return {
             "success": True
@@ -357,6 +368,7 @@ def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -369,16 +381,16 @@ def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
 
         # Get the active mesh
         obj = bpy.context.object
-        mesh = obj.data
+        mesh = bmesh.from_edit_mesh(obj.data)
 
         # Retrieve selected elements based on type
         selected_ids = []
         if type == "vertex":
-            selected_ids = [str(v.index) for v in mesh.vertices if v.select]
+            selected_ids = [str(v.index) for v in mesh.verts if v.select]
         elif type == "edge":
             selected_ids = [str(e.index) for e in mesh.edges if e.select]
         elif type == "face":
-            selected_ids = [str(f.index) for f in mesh.polygons if f.select]
+            selected_ids = [str(f.index) for f in mesh.faces if f.select]
 
         return {
             "success": True,
@@ -412,8 +424,12 @@ def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
                 f"Parameter 'mode' must be one of ['vertex', 'edge', 'face'], got {mode}")
 
         # Map mode to Blender's selection mode
-        mode_map = {"vertex": 0, "edge": 1, "face": 2}
-        bpy.ops.mesh.select_mode(type=mode.upper())
+        mode_map = {
+            'vertex': 'VERT',
+            'edge': 'EDGE',
+            'face': 'FACE'
+        }
+        bpy.ops.mesh.select_mode(type=mode_map[mode])
 
         return {"success": True}
 
@@ -466,8 +482,17 @@ def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Opt
         elif type == "face":
             bpy.ops.mesh.select_mode(type='FACE')
 
-        # Map selection mode
-        select = mode != "remove"
+        if mode == "replace":
+            # Deselect all first
+            bpy.ops.mesh.select_all(action='DESELECT')
+            select = True
+        elif mode == "add":
+            select = True
+        elif mode == "remove":
+            select = False
+        else:
+            raise ValueError(f"Invalid selection mode: {mode}")
+
         for id in ids:
             index = int(id)
             if type == "vertex":
@@ -506,6 +531,8 @@ def subdivide(count: Optional[int] = None) -> Dict[str, Any]:
         if bpy.context.object.mode != 'EDIT':
             raise RuntimeError(
                 "You must be in edit mode to subdivide geometry.")
+
+        bpy.ops.ed.undo_push(message="Subdivide Operation")
 
         # Perform the subdivision
         bpy.ops.mesh.subdivide(number_cuts=count or 1)
