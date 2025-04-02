@@ -3065,3 +3065,56 @@ TSharedPtr<FJsonObject> UMCPModelTools::transform(const TSharedPtr<FJsonObject>&
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("extrudeAlongNormals", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::extrudeAlongNormals));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::extrudeAlongNormals(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing extrudeAlongNormals in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter distance
+        if (!Params->HasField("distance")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter distance is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter distance is missing");
+            return Response;
+        }
+        // Extract distance (double)
+        double distance = 0;
+        if (Params->TryGetNumberField("distance", distance)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for extrudeAlongNormals
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in extrudeAlongNormals: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

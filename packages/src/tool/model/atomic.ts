@@ -72,7 +72,6 @@ const modelAtomicTools = {
   dissolve: {
     description: "Dissolve selected vertices, edges, or faces",
     parameters: z.object({
-      ids: z.array(z.string()).describe("IDs of structures to dissolve"),
       type: z.enum(["vertex", "edge", "face"]),
     }),
     returns: _OperationResponse,
@@ -117,10 +116,18 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
+  extrudeAlongNormals: {
+    description: "Extrude selected faces along their normals",
+    parameters: z.object({
+      distance: z.number().describe("Extrusion distance"),
+    }),
+    returns: _OperationResponse,
+  },
   bevel: {
     description: "Bevel selected edges or vertices",
     parameters: z.object({
       amount: z.number().describe("Bevel amount"),
+      type: z.enum(["vertex", "edge"]),
     }),
     returns: _OperationResponse,
   },
@@ -128,11 +135,21 @@ const modelAtomicTools = {
     description:
       "Apply transformations (translate, rotate, scale) to selected elements",
     parameters: z.object({
-      translation: _Tensor.VEC3.optional().describe("Translation vector"),
-      rotation: _Tensor.VEC3.optional().describe(
-        "Rotation vector (Euler angles)"
-      ),
-      scale: _Tensor.VEC3.optional().describe("Scaling vector"),
+      translation: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Translation vector"),
+      rotation: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Rotation vector (Euler angles)"),
+      scale: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Scaling vector"),
     }),
     returns: _OperationResponse,
   },
@@ -170,13 +187,9 @@ const modelAtomicTools = {
     parameters: z.object({}),
     returns: _OperationResponse,
   },
-  createFace: {
-    description: "Create a face from selected vertices or edges",
-    parameters: z.object({}),
-    returns: _OperationResponse,
-  },
-  createEdge: {
-    description: "Create an edge between two selected vertices",
+  createFaceOrEdge: {
+    description:
+      "Create a face or an edge from selected vertices or edges. Wether a face or an edge is created depends on how many vertices or edges are selected.",
     parameters: z.object({}),
     returns: _OperationResponse,
   },
@@ -190,9 +203,9 @@ const modelAtomicTools = {
     returns: _OperationResponse,
   },
   addSubsurfModifierLevel: {
-    description: "Add a subsurface modifier to a mesh and set its level",
+    description:
+      "Add a subsurface modifier to the selected mesh and set its level",
     parameters: z.object({
-      meshId: z.string().describe("ID of the mesh to modify"),
       level: z.number().int().min(1).max(6).describe("Subdivision level"),
     }),
     returns: _OperationResponse,

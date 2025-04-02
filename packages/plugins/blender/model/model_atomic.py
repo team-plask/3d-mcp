@@ -4,310 +4,589 @@
 import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
-def addPrimitives(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
 
+def extrudeAlongNormals(distance: float) -> Dict[str, Any]:
+    """
+    Extrude selected faces along their normals
+
+    Args:
+    distance (float): Extrusion distance
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "extrudeAlongNormals"  # Define tool name for logging
+    params = {"distance": distance}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Ensure we are in edit mode
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError("You must be in edit mode to extrude geometry.")
+
+        bpy.ops.ed.undo_push(message="Extrude Along Normals Operation")
+
+        # Perform the extrusion
+        bpy.ops.mesh.extrude_region_shrink_fatten(
+            TRANSFORM_OT_shrink_fatten={"value": distance})
+
+        return {
+            "success": True
+        }
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def bevel(amount: float, type: Literal["edge", "vertex"]) -> Dict[str, Any]:
+    """
+    Bevel selected edges or vertices
+
+    Args:
+    amount (float): Bevel amount
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "bevel"  # Define tool name for logging
+    params = {"amount": amount, "type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Validate enum values for type
+        if type is not None and type not in ['edge', 'vertex']:
+            raise ValueError(
+                f"Parameter 'type' must be one of ['edge','vertex'], got {type}")
+
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to perform a bevel operation.")
+
+        type_map = {
+            "vertex": "VERTICES",
+            "edge": "EDGES",
+        }
+
+        bpy.ops.ed.undo_push(message="Bevel Operation")
+
+        bpy.ops.mesh.bevel(
+            offset=amount,
+            affect=type_map[type],
+            release_confirm=True
+        )
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def addPrimitives(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
     """
     Add primitive shapes to the scene
-    
+
     Args:
     type (Literal["sphere", "cube", "cylinder", "plane"]): Type of primitive to add
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "addPrimitives"  # Define tool name for logging
     params = {"type": type}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
 
         # Validate enum values for type
-        if type is not None and type not in ['sphere','cube','cylinder','plane']:
-            raise ValueError(f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
-      
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        if type is not None and type not in ['sphere', 'cube', 'cylinder', 'plane']:
+            raise ValueError(
+                f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
+
+        # Add the specified primitive to the scene
+        if type == "sphere":
+            bpy.ops.mesh.primitive_uv_sphere_add()
+        elif type == "cube":
+            bpy.ops.mesh.primitive_cube_add()
+        elif type == "cylinder":
+            bpy.ops.mesh.primitive_cylinder_add()
+        elif type == "plane":
+            bpy.ops.mesh.primitive_plane_add()
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def addSubsurfModifierLevel(meshId: str, level: int) -> Dict[str, Any]:
 
+def addSubsurfModifierLevel(level: int) -> Dict[str, Any]:
     """
     Add a subsurface modifier to a mesh and set its level
-    
+
     Args:
-    meshId (str): ID of the mesh to modify
     level (int): Subdivision level
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "addSubsurfModifierLevel"  # Define tool name for logging
-    params = {"meshId": meshId, "level": level}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"level": level}
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        # Get the object by its name (meshId)
+        obj = bpy.context.object
+        if obj is None:
+            raise RuntimeError(f"No selected object.")
+
+        # Ensure the object is a mesh
+        if obj.type != 'MESH':
+            raise RuntimeError(f"Selected object is not a mesh.")
+
+        # Add a subsurface modifier if it doesn't already exist
+        modifier = obj.modifiers.get("Subsurf")
+        if modifier is None:
+            modifier = obj.modifiers.new(name="Subsurf", type='SUBSURF')
+
+        # Set the subdivision level
+        modifier.levels = level
+        modifier.render_levels = level
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def bridgeEdgeLoops() -> Dict[str, Any]:
 
+def bridgeEdgeLoops() -> Dict[str, Any]:
     """
     Bridge two selected edge loops to create faces
-    
+
     Args:
     No parameters
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "bridgeEdgeLoops"  # Define tool name for logging
     params = {}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        import bmesh
+
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to bridge edge loops.")
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Get selected edges
+        selected_edges = [edge for edge in bm.edges if edge.select]
+        if len(selected_edges) < 2:
+            raise RuntimeError(
+                "At least two edge loops must be selected to bridge.")
+
+        # Perform the bridge edge loops operation
+        bpy.ops.ed.undo_push(message="Bridge Edge Loops Operation")
+        bpy.ops.mesh.bridge_edge_loops()
+
+        # Update the mesh to reflect changes
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def createEdge() -> Dict[str, Any]:
 
+def createEdge() -> Dict[str, Any]:
     """
     Create an edge between two selected vertices
-    
+
     Args:
     No parameters
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "createEdge"  # Define tool name for logging
     params = {}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
         # No parameters to validate
-        
+
         # TODO: Implement actual blender API calls
         # This is a placeholder implementation
-        
+
         return {
             "success": True
         }
-        
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
 
+def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
     """
     Create an edge loop on a mesh
-    
+
     Args:
     edgeId (str): ID of the edge to create a loop from
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "createEdgeLoop"  # Define tool name for logging
     params = {"edgeId": edgeId}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
+        import bmesh
+
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to create an edge loop.")
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Find the edge by its index
+        edge_index = int(edgeId)
+        if edge_index < 0 or edge_index >= len(bm.edges):
+            raise ValueError(f"Invalid edge ID: {edgeId}")
+
+        # Deselect all edges and select the target edge
+        for edge in bm.edges:
+            edge.select_set(False)
+        bm.edges[edge_index].select_set(True)
+
+        # Update the mesh to reflect the selection
+        bmesh.update_edit_mesh(obj.data)
+
+        # Override the context for the operator
+        override_context = bpy.context.copy()
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override_context['area'] = area
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override_context['region'] = region
+                        break
+                break
+        bpy.ops.ed.undo_push(message="Create edge loop Operation")
+
+        with bpy.context.temp_override(**override_context):
+            bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": 1,
+                                                        "smoothness": 0, "falloff": 'INVERSE_SQUARE',
+                                                        "object_index": 0, "edge_index": edge_index},)
+            # # Update the mesh to reflect changes
+            # bmesh.update_edit_mesh(obj.data)
         return {
             "success": True
         }
-        
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def createFace() -> Dict[str, Any]:
 
+def createFaceOrEdge() -> Dict[str, Any]:
     """
     Create a face from selected vertices or edges
-    
+
     Args:
     No parameters
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "createFace"  # Define tool name for logging
     params = {}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to create a face or edge.")
+
+        # Use Blender's operator to create a face or edge
+        bpy.ops.ed.undo_push(message="Create Face or Edge Operation")
+        bpy.ops.mesh.edge_face_add()
+
+        return {"success": True}
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
 
+def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
     """
     Slide selected edges along their adjacent edges
-    
+
     Args:
     edgeId (str): IDs of edge to slide along
     factor (float): Sliding factor (-1 to 1)
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "edgeSlide"  # Define tool name for logging
-    params = {"edgeId": edgeId, "factor": factor}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"edgeId": edgeId, "factor": factor}
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        import bmesh
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to perform an edge slide operation.")
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Find the edge by its index
+        edge_index = int(edgeId)
+        if edge_index < 0 or edge_index >= len(bm.edges):
+            raise ValueError(f"Invalid edge ID: {edgeId}")
+
+        edge = bm.edges[edge_index]
+        # if not edge.select:
+        #     raise RuntimeError(f"Edge with ID {edgeId} is not selected.")
+
+        # Perform the edge slide operation
+        bpy.ops.ed.undo_push(message="Edge Slide Operation")
+        bpy.ops.transform.edge_slide(value=factor)
+
+        # Update the mesh to reflect changes
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
 
+def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
     """
     Select an edge loop
-    
+
     Args:
     edgeId (str): ID of an edge in the loop
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "selectEdgeLoop"  # Define tool name for logging
     params = {"edgeId": edgeId}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        import bmesh
+
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to select an edge loop.")
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Find the edge by its index
+        edge_index = int(edgeId)
+        if edge_index < 0 or edge_index >= len(bm.edges):
+            raise ValueError(f"Invalid edge ID: {edgeId}")
+
+        # Deselect all edges and select the target edge
+        for edge in bm.edges:
+            edge.select_set(False)
+        bm.edges[edge_index].select_set(True)
+
+        # Use Blender's operator to select the edge loop
+        bpy.ops.ed.undo_push(message="Select Edge Loop Operation")
+        bpy.ops.mesh.loop_select()
+
+        # Update the mesh to reflect the selection
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
 
+def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
     """
     Select an edge ring
-    
+
     Args:
     edgeId (str): ID of an edge in the ring
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "selectEdgeRing"  # Define tool name for logging
     params = {"edgeId": edgeId}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        import bmesh
+
+        # Ensure we are in edit mode
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        if bpy.context.object.mode != 'EDIT':
+            raise RuntimeError(
+                "You must be in edit mode to select an edge ring.")
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Find the edge by its index
+        edge_index = int(edgeId)
+        if edge_index < 0 or edge_index >= len(bm.edges):
+            raise ValueError(f"Invalid edge ID: {edgeId}")
+
+        # Deselect all edges and select the target edge
+        for edge in bm.edges:
+            edge.select_set(False)
+        bm.edges[edge_index].select_set(True)
+
+        # Use Blender's operator to select the edge ring
+        bpy.ops.ed.undo_push(message="Select Edge Ring Operation")
+        bpy.ops.mesh.edgering_select()
+
+        # Update the mesh to reflect the selection
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None) -> Dict[str, Any]:
 
+def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None) -> Dict[str, Any]:
     """
     Apply transformations (translate, rotate, scale) to selected elements
-    
+
     Args:
     translation (List[float]): Translation vector
     rotation (List[float]): Rotation vector (Euler angles)
     scale (List[float]): Scaling vector
-        
+
     Returns:
     success (bool): Operation success status
     """
     tool_name = "transform"  # Define tool name for logging
-    params = {"translation": translation, "rotation": rotation, "scale": scale}  # Create params dict for logging
+    params = {"translation": translation, "rotation": rotation,
+              "scale": scale}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
-    
+
     try:
-        # No parameters to validate
-        
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
+        import mathutils
+        import bmesh
+
+        # Ensure there is an active object
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        # Ensure we are in edit mode
+        if bpy.context.object.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Get selected vertices
+        selected_verts = [v for v in bm.verts if v.select]
+        if not selected_verts:
+            raise RuntimeError("No vertices selected.")
+
+        # Calculate the median point of the selected vertices
+        median_point = mathutils.Vector((0.0, 0.0, 0.0))
+        for vert in selected_verts:
+            median_point += vert.co
+        median_point /= len(selected_verts)
+
+        # Create transformation matrices
+        translation_matrix = mathutils.Matrix.Translation(
+            translation) if translation else mathutils.Matrix.Identity(4)
+        rotation_matrix = mathutils.Euler(rotation, 'XYZ').to_matrix(
+        ).to_4x4() if rotation else mathutils.Matrix.Identity(4)
+        scale_matrix = mathutils.Matrix.Diagonal(
+            scale + [1]) if scale else mathutils.Matrix.Identity(4)
+
+        bpy.ops.ed.undo_push(message="Transform Operation")
+
+        # Combine transformations into a single matrix
+        transformation_matrix = translation_matrix @ rotation_matrix @ scale_matrix
+
+        # Apply transformations relative to the median point
+        for vert in selected_verts:
+            # Move vertex to origin relative to the median point
+            local_co = vert.co - median_point
+            # Apply transformation
+            transformed_co = transformation_matrix @ local_co
+            # Move vertex back to its original position relative to the median point
+            vert.co = transformed_co + median_point
+
+        # Update the mesh to reflect changes
+
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-
  # === NEWLY GENERATED ===
-
-
-
-
 
 
 def delete(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
@@ -408,7 +687,7 @@ def inset(amount: float) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        
+        import bmesh
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -451,7 +730,7 @@ def getGeometry() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-
+        import bmesh
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
             raise RuntimeError("No active mesh object found.")
@@ -520,7 +799,7 @@ def deleteOnlyFaces() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def dissolve(ids: List[str], type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+def dissolve(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     """
     Dissolve selected vertices, edges, or faces
 
@@ -532,7 +811,7 @@ def dissolve(ids: List[str], type: Literal["vertex", "edge", "face"]) -> Dict[st
     success (bool): Operation success status
     """
     tool_name = "dissolve"  # Define tool name for logging
-    params = {"ids": ids, "type": type}  # Create params dict for logging
+    params = {"type": type}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
@@ -643,6 +922,8 @@ def extrude(offset: List[float]) -> Dict[str, Any]:
         if bpy.context.object.mode != 'EDIT':
             raise RuntimeError("You must be in edit mode to extrude geometry.")
 
+        bpy.ops.ed.undo_push(message="Extrude Operation")
+
         # Perform the extrusion
         bpy.ops.mesh.extrude_region_move(
             TRANSFORM_OT_translate={"value": (offset[0], offset[1], offset[2])})
@@ -673,7 +954,7 @@ def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-
+        import bmesh
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -761,7 +1042,7 @@ def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Opt
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-
+        import bmesh
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -1245,37 +1526,6 @@ def createFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {
             "success": True,  # TODO: Implement
             "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def extrudeFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Extrude faces
-
-    Args:
-    items (List[Dict[str, Any] with keys {"faceIds": List[str], "distance": float, "direction": Literal["normal", "custom"], "customDirection": List[float], "createCaps": bool, "individualFaces": bool}]): Face extrusion operations
-
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any] with keys {"faceIds": List[str], "newFaceIds": List[str], "newEdgeIds": List[str]}]): Extrusion results
-    """
-    tool_name = "extrudeFaces"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "results": None
         }
 
     except Exception as e:
@@ -2409,37 +2659,6 @@ def deleteMeshs(ids: List[str]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def bevel(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Bevel edges or vertices
-
-    Args:
-    items (List[Dict[str, Any] with keys {"meshId": str, "edgeIds": List[str], "vertexIds": List[str], "amount": float, "segments": int, "shape": float}]): Bevel operations
-
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any] with keys {"meshId": str, "newFaceIds": List[str], "newEdgeIds": List[str], "newVertexIds": List[str]}]): Bevel results
-    """
-    tool_name = "bevel"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "results": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def listSubdivisionModifiers(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
     """
     List all SubdivisionModifiers
@@ -2570,5 +2789,3 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
-
-
