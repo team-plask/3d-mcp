@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createExecutableTools } from "./request";
-import { OperationResponse, Tensor } from "./entity";
+import { _OperationResponse, _Tensor } from "./entity";
 
 /**
  * Core atomic tools that provide fundamental operations applicable across domains
@@ -24,7 +24,7 @@ const coreAtomicTools = {
           "Optional domain to restrict selection (e.g., 'mesh', 'animation')"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       selectedIds: z
         .array(z.string())
         .describe(
@@ -43,7 +43,7 @@ const coreAtomicTools = {
           "Optional domain to restrict clearing (e.g., 'mesh', 'animation')"
         ),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   getSelection: {
@@ -56,7 +56,7 @@ const coreAtomicTools = {
           "Optional domain to filter results (e.g., 'mesh', 'animation')"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       selectedIds: z
         .array(z.string())
         .describe("Currently selected object IDs"),
@@ -71,22 +71,24 @@ const coreAtomicTools = {
         .array(
           z.object({
             id: z.string().describe("Object identifier"),
-            position: Tensor.VEC3.optional().describe(
+            position: _Tensor.VEC3.optional().describe(
               "New absolute position [x, y, z]"
             ),
-            rotation: Tensor.QUAT.optional().describe(
+            rotation: _Tensor.QUAT.optional().describe(
               "New absolute rotation quaternion [x, y, z, w]"
             ),
-            scale: Tensor.VEC3.optional().describe(
+            scale: _Tensor.VEC3.optional().describe(
               "New absolute scale [x, y, z]"
             ),
-            positionOffset: Tensor.VEC3.optional().describe(
-              "Relative position offset to apply [dx, dy, dz]"
-            ),
-            rotationOffset: Tensor.QUAT.optional().describe(
-              "Relative rotation to apply as quaternion [x, y, z, w]"
-            ),
-            scaleOffset: Tensor.VEC3.optional().describe(
+            positionOffset:
+              _Tensor.VEC3.optional().describe(
+                "Relative position offset to apply [dx, dy, dz]"
+              ),
+            rotationOffset:
+              _Tensor.QUAT.optional().describe(
+                "Relative rotation to apply as quaternion [x, y, z, w]"
+              ),
+            scaleOffset: _Tensor.VEC3.optional().describe(
               "Relative scale to apply [sx, sy, sz]"
             ),
             space: z
@@ -99,7 +101,7 @@ const coreAtomicTools = {
         )
         .describe("Transformations to apply"),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   batchSetParent: {
@@ -125,7 +127,7 @@ const coreAtomicTools = {
           "Whether to preserve world transforms after reparenting"
         ),
     }),
-    returns: OperationResponse,
+    returns: _OperationResponse,
   },
 
   getChildren: {
@@ -141,7 +143,7 @@ const coreAtomicTools = {
         .optional()
         .describe("Filter by object types"),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       childIds: z
         .array(z.string())
         .describe("Child object IDs"),
@@ -155,32 +157,21 @@ const coreAtomicTools = {
         .array(
           z.object({
             id: z.string().describe("Object identifier"),
-            propertyPath: z
-              .string()
-              .describe("Path to the property"),
-            value: z
-              .any()
-              .describe("Property value to set"),
+            entries: z
+              .array(
+                z.object({
+                  propertyPath: z
+                    .array(z.string())
+                    .describe("Property path to set"),
+                  value: z.any().describe("Value to set"),
+                })
+              )
+              .describe("Property entries to set"),
           })
         )
         .describe("Property assignments to make"),
     }),
-    returns: OperationResponse,
-  },
-
-  getProperty: {
-    description: "Get a property value from an object",
-    parameters: z.object({
-      id: z.string().describe("Object identifier"),
-      propertyPath: z
-        .string()
-        .describe(
-          "Path to the property (e.g., 'material.color')"
-        ),
-    }),
-    returns: OperationResponse.extend({
-      value: z.any().describe("Property value"),
-    }),
+    returns: _OperationResponse,
   },
 
   batchGetProperty: {
@@ -192,8 +183,10 @@ const coreAtomicTools = {
           z.object({
             id: z.string().describe("Object identifier"),
             propertyPath: z
-              .string()
-              .describe("Path to the property"),
+              .array(z.string())
+              .describe(
+                "List of property paths to retrieve"
+              ),
           })
         )
         .describe("Property requests to make"),
@@ -202,7 +195,7 @@ const coreAtomicTools = {
         .default(false)
         .describe("Whether to include all descendants"),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       values: z
         .array(
           z.object({
@@ -236,7 +229,7 @@ const coreAtomicTools = {
           "Whether to duplicate dependencies (materials, etc.)"
         ),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       newId: z
         .string()
         .describe("ID of the duplicated entity"),
@@ -261,30 +254,13 @@ const coreAtomicTools = {
         .record(z.string(), z.any())
         .optional()
         .describe(
-          "Property values to match (path -> value)"
+          "Property values to match (path -> value). Skip to get all entities of the type"
         ),
-      limit: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe("Maximum results to return"),
-      offset: z
-        .number()
-        .int()
-        .nonnegative()
-        .optional()
-        .describe("Starting offset for pagination"),
     }),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       results: z
         .array(z.string())
         .describe("IDs of matching entities"),
-      totalCount: z
-        .number()
-        .int()
-        .nonnegative()
-        .describe("Total count matching query"),
     }),
   },
 
@@ -292,7 +268,7 @@ const coreAtomicTools = {
   undo: {
     description: "Undo the last operation",
     parameters: z.object({}),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       operationName: z
         .string()
         .optional()
@@ -303,54 +279,11 @@ const coreAtomicTools = {
   redo: {
     description: "Redo the previously undone operation",
     parameters: z.object({}),
-    returns: OperationResponse.extend({
+    returns: _OperationResponse.extend({
       operationName: z
         .string()
         .optional()
         .describe("Name of the redone operation"),
-    }),
-  },
-
-  // Naming and metadata
-  rename: {
-    description: "Rename an entity",
-    parameters: z.object({
-      id: z.string().describe("Entity identifier"),
-      name: z.string().describe("New name"),
-    }),
-    returns: OperationResponse,
-  },
-
-  setMetadata: {
-    description: "Set metadata on an entity",
-    parameters: z.object({
-      id: z.string().describe("Entity identifier"),
-      metadata: z
-        .record(z.string(), z.any())
-        .describe("Metadata to set"),
-      merge: z
-        .boolean()
-        .default(true)
-        .describe(
-          "Whether to merge with existing metadata"
-        ),
-    }),
-    returns: OperationResponse,
-  },
-
-  getMetadata: {
-    description: "Get metadata from an entity",
-    parameters: z.object({
-      id: z.string().describe("Entity identifier"),
-      key: z
-        .string()
-        .optional()
-        .describe("Specific metadata key to retrieve"),
-    }),
-    returns: OperationResponse.extend({
-      metadata: z
-        .record(z.string(), z.any())
-        .describe("Entity metadata"),
     }),
   },
 } as const;

@@ -1,10 +1,5 @@
 import { z } from "zod";
 import {
-  BaseEntity,
-  Tensor,
-  NodeBase,
-  Color,
-  IKChain,
   Joint,
   BlendShape,
   Constraint,
@@ -14,6 +9,5 @@ import {
 export const RigEntities = {
   Joint,
   Constraint,
-  IKChain,
   BlendShape,
 } as const;

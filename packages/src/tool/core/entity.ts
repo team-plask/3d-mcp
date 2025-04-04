@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Base entity definition all entities will extend
  */
-export const BaseEntity = z.object({
+export const _BaseEntity = z.object({
   id: z.string().describe("Unique identifier"),
   name: z.string().describe("Display name"),
   metadata: z
@@ -15,14 +15,14 @@ export const BaseEntity = z.object({
 /**
  * Standard operation response
  */
-export const OperationResponse = z.object({
+export const _OperationResponse = z.object({
   success: z.boolean().describe("Operation success status"),
 });
 
 /**
  * Data types for tensor values, aligned with glTF
  */
-export const TensorType = z.enum([
+export const _TensorType = z.enum([
   "SCALAR", // Single value
   "VEC2", // 2D vector
   "VEC3", // 3D vector
@@ -36,7 +36,9 @@ export const TensorType = z.enum([
 /**
  * Helper to create tensor validators with consistent typing
  */
-const createTensor = <T extends z.infer<typeof TensorType>>(
+const createTensor = <
+  T extends z.infer<typeof _TensorType>
+>(
   length: number,
   typeName: T
 ) =>
@@ -50,7 +52,7 @@ const createTensor = <T extends z.infer<typeof TensorType>>(
 /**
  * Type-specific tensor validators
  */
-export const Tensor = {
+export const _Tensor = {
   SCALAR: z.number(),
   VEC2: createTensor(2, "VEC2"),
   VEC3: createTensor(3, "VEC3"),
@@ -71,22 +73,22 @@ export const Tensor = {
 /**
  * Common transformable object properties
  */
-export const Transformable = z.object({
-  position: Tensor.VEC3.default([0, 0, 0]).describe(
-    "Position [x, y, z]"
-  ),
-  rotation: Tensor.QUAT.default([0, 0, 0, 1]).describe(
-    "Rotation quaternion [x, y, z, w]"
-  ),
-  scale: Tensor.VEC3.default([1, 1, 1]).describe(
-    "Scale [x, y, z]"
-  ),
+export const _Transformable = z.object({
+  position: z
+    .array(z.number())
+    .describe("Position in 3D space [x, y, z]"),
+  rotation: z
+    .array(z.number())
+    .describe("Rotation in 3D space [x, y, z, w]"),
+  scale: z
+    .array(z.number())
+    .describe("Scale factors in 3D space [x, y, z]"),
 });
 
 /**
  * Visual properties common to renderable entities
  */
-export const VisualProperties = z.object({
+export const _VisualProperties = z.object({
   visible: z
     .boolean()
     .default(true)
@@ -113,11 +115,10 @@ export const VisualProperties = z.object({
 /**
  * Hierarchical object properties
  */
-export const Hierarchical = z.object({
+export const _Hierarchical = z.object({
   parentId: z
     .string()
-    .nullable()
-    .default(null)
+    .optional()
     .describe("Parent object ID"),
   childIds: z
     .array(z.string())
@@ -128,41 +129,21 @@ export const Hierarchical = z.object({
 /**
  * Bounds - Axis-aligned bounding box
  */
-export const Bounds = z.object({
-  min: Tensor.VEC3.describe("Minimum point [x, y, z]"),
-  max: Tensor.VEC3.describe("Maximum point [x, y, z]"),
-  center: Tensor.VEC3.optional().describe(
+export const _Bounds = z.object({
+  min: _Tensor.VEC3.describe("Minimum point [x, y, z]"),
+  max: _Tensor.VEC3.describe("Maximum point [x, y, z]"),
+  center: _Tensor.VEC3.optional().describe(
     "Center point [x, y, z]"
   ),
-  size: Tensor.VEC3.optional().describe(
+  size: _Tensor.VEC3.optional().describe(
     "Size dimensions [width, height, depth]"
   ),
 });
 
 /**
- * Color value with different representation options
- */
-export const Color = z.union([
-  Tensor.VEC3.describe(
-    "RGB color [r, g, b] with values 0-1"
-  ),
-  Tensor.VEC4.describe(
-    "RGBA color [r, g, b, a] with values 0-1"
-  ),
-  z
-    .string()
-    .regex(/^#([0-9A-F]{3}){1,2}$/i)
-    .describe("Hex color string (e.g. #FF0000)"),
-  z
-    .string()
-    .regex(/^rgb\(\d{1,3},\s*\d{1,3},\s*\d{1,3}\)$/)
-    .describe("RGB string (e.g. rgb(255, 0, 0))"),
-]);
-
-/**
  * Interpolation types for animation and curves
  */
-export const InterpolationType = z.enum([
+export const _InterpolationType = z.enum([
   "linear", // Linear interpolation
   "step", // Discrete step function
   "bezier", // Cubic Bezier curve
@@ -174,7 +155,7 @@ export const InterpolationType = z.enum([
 /**
  * Extrapolation behaviors for curves
  */
-export const ExtrapolationType = z.enum([
+export const _ExtrapolationType = z.enum([
   "constant", // Hold last/first value
   "linear", // Continue linear trend
   "cycle", // Repeat from beginning
@@ -183,57 +164,17 @@ export const ExtrapolationType = z.enum([
 ]);
 
 /**
- * Material base definition with common properties
- */
-export const MaterialBase = BaseEntity.extend({
-  type: z
-    .enum([
-      "standard",
-      "pbr",
-      "lambert",
-      "phong",
-      "toon",
-      "custom",
-    ])
-    .describe("Material type/shader model"),
-  baseColor: Tensor.VEC4.default([1, 1, 1, 1]).describe(
-    "Base color [r, g, b, a]"
-  ),
-  opacity: z
-    .number()
-    .min(0)
-    .max(1)
-    .default(1)
-    .describe("Opacity factor"),
-  alphaMode: z
-    .enum(["OPAQUE", "MASK", "BLEND"])
-    .default("OPAQUE")
-    .describe("Alpha rendering mode"),
-  alphaCutoff: z
-    .number()
-    .min(0)
-    .max(1)
-    .default(0.5)
-    .describe("Alpha cutoff threshold"),
-  doubleSided: z
-    .boolean()
-    .default(false)
-    .describe("Whether material is rendered on both sides"),
-});
-
-/**
  * Node base definition for scene graph
  */
-export const NodeBase = BaseEntity.extend({
-  ...Transformable.shape,
-  ...VisualProperties.shape,
-  ...Hierarchical.shape,
+export const _NodeBase = _BaseEntity.extend({
+  ..._Transformable.shape,
+  ..._Hierarchical.shape,
 });
 
 /**
  * Constraint - Restriction on object movement (common across domains)
  */
-export const Constraint = BaseEntity.extend({
+export const Constraint = _BaseEntity.extend({
   type: z
     .enum([
       "point",
@@ -260,11 +201,9 @@ export const Constraint = BaseEntity.extend({
     .number()
     .min(0)
     .max(1)
-    .default(1)
     .describe("Constraint influence strength"),
   maintainOffset: z
     .boolean()
-    .default(true)
     .describe("Whether to maintain initial offset"),
   skipRotation: z
     .array(z.enum(["x", "y", "z"]))
@@ -280,7 +219,6 @@ export const Constraint = BaseEntity.extend({
     .describe("Scale axes to skip"),
   space: z
     .enum(["world", "local", "custom"])
-    .default("world")
     .describe("Space in which constraint operates"),
   customSpaceId: z
     .string()
@@ -288,72 +226,13 @@ export const Constraint = BaseEntity.extend({
     .describe("Custom space reference object ID"),
   active: z
     .boolean()
-    .default(true)
     .describe("Whether constraint is active"),
-});
-
-/**
- * IKChain - Inverse Kinematics system (used in both rigging and animation)
- */
-export const IKChain = BaseEntity.extend({
-  startId: z.string().describe("Start joint/bone ID"),
-  endId: z.string().describe("End joint/bone ID"),
-  solverType: z
-    .enum(["ccd", "fabrik", "analytic", "spring"])
-    .default("ccd")
-    .describe("IK solver algorithm"),
-  poleTargetId: z
-    .string()
-    .optional()
-    .describe(
-      "Pole vector target ID (for orientating the chain)"
-    ),
-  poleAngle: z
-    .number()
-    .default(0)
-    .describe("Rotation around pole vector in degrees"),
-  iterations: z
-    .number()
-    .int()
-    .positive()
-    .default(10)
-    .describe("Solver iteration count"),
-  tolerance: z
-    .number()
-    .positive()
-    .default(0.001)
-    .describe("Solver distance tolerance"),
-  maintainRotation: z
-    .boolean()
-    .default(false)
-    .describe("Whether to maintain end effector rotation"),
-  stretchEnabled: z
-    .boolean()
-    .default(false)
-    .describe(
-      "Whether the chain can stretch beyond natural limits"
-    ),
-  maxStretchRatio: z
-    .number()
-    .min(1)
-    .default(1.5)
-    .describe("Maximum stretch ratio"),
-  enabled: z
-    .boolean()
-    .default(true)
-    .describe("Whether IK chain is enabled"),
-  influence: z
-    .number()
-    .min(0)
-    .max(1)
-    .default(1)
-    .describe("Influence strength"),
 });
 
 /**
  * BlendShape - Per-vertex mesh deformation (used in both modeling and animation)
  */
-export const BlendShape = BaseEntity.extend({
+export const BlendShape = _BaseEntity.extend({
   meshId: z.string().describe("ID of the target mesh"),
   weight: z
     .number()
@@ -369,13 +248,13 @@ export const BlendShape = BaseEntity.extend({
           .int()
           .nonnegative()
           .describe("Vertex index"),
-        positionDelta: Tensor.VEC3.describe(
+        positionDelta: _Tensor.VEC3.describe(
           "Position offset"
         ),
-        normalDelta: Tensor.VEC3.optional().describe(
+        normalDelta: _Tensor.VEC3.optional().describe(
           "Normal vector offset"
         ),
-        tangentDelta: Tensor.VEC3.optional().describe(
+        tangentDelta: _Tensor.VEC3.optional().describe(
           "Tangent vector offset"
         ),
       })
@@ -390,26 +269,20 @@ export const BlendShape = BaseEntity.extend({
 /**
  * Joint - Base joint/bone definition for skeletal systems
  */
-export const Joint = NodeBase.extend({
+export const Joint = _NodeBase.extend({
   length: z
     .number()
     .nonnegative()
     .default(1)
     .describe("Length of the joint"),
-  orientation: Tensor.QUAT.default([0, 0, 0, 1]).describe(
-    "Local orientation for the joint"
-  ),
-  preferredRotationAxis: Tensor.VEC3.optional().describe(
-    "Preferred axis for rotation (for resolving rotation ambiguity)"
-  ),
 });
 
 /**
  * Pose - A stored set of transforms for joints/bones
  */
-export const Pose = BaseEntity.extend({
+export const Pose = _BaseEntity.extend({
   transforms: z
-    .record(z.string(), Tensor.MAT4)
+    .record(z.string(), _Tensor.MAT4)
     .describe("Transforms by joint/bone ID (ID -> matrix)"),
   isBindPose: z
     .boolean()
@@ -418,21 +291,18 @@ export const Pose = BaseEntity.extend({
 });
 
 export const CoreEntities = {
-  BaseEntity,
-  OperationResponse,
-  TensorType,
-  Tensor,
-  Transformable,
-  VisualProperties,
-  Hierarchical,
-  Bounds,
-  Color,
-  InterpolationType,
-  ExtrapolationType,
-  MaterialBase,
-  NodeBase,
+  _BaseEntity,
+  _OperationResponse,
+  _TensorType,
+  _Tensor,
+  _Transformable,
+  _VisualProperties,
+  _Hierarchical,
+  _Bounds,
+  _InterpolationType,
+  _ExtrapolationType,
+  _NodeBase,
   Constraint,
-  IKChain,
   BlendShape,
   Joint,
   Pose,

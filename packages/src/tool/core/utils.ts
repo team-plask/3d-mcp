@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OperationResponse } from "./entity";
+import { _OperationResponse } from "./entity";
 import { entities } from "..";
 
 type Domains = keyof typeof entities;
@@ -85,7 +85,7 @@ function createCrudOperations<T extends EntitySchemas>(
             .array(entitySchema.omit({ id: true }))
             .describe(`Array of ${pluralName} to create`),
         }),
-        returns: OperationResponse.extend({
+        returns: _OperationResponse.extend({
           ids: z
             .array(z.string())
             .describe(`IDs of the created ${pluralName}`),
@@ -100,7 +100,7 @@ function createCrudOperations<T extends EntitySchemas>(
             .array(z.string())
             .describe(`${pascalCase} identifiers`),
         }),
-        returns: OperationResponse.extend({
+        returns: _OperationResponse.extend({
           items: z
             .array(entitySchema)
             .describe(`Array of ${pluralName} objects`),
@@ -132,7 +132,7 @@ function createCrudOperations<T extends EntitySchemas>(
             .optional()
             .describe(`Starting offset for pagination`),
         }),
-        returns: OperationResponse.extend({
+        returns: _OperationResponse.extend({
           items: z
             .array(entitySchema)
             .describe(`Array of ${pluralName} objects`),
@@ -167,7 +167,7 @@ function createCrudOperations<T extends EntitySchemas>(
               `Array of ${pluralName} to update with their IDs`
             ),
         }),
-        returns: OperationResponse,
+        returns: _OperationResponse,
       };
 
       // Delete operation
@@ -180,7 +180,7 @@ function createCrudOperations<T extends EntitySchemas>(
               `${pascalCase} identifiers to delete`
             ),
         }),
-        returns: OperationResponse,
+        returns: _OperationResponse,
       };
     }
   );

@@ -34,7 +34,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 # Generated plugin code
-plugins/
-
-# Generated plugin code
-packages/plugins/
+packages/plugins/**/__pycache__/

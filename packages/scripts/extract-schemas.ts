@@ -203,10 +203,6 @@ export async function extractSchemas(
 
   // Process each domain
   for (const domain of domains) {
-    // Skip the 'core' domain as it typically contains base definitions
-    // and not actual tools to be extracted
-    if (domain === "core") continue;
-
     // Import tools for this domain
     const domainTools = await importDomainTools(
       domain,

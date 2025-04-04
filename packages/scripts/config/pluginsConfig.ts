@@ -28,7 +28,7 @@ export const PLUGINS: PluginConfig[] = [
     ext: "py",
     lang: "python",
     utilsModule: "mcp_utils",
-    importStatements: ["import json"],
+    importStatements: ["import bpy"],
     printFormat:
       'print(f"Executing {tool_name} in Blender with params: {params}")',
     errorFormat: 'print(f"Error in {tool_name}: {str(e)}")',

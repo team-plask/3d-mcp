@@ -94,10 +94,7 @@ export class PythonGenerator implements IGenerator {
       plugin,
       categories
     );
-    const serverPath = join(
-      serverDir,
-      `mcp_server.${plugin.ext}`
-    );
+    const serverPath = join(serverDir, `__init__.py`);
 
     writeFileSync(serverPath, serverContent);
   }

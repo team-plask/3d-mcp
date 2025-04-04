@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createExecutableTools } from "../core/request";
-import { OperationResponse } from "../core/entity";
+import { _OperationResponse } from "../core/entity";
 import { createCrudOperations } from "../core/utils";
 import { AnimationEntities } from "./entity";
 

@@ -1,25 +1,25 @@
 import { z } from "zod";
 import {
-  BaseEntity,
-  TensorType,
-  Tensor,
-  InterpolationType,
-  ExtrapolationType,
+  _BaseEntity,
+  _TensorType,
+  _Tensor,
+  _InterpolationType,
+  _ExtrapolationType,
 } from "../core/entity";
 
 /**
  * Keyframe - A single point in time with a value and interpolation metadata
  */
-export const Keyframe = BaseEntity.extend({
+export const Keyframe = _BaseEntity.extend({
   time: z.number().describe("Time position in seconds"),
-  value: Tensor.any.describe("Value at this keyframe"),
+  value: _Tensor.any.describe("Value at this keyframe"),
   channelId: z
     .string()
     .describe("ID of the channel this keyframe belongs to"),
-  tangentIn: Tensor.VEC2.optional().describe(
+  tangentIn: _Tensor.VEC2.optional().describe(
     "Incoming tangent handle (for bezier/hermite)"
   ),
-  tangentOut: Tensor.VEC2.optional().describe(
+  tangentOut: _Tensor.VEC2.optional().describe(
     "Outgoing tangent handle (for bezier/hermite)"
   ),
 });
@@ -27,11 +27,11 @@ export const Keyframe = BaseEntity.extend({
 /**
  * Channel - A property track that contains keyframes
  */
-export const Channel = BaseEntity.extend({
+export const Channel = _BaseEntity.extend({
   path: z
     .string()
     .describe("Property path this channel animates"),
-  type: TensorType.describe(
+  type: _TensorType.describe(
     "Data type of the animated property"
   ),
   nodeId: z
@@ -48,18 +48,18 @@ export const Channel = BaseEntity.extend({
     .boolean()
     .default(true)
     .describe("Whether this channel is active"),
-  extrapolationPre: ExtrapolationType.default(
-    "constant"
-  ).describe("Behavior before first keyframe"),
-  extrapolationPost: ExtrapolationType.default(
-    "constant"
-  ).describe("Behavior after last keyframe"),
+  extrapolationPre: _ExtrapolationType
+    .default("constant")
+    .describe("Behavior before first keyframe"),
+  extrapolationPost: _ExtrapolationType
+    .default("constant")
+    .describe("Behavior after last keyframe"),
 });
 
 /**
  * Clip - A complete animation sequence containing multiple channels
  */
-export const Clip = BaseEntity.extend({
+export const Clip = _BaseEntity.extend({
   duration: z
     .number()
     .nonnegative()
@@ -90,7 +90,7 @@ export const Clip = BaseEntity.extend({
 /**
  * Layer - Container for blending multiple animation clips
  */
-export const Layer = BaseEntity.extend({
+export const Layer = _BaseEntity.extend({
   weight: z
     .number()
     .min(0)
@@ -114,7 +114,7 @@ export const Layer = BaseEntity.extend({
 /**
  * Driver - Procedural animation logic that drives property values
  */
-export const Driver = BaseEntity.extend({
+export const Driver = _BaseEntity.extend({
   targetNodeId: z.string().describe("Node to drive"),
   targetPath: z
     .string()
