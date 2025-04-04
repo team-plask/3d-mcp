@@ -53,11 +53,13 @@ function getPluginForTool(toolName: string): PluginConfig {
     toolName.toLowerCase().includes(cat.toLowerCase())
   );
 
-  const pluginName = category ? TOOL_PLUGIN_MAP[category] : "blender"; // Default to blender if no match
+  const pluginName = category
+    ? TOOL_PLUGIN_MAP[category]
+    : "unreal"; // Default to blender if no match
   return PLUGINS[pluginName!]!;
 }
 
-/**
+/** 
  * Request function to send a POST request to a plug-in
  * @param params Request parameters
  * @returns Response data
