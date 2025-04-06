@@ -2,7 +2,29 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 import bpy
-from typing import Dict, Any, Optional, List, Union, Tuple, Literal
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal, Callable
+import mathutils
+import os
+import time
+from pathlib import Path
+import traceback
+import subprocess
+import sys
+
+try:
+    from PIL import Image
+except:
+    import sysconfig
+    import platform
+
+    python_exe = sys.executable  # This works on macOS/Linux/Windows
+
+    try:
+        subprocess.call([python_exe, "-m", "ensurepip"])
+        subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.call([python_exe, "-m", "pip", "install", "pillow"])
+    except Exception as install_error:
+        print(f"Failed to install Pillow: {install_error}")
 
 
 def getSceneGraph() -> Dict[str, Any]:
@@ -21,6 +43,7 @@ def getSceneGraph() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         def build_scene_graph(obj):
             return {
                 "id": obj.name,
@@ -50,37 +73,41 @@ def getSceneGraph() -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
- # === NEWLY GENERATED ===
+
+# === NEWLY GENERATED ===
 
 
-def getQuadView(
+def getCameraView(
     shading_mode: Optional[str] = None,
     name_visibility_predicate: Optional[str] = None,
     auto_adjust_camera: Optional[bool] = None,
-    export_width: int = 1920,
-    export_height: int = 1080,
+    export_width: int = 960,
+    export_height: int = 540,
+    perspective: Optional[Union[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
-    Get top, front, right, and perspective views of the scene.
+    Get a customizable view of the 3D scene from any camera angle.
 
     Args:
-    shading_mode (str): Shading mode for the viewports
-    name_visibility_predicate (str):  Function that takes an object as input and returns a dict with display settings. See example below.
-    auto_adjust_camera (bool): Automatically adjust camera to fit the scene
-    export_width (int): Width of the exported images in pixels
-    export_height (int): Height of the exported images in pixels
+    shading_mode (str): Rendering style for the viewport (WIREFRAME: line rendering, SOLID: basic shading, MATERIAL: with materials, RENDERED: fully rendered)
+    name_visibility_predicate (str): Python lambda function that takes an object as input and returns display settings (e.g., 'lambda obj: {"show_name": obj.type == "MESH"}')
+    auto_adjust_camera (bool): When true, automatically positions the camera to frame all scene objects
+    export_width (int): Width of the exported image in pixels
+    export_height (int): Height of the exported image in pixels
+    perspective (str or dict): Predefined view angle (TOP/FRONT/RIGHT/PERSP) or custom camera configuration
 
     Returns:
     success (bool): Operation success status
-    image_path (List[str]): Paths to the images of the quad view
+    image_path (List[str]): File paths to the generated image
     """
-    tool_name = "getQuadView"  # Define tool name for logging
+    tool_name = "getCameraView"  # Define tool name for logging
     params = {
         "shading_mode": shading_mode,
         "name_visibility_predicate": name_visibility_predicate,
         "auto_adjust_camera": auto_adjust_camera,
         "export_width": export_width,
         "export_height": export_height,
+        "perspective": perspective,
     }  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
@@ -88,29 +115,23 @@ def getQuadView(
         base_filepath=None,
         shading_mode="WIREFRAME",
         auto_adjust_camera=True,
-        export_width=1920,
-        export_height=1080,
+        export_width=960,
+        export_height=540,
         name_visibility_predicate=None,
+        perspective="FRONT",
     ):
         """
-        Create 4 separate screenshots for TOP, FRONT, RIGHT, and PERSPECTIVE views.
-        Each screenshot will be taken in fullscreen mode with consistent size.
+        Create a screenshot from the specified perspective view.
+        The screenshot will be taken in fullscreen mode with consistent size.
 
         Args:
-            base_filepath (str, optional): Base path for saving screenshots.
-                                        Will be appended with view name.
-                                        Defaults to ~/Downloads/blender_view_{view}.png
+            base_filepath (str, optional): Base path for saving the screenshot.
             shading_mode (str, optional): The shading mode to use for the viewport.
-                                        Defaults to 'WIREFRAME'.
-                                        Options: 'WIREFRAME', 'SOLID', 'MATERIAL', 'RENDERED'
-            auto_adjust_camera (bool, optional): Whether to automatically adjust the camera
-                                                for better framing. Defaults to True.
-            export_width (int, optional): Width of the exported images in pixels.
-                                        Defaults to 1920.
-            export_height (int, optional): Height of the exported images in pixels.
-                                        Defaults to 1080.
-            name_visibility_predicate (callable, optional): Function that takes an object as input
-                                                        and returns a dict with display settings.
+            auto_adjust_camera (bool, optional): Whether to automatically adjust the camera for better framing.
+            export_width (int, optional): Width of the exported image in pixels.
+            export_height (int, optional): Height of the exported image in pixels.
+            name_visibility_predicate (callable, optional): Function that takes an object as input and returns display settings.
+            perspective (str or dict, optional): Specific view perspective or custom camera parameters.
         """
         # Default filepath
         if not base_filepath:
@@ -122,7 +143,8 @@ def getQuadView(
         # Default name visibility predicate
         if name_visibility_predicate is None:
             # Default behavior: don't show any names
-            def name_visibility_predicate(obj): return {"show_name": False}
+            def name_visibility_predicate(obj):
+                return {"show_name": False}
 
         # Store original state
         original_state = store_original_state()
@@ -138,17 +160,22 @@ def getQuadView(
             # Set render resolution
             bpy.context.scene.render.resolution_x = export_width
             bpy.context.scene.render.resolution_y = export_height
-            bpy.context.scene.render.resolution_percentage = 100
+            bpy.context.scene.render.resolution_percentage = 10
 
             # Take screenshots
-            take_view_screenshots(
-                base_filepath, temp_screen_name, shading_mode, auto_adjust_camera
+            image_paths = take_view_screenshots(
+                base_filepath,
+                temp_screen_name,
+                shading_mode,
+                auto_adjust_camera,
+                perspective,
             )
+            return image_paths
 
         except Exception as ex:
-
             print("=== EXCEPTION OCCURRED ===")
             traceback.print_exc()
+            return []
 
         finally:
             # Restore original state
@@ -307,16 +334,14 @@ def getQuadView(
                 break
 
         if not main_3d_view:
-            largest_area = max(temp_screen.areas,
-                               key=lambda a: a.width * a.height)
+            largest_area = max(temp_screen.areas, key=lambda a: a.width * a.height)
             largest_area.type = "VIEW_3D"
             main_3d_view = largest_area
 
     def calculate_scene_bounds() -> Tuple[mathutils.Vector, mathutils.Vector]:
         """Calculate bounds of all visible objects for auto-fit."""
         min_co = mathutils.Vector((float("inf"), float("inf"), float("inf")))
-        max_co = mathutils.Vector(
-            (float("-inf"), float("-inf"), float("-inf")))
+        max_co = mathutils.Vector((float("-inf"), float("-inf"), float("-inf")))
 
         has_objects = False
 
@@ -424,8 +449,9 @@ def getQuadView(
         temp_screen_name: str,
         shading_mode: str,
         auto_adjust_camera: bool,
-    ) -> None:
-        """Take screenshots for TOP, FRONT, RIGHT, and PERSPECTIVE views."""
+        perspective: Union[str, Dict[str, Any]],
+    ) -> List[str]:
+        """Take a screenshot based on the specified perspective."""
         original_window = bpy.context.window
 
         # Find the 3D view area
@@ -449,13 +475,14 @@ def getQuadView(
                 scene_dimensions.x, scene_dimensions.y, scene_dimensions.z
             )
 
-            # Define view configurations
+            # Define standard view configurations
             view_configs = {
                 "TOP": {
                     "perspective": "ORTHO",
                     # Quaternion for top view
                     "rotation": (1.0, 0.0, 0.0, 0.0),
                     "dimension_func": lambda d: max(d.x, d.y),
+                    "filename": f"{base_filepath}_top.png",
                 },
                 "FRONT": {
                     "perspective": "ORTHO",
@@ -466,23 +493,48 @@ def getQuadView(
                         0.0,
                     ),  # Quaternion for front view
                     "dimension_func": lambda d: max(d.x, d.z),
+                    "filename": f"{base_filepath}_front.png",
                 },
                 "RIGHT": {
                     "perspective": "ORTHO",
                     # Quaternion for right view
                     "rotation": (0.5, 0.5, 0.5, 0.5),
                     "dimension_func": lambda d: max(d.y, d.z),
+                    "filename": f"{base_filepath}_right.png",
                 },
                 "PERSP": {
                     "perspective": "PERSP",
                     # Default perspective
                     "rotation": (0.8205, 0.4306, 0.1714, 0.3312),
                     "dimension_func": lambda d: max(d.x, d.y, d.z),
+                    "filename": f"{base_filepath}_persp.png",
                 },
             }
 
-            # Take screenshots for each view
-            for view_name, config in view_configs.items():
+            # Determine which views to render
+            views_to_render = []
+
+            if isinstance(perspective, dict):
+                # Custom perspective configuration
+                custom_view = {
+                    "perspective": perspective.get("type", "PERSP"),
+                    "rotation": tuple(perspective.get("rotation")),
+                    "location": perspective.get("location"),
+                    "dimension_func": lambda d: max(d.x, d.y, d.z),
+                    "filename": f"{base_filepath}_custom.png",
+                }
+                views_to_render = [("CUSTOM", custom_view)]
+            elif perspective == "ALL":
+                views_to_render = list(view_configs.items())
+            elif perspective in view_configs:
+                views_to_render = [(perspective, view_configs[perspective])]
+            else:
+                raise ValueError(f"Invalid perspective: {perspective}")
+
+            # Take screenshots for each selected view
+            image_paths = []
+
+            for view_name, config in views_to_render:
                 for area in bpy.context.screen.areas:
                     if area.type == "VIEW_3D":
                         space = area.spaces[0]
@@ -490,20 +542,32 @@ def getQuadView(
 
                         # Configure the view
                         region_3d.view_perspective = config["perspective"]
-                        region_3d.view_rotation = config["rotation"]
+                        region_3d.view_rotation = mathutils.Quaternion(
+                            config["rotation"]
+                        )
 
                         if auto_adjust_camera:
-                            region_3d.view_location = scene_center
+                            # Set view location based on config or use scene_center
+                            if "location" in config and config["location"] is not None:
+                                region_3d.view_location = mathutils.Vector(
+                                    config["location"]
+                                )
+                            else:
+                                region_3d.view_location = scene_center
 
                             if region_3d.view_perspective == "ORTHO":
                                 padding = 1.2
                                 region_3d.view_distance = 0
                                 region_3d.view_camera_zoom = 0
 
-                                ortho_dimension = config["dimension_func"](
-                                    scene_dimensions
-                                )
-                                region_3d.view_distance = max_dimension * padding
+                                # Use the dimension function from the config
+                                if "dimension_func" in config:
+                                    ortho_dimension = config["dimension_func"](
+                                        scene_dimensions
+                                    )
+                                    region_3d.view_distance = max_dimension * padding
+                                else:
+                                    region_3d.view_distance = max_dimension * padding
                             else:
                                 padding = 1.5
                                 region_3d.view_distance = max_dimension * padding
@@ -513,28 +577,60 @@ def getQuadView(
                             region_3d.view_location = (0.0, 0.0, 0.0)
 
                         # Force redraw and wait for UI update
-                        bpy.ops.wm.redraw_timer(
-                            type="DRAW_WIN_SWAP", iterations=1)
+                        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
                         bpy.context.view_layer.update()
                         time.sleep(0.3)
 
-                        # Create filename and take screenshot
-                        view_filename = f"{base_filepath}_{view_name.lower()}.png"
+                        # Get the filename from config or generate one
+                        view_filename = config.get(
+                            "filename", f"{base_filepath}_{view_name.lower()}.png"
+                        )
                         print(f"Taking {view_name} view screenshot...")
 
-                        context_override = {
-                            "window": original_window, "area": area}
+                        context_override = {"window": original_window, "area": area}
 
                         try:
                             with bpy.context.temp_override(**context_override):
-                                bpy.ops.screen.screenshot(
-                                    filepath=str(view_filename))
+                                bpy.ops.screen.screenshot_area(
+                                    filepath=str(view_filename), show_multiview=True
+                                )
                         except (AttributeError, TypeError):
-                            bpy.ops.screen.screenshot(
-                                context_override, filepath=str(view_filename)
+                            bpy.ops.screen.screenshot_area(
+                                context_override,
+                                filepath=str(view_filename),
+                                show_multiview=True,
                             )
 
                         print(f"Screenshot saved to: {view_filename}")
+
+                        # Resize the image to half its size
+                        try:
+                            # Create resized filename
+                            filename_parts = os.path.splitext(view_filename)
+                            resized_filename = (
+                                f"{filename_parts[0]}_resized{filename_parts[1]}"
+                            )
+
+                            # Open and resize the image
+                            from PIL import Image
+
+                            img = Image.open(view_filename)
+                            width, height = img.size
+                            resized_img = img.resize(
+                                (width // 2, height // 2), Image.Resampling.LANCZOS
+                            )
+                            resized_img.save(resized_filename)
+
+                            # Replace the original file with the resized one
+                            os.replace(resized_filename, view_filename)
+
+                            print(f"Image resized to half resolution: {view_filename}")
+                            image_paths.append(view_filename)
+                        except Exception as e:
+                            print(f"Error resizing image: {e}")
+                            # If resizing fails, use the original image
+                            image_paths.append(view_filename)
+
                         time.sleep(0.2)
                         break
 
@@ -542,8 +638,7 @@ def getQuadView(
             try:
                 for area in bpy.context.screen.areas:
                     if area.type == "VIEW_3D":
-                        context_override = {
-                            "window": original_window, "area": area}
+                        context_override = {"window": original_window, "area": area}
                         try:
                             with bpy.context.temp_override(**context_override):
                                 bpy.ops.screen.screen_full_area()
@@ -552,6 +647,8 @@ def getQuadView(
                         break
             except Exception as e:
                 print(f"Error exiting fullscreen: {e}")
+
+            return image_paths
 
     try:
         # Validate enum values for shading_mode
@@ -570,38 +667,38 @@ def getQuadView(
             shading_mode = "WIREFRAME"
         if auto_adjust_camera is None:
             auto_adjust_camera = True
+        if perspective is None:
+            perspective = "FRONT"  # Changed default from "ALL" to "FRONT"
 
         # Use Desktop directory instead of temp directory
         desktop_dir = os.path.expanduser("~/Desktop")
-        base_filepath = os.path.join(desktop_dir, "blender_quad_view")
-        print(f"Saving quad view images to: {base_filepath}_*.png")
+        base_filepath = os.path.join(
+            desktop_dir, "blender_camera_view"
+        )  # Updated filename base
+        print(f"Saving camera view image to: {base_filepath}_*.png")
 
         # Parse name_visibility_predicate if provided
         visibility_func = None
         if name_visibility_predicate:
             try:
                 # Try to evaluate the string as Python code
-                visibility_func = eval(
-                    f"lambda obj: {name_visibility_predicate}")
-            except:
+                visibility_func = eval(f"lambda obj: {name_visibility_predicate}")
+            except Exception as e:
                 print(
-                    f"Error evaluating name_visibility_predicate: {name_visibility_predicate}"
+                    f"Error evaluating name_visibility_predicate: {name_visibility_predicate} - {str(e)}"
                 )
                 print("Using default visibility settings")
 
         # Create view screenshots
-        create_view_screenshots(
+        image_paths = create_view_screenshots(
             base_filepath=base_filepath,
             shading_mode=shading_mode,
             auto_adjust_camera=auto_adjust_camera,
             export_width=export_width,
             export_height=export_height,
             name_visibility_predicate=visibility_func,
+            perspective=perspective,
         )
-
-        # Collect paths to the generated images
-        view_types = ["top", "front", "right", "persp"]
-        image_paths = [f"{base_filepath}_{view}.png" for view in view_types]
 
         # Verify files exist
         existing_paths = [path for path in image_paths if os.path.exists(path)]
@@ -609,7 +706,12 @@ def getQuadView(
         if not existing_paths:
             raise FileNotFoundError("No screenshot files were generated")
 
-        return {"success": True, "image_path": existing_paths}
+        return {
+            "content": {
+                "path": existing_paths,
+                "type": "image",
+            }
+        }
 
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")

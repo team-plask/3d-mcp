@@ -13,6 +13,7 @@ bl_info = {
 
 try:
     import bpy
+
     HAS_APP_LIBS = True
 except ImportError:
     print(f"Warning: Could not import bpy. Running in mock mode.")
@@ -91,6 +92,7 @@ def process_task_queue():
     try:
         if tool_name in tools:
             result = tools[tool_name](**params)
+
         else:
             result = {"success": False, "error": f"Unknown tool: {tool_name}"}
     except Exception as e:
@@ -421,4 +423,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-  
