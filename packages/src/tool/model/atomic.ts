@@ -11,7 +11,7 @@ const entityCruds = createCrudOperations(ModelEntities);
  * Modeling atomic tools with focus on domain-specific batch operations
  */
 const modelAtomicTools = {
-  ...entityCruds,
+  // ...entityCruds,
 
   // General operations
   editStart: {
@@ -37,7 +37,7 @@ const modelAtomicTools = {
   // Edit mesh operations
 
   // Selection operations
-  setSelect: {
+  setSelectedGeometry: {
     description: "Select or deselect vertices, edges, or faces",
     parameters: z.object({
       ids: z.array(z.string()).describe("IDs of structures to select"),
@@ -49,7 +49,7 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  getSelect: {
+  getSelectedGeometry: {
     description: "Get selected vertices, edges, or faces",
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
@@ -76,7 +76,7 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  delete: {
+  deleteGeometry: {
     description: "Delete selected vertices, edges, or faces",
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
@@ -193,15 +193,6 @@ const modelAtomicTools = {
     parameters: z.object({}),
     returns: _OperationResponse,
   },
-  addPrimitives: {
-    description: "Add primitive shapes to the scene",
-    parameters: z.object({
-      type: z
-        .enum(["sphere", "cube", "cylinder", "plane"])
-        .describe("Type of primitive to add"),
-    }),
-    returns: _OperationResponse,
-  },
   addSubsurfModifierLevel: {
     description:
       "Add a subsurface modifier to the selected mesh and set its level",
@@ -264,6 +255,22 @@ const modelAtomicTools = {
         )
         .describe("Split results by mesh"),
     }),
+  },
+  createMeshFromPrimitive: {
+    description: "Add primitive shapes to the scene",
+    parameters: z.object({
+      type: z
+        .enum(["sphere", "cube", "cylinder", "plane"])
+        .describe("Type of primitive to add"),
+    }),
+    returns: _OperationResponse,
+  },
+  deleteMesh: {
+    description: "Delete a mesh from the scene",
+    parameters: z.object({
+      meshId: z.string().describe("ID of the mesh to delete"),
+    }),
+    returns: _OperationResponse,
   },
 
   // UVMap operations

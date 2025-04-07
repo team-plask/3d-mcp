@@ -6,6 +6,187 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
+
+    """
+    Add primitive shapes to the scene
+    
+    Args:
+    type (Literal["sphere", "cube", "cylinder", "plane"]): Type of primitive to add
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createMeshFromPrimitive"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['sphere','cube','cylinder','plane']:
+            raise ValueError(f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteGeometry(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Delete selected vertices, edges, or faces
+    
+    Args:
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteGeometry"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteMesh(meshId: str) -> Dict[str, Any]:
+
+    """
+    Delete a mesh from the scene
+    
+    Args:
+    meshId (str): ID of the mesh to delete
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteMesh"  # Define tool name for logging
+    params = {"meshId": meshId}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def getSelectedGeometry(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Get selected vertices, edges, or faces
+    
+    Args:
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    selectedIds (List[str]): IDs of selected structures
+    type (Literal["vertex", "edge", "face"]): The type return value
+    """
+    tool_name = "getSelectedGeometry"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "selectedIds": None  , # TODO: Implement  
+                "type": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def setSelectedGeometry(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Optional[Literal["replace", "add", "remove"]] = None) -> Dict[str, Any]:
+
+    """
+    Select or deselect vertices, edges, or faces
+    
+    Args:
+    ids (List[str]): IDs of structures to select
+    type (Literal["vertex", "edge", "face"]): The type parameter
+    mode (Literal["replace", "add", "remove"]): Selection mode
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setSelectedGeometry"  # Define tool name for logging
+    params = {"ids": ids, "type": type, "mode": mode}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+
+        # Validate enum values for mode
+        if mode is not None and mode not in ['replace','add','remove']:
+            raise ValueError(f"Parameter 'mode' must be one of ['replace','add','remove'], got {mode}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
 def setMaterialParameters(materialId: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
 
     """
@@ -2607,6 +2788,8 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
 
 
  # === NEWLY GENERATED ===
+
+
 
 
 
