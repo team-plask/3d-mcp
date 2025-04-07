@@ -39,12 +39,12 @@ import time
 import uuid
 import queue
 
-from .animation import animation_atomic
-from .core import core_atomic
-from .model import model_atomic
 from .monitor import monitor_atomic
+from .core import core_atomic
 from .render import render_atomic
+from .animation import animation_atomic
 from .rig import rig_atomic
+from .model import model_atomic
 
 
 # Global variables - this will store tools
@@ -121,8 +121,8 @@ def register_all_tools():
     """Register all available tool functions"""
     print("Registering all tools...")
 
-    # Register animation tools
-    for name, func in inspect.getmembers(animation_atomic, inspect.isfunction):
+    # Register monitor tools
+    for name, func in inspect.getmembers(monitor_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
@@ -131,23 +131,23 @@ def register_all_tools():
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
-    # Register model tools
-    for name, func in inspect.getmembers(model_atomic, inspect.isfunction):
-        print(f"Registering tool: {name}")
-        register_tool(name, func)
-
-    # Register monitor tools
-    for name, func in inspect.getmembers(monitor_atomic, inspect.isfunction):
-        print(f"Registering tool: {name}")
-        register_tool(name, func)
-
     # Register render tools
     for name, func in inspect.getmembers(render_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 
+    # Register animation tools
+    for name, func in inspect.getmembers(animation_atomic, inspect.isfunction):
+        print(f"Registering tool: {name}")
+        register_tool(name, func)
+
     # Register rig tools
     for name, func in inspect.getmembers(rig_atomic, inspect.isfunction):
+        print(f"Registering tool: {name}")
+        register_tool(name, func)
+
+    # Register model tools
+    for name, func in inspect.getmembers(model_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 

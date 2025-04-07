@@ -1,77 +1,211 @@
-# plugins/unreal/__init__.py
-# Generated Unreal MCP server
-# This file is an example - adapt as needed
+# Generated unreal MCP server
+# This file is generated - DO NOT EDIT DIRECTLY
 
-import unreal
-import socket
-import threading
+try:
+    import unreal
+    HAS_APP_LIBS = True
+except ImportError:
+    print(f"Warning: Could not import unreal. Running in mock mode.")
+    HAS_APP_LIBS = False
+
 import json
-import time
+import inspect
+import socket
+import sys
+import os
+import argparse
+from typing import Dict, Any, Callable, List, Union, Optional, Literal, TypedDict, Tuple
+import threading
 import traceback
 
-# 만약 다른 atomic 함수 파일들을 만든 경우, 여기서 import
-from . import my_atomic
-from . import other_atomic
+import time
+import uuid
+import queue
 
-# 전역 상태
-_server_running = False
-_server_socket = None
-_server_thread = None
+from .monitor import monitor_atomic
+from .core import core_atomic
+from .render import render_atomic
+from .animation import animation_atomic
+from .rig import rig_atomic
+from .model import model_atomic
 
-# 툴 함수들을 담을 딕셔너리
+
+# Global variables - this will store tools
 tools = {}
 
-def register_tool(name, func):
-    """툴 함수를 등록"""
+# Task queue for main thread execution
+task_queue = queue.Queue()
+results_store = {}  # Store task results by ID
+server_running = False  # 서버 실행 상태
+server_socket = None
+server_thread = None
+server_host = "127.0.0.1"
+server_port = 8000
+
+
+def execute_on_main_thread(tool_name, params):
+    """Schedule a tool execution on the main thread and wait for result"""
+    task_id = str(uuid.uuid4())
+    task = {"id": task_id, "tool": tool_name, "params": params, "completed": False}
+    results_store[task_id] = {
+        "completed": False,
+        "result": None,
+    }  # Initialize with proper structure
+    task_queue.put(task)
+
+    # Register timer if not already registered
+    if not is_task_processor_running():
+        start_task_processor()
+
+    # 작업 완료 대기
+    start_time = time.time()
+    timeout = 30.0  # 30초 타임아웃 설정
+
+    # Wait for task completion
+    try:
+        while not results_store.get(task_id, {}).get("completed", False):
+            time.sleep(0.1)
+            if time.time() - start_time > timeout:
+                return {"success": False, "error": "Task execution timed out"}
+    except Exception as e:
+        unreal.log_error(f"Error waiting for task completion: {str(e)}")
+        return {"success": False, "error": f"Task execution error: {str(e)}"}
+
+    # Get result and clean up
+    result = results_store.get(task_id, {}).get(
+        "result", {"success": False, "error": "No result found"}
+    )
+    del results_store[task_id]  # Clean up
+    return result
+
+# Unreal 메인 스레드에서 태스크 처리를 위한 타이머 설정
+def is_task_processor_running():
+    """태스크 프로세서가 실행 중인지 확인"""
+    return unreal.EditorAssetLibrary.does_asset_exist('/Engine/MCP/TaskProcessor')
+
+def start_task_processor():
+    """메인 스레드에서 태스크 처리를 위한 타이머 시작"""
+    unreal.register_slate_pre_tick_callback(process_task_queue)
+    unreal.log("[MCP] Task processor started")
+
+def process_task_queue(delta_time):
+    """Process queued tasks on the main thread"""
+    if task_queue.empty():
+        return True  # 계속 타이머 유지
+
+    try:
+        task = task_queue.get(block=False)
+        tool_name = task["tool"]
+        params = task["params"]
+        task_id = task["id"]
+        
+        try:
+            if tool_name in tools:
+                result = tools[tool_name](**params)
+            else:
+                result = {"success": False, "error": f"Unknown tool: {tool_name}"}
+        except Exception as e:
+            unreal.log_error(f"Error executing {tool_name}: {str(e)}")
+            traceback.print_exc()
+            result = {"success": False, "error": str(e)}
+        
+        # 결과 저장
+        results_store[task_id] = {"completed": True, "result": result}
+    except queue.Empty:
+        pass  # 큐가 비었을 때 예외 처리
+    
+    return True  # 계속 타이머 유지
+
+def register_tool(name: str, func: Callable):
+    """도구 함수를 서버에 등록"""
     unreal.log(f"[MCP] Registering tool: {name}")
     tools[name] = func
 
 def register_all_tools():
-    """my_atomic.py, other_atomic.py 등에 정의된 함수들을 등록"""
+    """사용 가능한 모든 도구 함수 등록"""
     unreal.log("[MCP] Registering all tools...")
+    
+    # 각 도메인별 도구 등록
+    for module, prefix in [
+        (monitor_atomic, "monitor_"),
+        (core_atomic, "core_"),
+        (render_atomic, "render_"),
+        (animation_atomic, "animation_"),
+        (rig_atomic, "rig_"),
+        (model_atomic, "model_")
+    ]:
+        for name, func in inspect.getmembers(module, inspect.isfunction):
+            if name.startswith(prefix):
+                register_tool(name, func)
 
-    # 예: my_atomic 내부 함수를 전부 찾아 등록한다거나, 필요한 것만 선택 등록
-    register_tool("my_first_tool", my_atomic.my_first_tool)
-    register_tool("my_second_tool", my_atomic.my_second_tool)
 
-    # other_atomic 도 마찬가지
-    # register_tool("other_tool", other_atomic.do_something)
+def server_loop():
+    """Main server loop running in a separate thread"""
+    global server_socket
+    
+    try:
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_socket.bind((server_host, server_port))
+        server_socket.listen(5)
+        server_socket.settimeout(1.0)  # 1초 타임아웃 설정
+        
+        unreal.log("[MCP] Server loop started")
+        
+        while server_running:
+            try:
+                client_socket, addr = server_socket.accept()
+                unreal.log(f"[MCP] Connection from {addr}")
+                # 클라이언트 요청 처리를 위한 스레드 시작
+                client_thread = threading.Thread(target=handle_client, args=(client_socket,))
+                client_thread.daemon = True
+                client_thread.start()
+            except socket.timeout:
+                # 타임아웃 발생 시 서버 상태 확인하고 계속 실행
+                continue
+    except Exception as e:
+        unreal.log_error(f"[MCP] Server error: {str(e)}")
+        traceback.print_exc()
+    finally:
+        if server_socket:
+            server_socket.close()
+            server_socket = None
+        unreal.log("[MCP] Server loop ended")
+
 
 def handle_client(client_socket):
-    """클라이언트 요청을 받아서 JSON 해석 후 tools에 등록된 함수를 호출"""
+    """Handle client connection and route requests to appropriate tool"""
     try:
         data = client_socket.recv(4096)
         if not data:
             return
-        unreal.log(f"[MCP] Received data: {data}")
         
+        unreal.log(f"[MCP] Received data: {len(data)} bytes")
+        
+        # HTTP 요청인지 확인
         request_str = data.decode("utf-8", errors="ignore")
         
-        # HTTP 요청이면 body 파싱, 아니면 바로 JSON 파싱
         if request_str.startswith("POST") or request_str.startswith("GET"):
+            # HTTP 요청 파싱
             body_start = request_str.find("\r\n\r\n") + 4
             if body_start > 4:
                 json_body = request_str[body_start:]
                 request = json.loads(json_body)
             else:
-                raise ValueError("Invalid HTTP request format, no body found")
+                raise ValueError("Invalid HTTP request format")
         else:
+            # 직접 JSON 파싱
             request = json.loads(request_str)
-
-        unreal.log(f"[MCP] Parsed request: {request_str}")
-        tool_name = request.get("tool", "")
+        
+        unreal.log(f"[MCP] Parsed request for tool: {request.get('tool', 'unknown')}")
+        tool_name = request.get("tool")
         params = request.get("params", {})
-
-        # 툴 실행
-        if tool_name in tools:
-            result = tools[tool_name](**params)
-        else:
-            result = {"success": False, "error": f"Unknown tool '{tool_name}'"}
-
-        # 결과를 JSON으로 보내기
+        
+        # 메인 스레드에서 실행하고 결과 가져오기
+        result = execute_on_main_thread(tool_name, params)
         response_data = json.dumps(result).encode("utf-8")
-
-        # HTTP 요청이었으면 간단한 헤더 붙이기
+        
+        # HTTP 응답 형식으로 보내기
         if request_str.startswith("POST") or request_str.startswith("GET"):
             response = (
                 b"HTTP/1.1 200 OK\r\n"
@@ -81,94 +215,92 @@ def handle_client(client_socket):
                 b"\r\n" +
                 response_data
             )
+            client_socket.send(response)
         else:
-            response = response_data
-
-        client_socket.send(response)
-
+            client_socket.send(response_data)
+    
     except Exception as e:
-        unreal.log_error(f"[MCP] Error in handle_client: {str(e)}")
+        unreal.log_error(f"[MCP] Client handling error: {str(e)}")
         traceback.print_exc()
-        error_msg = {"success": False, "error": str(e)}
-        response_data = json.dumps(error_msg).encode("utf-8")
-        client_socket.send(response_data)
+        
+        # 오류 응답 보내기
+        error_response = json.dumps({"success": False, "error": str(e)}).encode("utf-8")
+        
+        try:
+            if request_str and (request_str.startswith("POST") or request_str.startswith("GET")):
+                response = (
+                    b"HTTP/1.1 500 Internal Server Error\r\n"
+                    b"Content-Type: application/json\r\n"
+                    b"Content-Length: " + str(len(error_response)).encode() + b"\r\n"
+                    b"\r\n" +
+                    error_response
+                )
+                client_socket.send(response)
+            else:
+                client_socket.send(error_response)
+        except:
+            pass  # 응답 전송 실패 무시
     finally:
         client_socket.close()
 
-def server_loop(host, port):
-    """서버 메인 루프"""
-    global _server_running, _server_socket
-    unreal.log(f"[MCP] Server loop started on {host}:{port}")
 
-    try:
-        _server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        _server_socket.bind((host, port))
-        _server_socket.listen(5)
-        _server_socket.settimeout(1.0)  # accept() 타임아웃
-
-        while _server_running:
-            try:
-                client_sock, addr = _server_socket.accept()
-                unreal.log(f"[MCP] Connection from {addr}")
-                # 클라이언트마다 스레드를 따로 두는 간단한 방식
-                client_thread = threading.Thread(
-                    target=handle_client, args=(client_sock,)
-                )
-                client_thread.daemon = True
-                client_thread.start()
-
-            except socket.timeout:
-                # 1초마다 accept 재시도. _server_running이 False가 되면 루프종료
-                pass
-
-    except Exception as e:
-        unreal.log_error(f"[MCP] Server error: {str(e)}")
-        traceback.print_exc()
-    finally:
-        if _server_socket:
-            _server_socket.close()
-            _server_socket = None
-        unreal.log("[MCP] Server loop ended.")
 
 def start_server(host="127.0.0.1", port=8000):
-    """MCP 서버 시작 함수"""
-    global _server_running, _server_thread
-    if _server_running:
-        unreal.log_warning("[MCP] Server is already running.")
+    """Start the MCP server"""
+    global server_running, server_thread, server_host, server_port
+    
+    if server_running:
+        unreal.log_warning("[MCP] Server is already running")
         return
-
-    # 툴 등록
+    
+    server_host = host
+    server_port = port
+    
+    # 도구 등록
     register_all_tools()
+    
+    server_running = True
+    
+    # 서버 스레드 생성 및 시작
+    server_thread = threading.Thread(target=server_loop)
+    server_thread.daemon = True
+    server_thread.start()
+    
+    unreal.log(f"[MCP] Server started on {host}:{port}")
 
-    _server_running = True
-    _server_thread = threading.Thread(target=server_loop, args=(host, port))
-    _server_thread.daemon = True
-    _server_thread.start()
-
-    unreal.log(f"[MCP] Server started at {host}:{port}")
 
 def stop_server():
-    """MCP 서버 중지 함수"""
-    global _server_running, _server_socket, _server_thread
-
-    if not _server_running:
-        unreal.log_warning("[MCP] Server is not running.")
+    """Stop the MCP server"""
+    global server_running, server_socket, server_thread
+    
+    if not server_running:
+        unreal.log_warning("[MCP] Server is not running")
         return
+    
+    server_running = False
+    
+    # 소켓 닫기
+    if server_socket:
+        server_socket.close()
+        server_socket = None
+    
+    # 스레드 종료 대기
+    if server_thread:
+        server_thread.join(timeout=2.0)
+        server_thread = None
+    
+    unreal.log("[MCP] Server stopped")
 
-    _server_running = False
+# 언리얼 에디터 플러그인 초기화 시 자동으로 실행 (옵션)
+def initialize_plugin():
+    """플러그인 초기화 시 호출되는 함수"""
+    unreal.log("[MCP] Initializing 3D-MCP Unreal plugin")
+    # 여기에 필요한 초기화 코드 추가
 
-    # 접속이 막혀 있으면 일단 소켓을 닫아 accept()를 깨움
-    if _server_socket:
-        _server_socket.close()
-        _server_socket = None
-
-    # 서버 스레드를 기다림
-    if _server_thread:
-        _server_thread.join(timeout=2.0)
-        _server_thread = None
-
-    unreal.log("[MCP] Server stopped.")
-
-# Unreal이 이 스크립트를 처음 import 할 때 자동으로 뭔가 할 수도 있지만,
-# 보통은 Editor Utility Blueprint나 Python 콘솔 등에서 start_server(), stop_server() 등을 호출해주는 식으로 사용.
+# 언리얼 에디터 플러그인 종료 시 자동으로 실행 (옵션)
+def shutdown_plugin():
+    """플러그인 종료 시 호출되는 함수"""
+    if server_running:
+        stop_server()
+    unreal.log("[MCP] Shutting down 3D-MCP Unreal plugin")
+    # 여기에 필요한 정리 코드 추가

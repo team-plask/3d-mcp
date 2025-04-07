@@ -37,14 +37,14 @@ export const PLUGINS: PluginConfig[] = [
   {
     name: "unreal",
     dir: "plugins/unreal",
-    ext: "cpp",
-    lang: "cpp",
-    importStatements: [],
+    ext: "py",
+    lang: "python",
+    importStatements: ["import unreal"],
     printFormat:
-      'UE_LOG(LogMCPPlugin, Display, TEXT("Executing {0} in Unreal Engine"))',
+      'unreal.log("Executing {0} in Unreal Engine", tool_name)',
     errorFormat:
-      'UE_LOG(LogMCPPlugin, Error, TEXT("Error in {0}: %s"), *FString(Exception.what()))',
-    parseFunction: parseExistingUnrealFunctions,
+      'unreal.log("Error in {0}: %s", tool_name, str(e))',
+    parseFunction: parseExistingPythonFunctions,
   },
   {
     name: "maya",
