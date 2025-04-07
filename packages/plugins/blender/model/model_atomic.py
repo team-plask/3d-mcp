@@ -1826,35 +1826,6 @@ def getVertexs(ids: List[str]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def assignMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Assign materials to meshes or specific faces
-
-    Args:
-    items (List[Dict[str, Any] with keys {"materialId": str, "meshId": str, "faceIds": List[str]}]): Material assignments to make
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "assignMaterials"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def updateFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Update multiple Faces in a single operation
