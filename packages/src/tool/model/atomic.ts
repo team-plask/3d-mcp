@@ -322,52 +322,6 @@ const modelAtomicTools = {
     }),
   },
 
-  // transformUVs: {
-  //   description: "Transform UV coordinates for vertices",
-  //   parameters: z.object({
-  //     items: z
-  //       .array(
-  //         z.object({
-  //           meshId: z.string().describe("Mesh identifier"),
-  //           channel: z
-  //             .number()
-  //             .int()
-  //             .nonnegative()
-  //             .default(0)
-  //             .describe("Target UV channel"),
-  //           vertexTransforms: z
-  //             .array(
-  //               z.object({
-  //                 vertexId: z.string().describe("Vertex identifier"),
-  //                 u: z.number().optional().describe("New U coordinate"),
-  //                 v: z.number().optional().describe("New V coordinate"),
-  //                 offsetU: z.number().optional().describe("U offset to apply"),
-  //                 offsetV: z.number().optional().describe("V offset to apply"),
-  //               })
-  //             )
-  //             .describe("Per-vertex UV transformations"),
-  //         })
-  //       )
-  //       .describe("UV transformation operations"),
-  //   }),
-  //   returns: _OperationResponse,
-  // },
-
-  // Material operations
-  // assignMaterials: {
-  //   description: "Assign materials to meshes",
-  //   parameters: z.object({
-  //     items: z
-  //       .array(
-  //         z.object({
-  //           materialId: z.string().describe("Material identifier"),
-  //           meshId: z.string().describe("Mesh identifier"),
-  //         })
-  //       )
-  //       .describe("Material assignments to make"),
-  //   }),
-  //   returns: _OperationResponse,
-  // },
   getMaterials: {
     description: "Get materials for the current edited mesh",
     parameters: z.object({}),
@@ -381,6 +335,7 @@ const modelAtomicTools = {
         )
         .describe("List of materials"),
     }),
+  },
   setMaterialParameters: {
     description: "Set all parameters of a BSDF material",
     parameters: z.object({

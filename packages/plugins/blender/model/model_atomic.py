@@ -5,6 +5,73 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
+def setMaterialParameters(materialId: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Set all parameters of a BSDF material
+
+    Args:
+    materialId (str): Material identifier
+    parameters (Dict[str, Any] with keys {"baseColor": List[float], "metallic": float, "roughness": float, "transmission": float, "transmissionRoughness": float, "emission": List[float], "alpha": float}): Parameters to tweak
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setMaterialParameters"  # Define tool name for logging
+    # Create params dict for logging
+    params = {"materialId": materialId, "parameters": parameters}
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Get the material by its name
+        material = bpy.data.materials.get(materialId)
+        if not material:
+            raise ValueError(f"Material '{materialId}' not found.")
+
+        # Ensure the material uses nodes
+        if not material.use_nodes:
+            raise RuntimeError(f"Material '{materialId}' does not use nodes.")
+
+        # Find the Principled BSDF node
+        principled_node = None
+        for node in material.node_tree.nodes:
+            if node.type == 'BSDF_PRINCIPLED':
+                principled_node = node
+                break
+
+        if not principled_node:
+            raise RuntimeError(
+                f"Principled BSDF node not found in material '{materialId}'.")
+
+        # Apply the parameters to the Principled BSDF node
+        map_names = {
+            "baseColor": "Base Color",
+            "metallic": "Metallic",
+            "roughness": "Roughness",
+            "alpha": "Alpha",
+            "emission": "Emission Color",
+
+        }
+        for key, value in parameters.items():
+            named_key = map_names.get(key, key)
+            if named_key in principled_node.inputs:
+                input_socket = principled_node.inputs[named_key]
+                if isinstance(value, list) and len(value) == 3:  # For RGB values
+                    input_socket.default_value[:3] = value
+                else:
+                    input_socket.default_value = value
+            else:
+                print(
+                    f"Warning: Parameter '{key}' is not valid for Principled BSDF.")
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
 def extrudeAlongNormals(distance: float) -> Dict[str, Any]:
     """
     Extrude selected faces along their normals
@@ -185,7 +252,6 @@ def bridgeEdgeLoops() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -263,7 +329,6 @@ def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -368,7 +433,7 @@ def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
+
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -419,7 +484,6 @@ def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -472,7 +536,6 @@ def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -528,8 +591,6 @@ def transform(translation: Optional[List[float]] = None, rotation: Optional[List
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import mathutils
-        import bmesh
 
         # Ensure there is an active object
         obj = bpy.context.object
@@ -687,7 +748,7 @@ def inset(amount: float) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
+
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -730,7 +791,7 @@ def getGeometry() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
+
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
             raise RuntimeError("No active mesh object found.")
@@ -954,7 +1015,7 @@ def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
+
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -1042,7 +1103,7 @@ def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Opt
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
+
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -2421,32 +2482,36 @@ def deleteSubdivisionModifiers(ids: List[str]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def getMaterials(ids: List[str]) -> Dict[str, Any]:
+def getMaterials() -> Dict[str, Any]:
     """
-    Get multiple Materials by IDs
+    Get materials for the current edited mesh
 
     Args:
-    ids (List[str]): Material identifiers
 
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str}}]): Array of Materials objects
     """
     tool_name = "getMaterials"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
+    params = {}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        # No parameters to validate
+        # Get the active object
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
 
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
+        # Retrieve materials from the object
+        materials = []
+        for index, material in enumerate(obj.data.materials):
+            if material:
+                materials.append({"id": str(index), "name": material.name})
 
         return {
-            "success": True,  # TODO: Implement
-            "items": None
+            "success": True,
+            "items": materials
         }
-
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}

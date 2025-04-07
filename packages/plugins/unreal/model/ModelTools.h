@@ -818,3 +818,68 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> extrudeAlongNormals(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Create a face or an edge from selected vertices or edges. Wether a face or an edge is created depends on how many vertices or edges are selected.
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> createFaceOrEdge(const TSharedPtr<FJsonObject>& Params);
+};
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Set all parameters of a BSDF material
+     * * @param materialId - Material identifier (FString)
+     * @param parameters - Parameters to tweak (TSharedPtr<FJsonObject>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setMaterialParameters(const TSharedPtr<FJsonObject>& Params);
+};
