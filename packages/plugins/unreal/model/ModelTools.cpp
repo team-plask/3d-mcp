@@ -3118,3 +3118,110 @@ TSharedPtr<FJsonObject> UMCPModelTools::extrudeAlongNormals(const TSharedPtr<FJs
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("createFaceOrEdge", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createFaceOrEdge));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::createFaceOrEdge(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createFaceOrEdge in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for createFaceOrEdge
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createFaceOrEdge: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("setMaterialParameters", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setMaterialParameters));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::setMaterialParameters(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setMaterialParameters in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter materialId
+        if (!Params->HasField("materialId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter materialId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter materialId is missing");
+            return Response;
+        }
+        // Extract materialId (FString)
+        FString materialId;
+        if (Params->TryGetStringField("materialId", materialId)) {
+        }
+        // Check required parameter parameters
+        if (!Params->HasField("parameters")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter parameters is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter parameters is missing");
+            return Response;
+        }
+        // Extract complex parameter parameters 
+        const TSharedPtr<FJsonValue>* parametersValue = nullptr;
+        if (Params->TryGetField("parameters", parametersValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setMaterialParameters
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setMaterialParameters: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

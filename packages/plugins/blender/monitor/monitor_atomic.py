@@ -2,29 +2,45 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 import bpy
-from typing import Dict, Any, Optional, List, Union, Tuple, Literal, Callable
-import mathutils
-import os
-import time
-from pathlib import Path
-import traceback
-import subprocess
-import sys
+from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
-try:
-    from PIL import Image
-except:
-    import sysconfig
-    import platform
 
-    python_exe = sys.executable  # This works on macOS/Linux/Windows
+def getQuadView(shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None, name_visibility_predicate: Optional[str] = None, auto_adjust_camera: Optional[bool] = None) -> Dict[str, Any]:
+    """
+    Get top, front, right, and perspective views of the scene.
+
+    Args:
+    shading_mode (Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]): Shading mode for the viewports
+    name_visibility_predicate (str):  Function that takes an object as input and returns a dict with display settings. See example below.
+    auto_adjust_camera (bool): Automatically adjust camera to fit the scene
+
+    Returns:
+    success (bool): Operation success status
+    image_path (List[str]): Paths to the images of the quad view
+    """
+    tool_name = "getQuadView"  # Define tool name for logging
+    params = {"shading_mode": shading_mode, "name_visibility_predicate": name_visibility_predicate,
+              "auto_adjust_camera": auto_adjust_camera}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        subprocess.call([python_exe, "-m", "ensurepip"])
-        subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
-        subprocess.call([python_exe, "-m", "pip", "install", "pillow"])
-    except Exception as install_error:
-        print(f"Failed to install Pillow: {install_error}")
+
+        # Validate enum values for shading_mode
+        if shading_mode is not None and shading_mode not in ['WIREFRAME', 'RENDERED', 'SOLID', 'MATERIAL']:
+            raise ValueError(
+                f"Parameter 'shading_mode' must be one of ['WIREFRAME','RENDERED','SOLID','MATERIAL'], got {shading_mode}")
+
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+
+        return {
+            "success": True,  # TODO: Implement
+            "image_path": None
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
 
 
 def getSceneGraph() -> Dict[str, Any]:
@@ -334,14 +350,16 @@ def getCameraView(
                 break
 
         if not main_3d_view:
-            largest_area = max(temp_screen.areas, key=lambda a: a.width * a.height)
+            largest_area = max(temp_screen.areas,
+                               key=lambda a: a.width * a.height)
             largest_area.type = "VIEW_3D"
             main_3d_view = largest_area
 
     def calculate_scene_bounds() -> Tuple[mathutils.Vector, mathutils.Vector]:
         """Calculate bounds of all visible objects for auto-fit."""
         min_co = mathutils.Vector((float("inf"), float("inf"), float("inf")))
-        max_co = mathutils.Vector((float("-inf"), float("-inf"), float("-inf")))
+        max_co = mathutils.Vector(
+            (float("-inf"), float("-inf"), float("-inf")))
 
         has_objects = False
 
@@ -577,7 +595,8 @@ def getCameraView(
                             region_3d.view_location = (0.0, 0.0, 0.0)
 
                         # Force redraw and wait for UI update
-                        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+                        bpy.ops.wm.redraw_timer(
+                            type="DRAW_WIN_SWAP", iterations=1)
                         bpy.context.view_layer.update()
                         time.sleep(0.3)
 
@@ -587,7 +606,8 @@ def getCameraView(
                         )
                         print(f"Taking {view_name} view screenshot...")
 
-                        context_override = {"window": original_window, "area": area}
+                        context_override = {
+                            "window": original_window, "area": area}
 
                         try:
                             with bpy.context.temp_override(**context_override):
@@ -612,7 +632,6 @@ def getCameraView(
                             )
 
                             # Open and resize the image
-                            from PIL import Image
 
                             img = Image.open(view_filename)
                             width, height = img.size
@@ -624,7 +643,8 @@ def getCameraView(
                             # Replace the original file with the resized one
                             os.replace(resized_filename, view_filename)
 
-                            print(f"Image resized to half resolution: {view_filename}")
+                            print(
+                                f"Image resized to half resolution: {view_filename}")
                             image_paths.append(view_filename)
                         except Exception as e:
                             print(f"Error resizing image: {e}")
@@ -638,7 +658,8 @@ def getCameraView(
             try:
                 for area in bpy.context.screen.areas:
                     if area.type == "VIEW_3D":
-                        context_override = {"window": original_window, "area": area}
+                        context_override = {
+                            "window": original_window, "area": area}
                         try:
                             with bpy.context.temp_override(**context_override):
                                 bpy.ops.screen.screen_full_area()
@@ -682,7 +703,8 @@ def getCameraView(
         if name_visibility_predicate:
             try:
                 # Try to evaluate the string as Python code
-                visibility_func = eval(f"lambda obj: {name_visibility_predicate}")
+                visibility_func = eval(
+                    f"lambda obj: {name_visibility_predicate}")
             except Exception as e:
                 print(
                     f"Error evaluating name_visibility_predicate: {name_visibility_predicate} - {str(e)}"

@@ -322,55 +322,68 @@ const modelAtomicTools = {
     }),
   },
 
-  // transformUVs: {
-  //   description: "Transform UV coordinates for vertices",
-  //   parameters: z.object({
-  //     items: z
-  //       .array(
-  //         z.object({
-  //           meshId: z.string().describe("Mesh identifier"),
-  //           channel: z
-  //             .number()
-  //             .int()
-  //             .nonnegative()
-  //             .default(0)
-  //             .describe("Target UV channel"),
-  //           vertexTransforms: z
-  //             .array(
-  //               z.object({
-  //                 vertexId: z.string().describe("Vertex identifier"),
-  //                 u: z.number().optional().describe("New U coordinate"),
-  //                 v: z.number().optional().describe("New V coordinate"),
-  //                 offsetU: z.number().optional().describe("U offset to apply"),
-  //                 offsetV: z.number().optional().describe("V offset to apply"),
-  //               })
-  //             )
-  //             .describe("Per-vertex UV transformations"),
-  //         })
-  //       )
-  //       .describe("UV transformation operations"),
-  //   }),
-  //   returns: _OperationResponse,
-  // },
-
-  // Material operations
-  assignMaterials: {
-    description: "Assign materials to meshes or specific faces",
-    parameters: z.object({
-      items: z
+  getMaterials: {
+    description: "Get materials for the current edited mesh",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      materials: z
         .array(
           z.object({
-            materialId: z.string().describe("Material identifier"),
-            meshId: z.string().describe("Mesh identifier"),
-            faceIds: z
-              .array(z.string())
-              .optional()
-              .describe(
-                "Specific face IDs (if omitted, applies to entire mesh)"
-              ),
+            id: z.string().describe("Material identifier"),
+            name: z.string().describe("Material name"),
           })
         )
-        .describe("Material assignments to make"),
+        .describe("List of materials"),
+    }),
+  },
+  setMaterialParameters: {
+    description: "Set all parameters of a BSDF material",
+    parameters: z.object({
+      materialId: z.string().describe("Material identifier"),
+      parameters: z
+        .object({
+          baseColor: z
+            .array(z.number())
+            .length(3)
+            .optional()
+            .describe("Base color (RGB)"),
+          metallic: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Metallic factor"),
+          roughness: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Roughness factor"),
+          transmission: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Transmission factor"),
+          transmissionRoughness: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Transmission roughness factor"),
+          emission: z
+            .array(z.number())
+            .length(3)
+            .optional()
+            .describe("Emission color (RGB)"),
+          alpha: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Alpha transparency"),
+        })
+        .describe("Parameters to tweak"),
     }),
     returns: _OperationResponse,
   },
