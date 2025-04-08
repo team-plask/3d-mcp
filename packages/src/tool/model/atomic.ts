@@ -11,7 +11,7 @@ const entityCruds = createCrudOperations(ModelEntities);
  * Modeling atomic tools with focus on domain-specific batch operations
  */
 const modelAtomicTools = {
-  ...entityCruds,
+  // ...entityCruds,
 
   // General operations
   editStart: {
@@ -30,14 +30,46 @@ const modelAtomicTools = {
     description: "Get geometry data for the current edited mesh",
     parameters: z.object({}),
     returns: _OperationResponse.extend({
-      geometryData: Mesh.describe("Geometry data"),
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
     }),
+  },
+
+  setGeometry: {
+    description: "Set geometry data for the current edited mesh",
+    parameters: z.object({
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
+    }),
+    returns: _OperationResponse,
   },
 
   // Edit mesh operations
 
   // Selection operations
-  setSelect: {
+  setSelectedGeometry: {
     description: "Select or deselect vertices, edges, or faces",
     parameters: z.object({
       ids: z.array(z.string()).describe("IDs of structures to select"),
@@ -49,7 +81,7 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  getSelect: {
+  getSelectedGeometry: {
     description: "Get selected vertices, edges, or faces",
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
@@ -76,7 +108,7 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  delete: {
+  deleteGeometry: {
     description: "Delete selected vertices, edges, or faces",
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
@@ -193,15 +225,6 @@ const modelAtomicTools = {
     parameters: z.object({}),
     returns: _OperationResponse,
   },
-  addPrimitives: {
-    description: "Add primitive shapes to the scene",
-    parameters: z.object({
-      type: z
-        .enum(["sphere", "cube", "cylinder", "plane"])
-        .describe("Type of primitive to add"),
-    }),
-    returns: _OperationResponse,
-  },
   addSubsurfModifierLevel: {
     description:
       "Add a subsurface modifier to the selected mesh and set its level",
@@ -234,7 +257,7 @@ const modelAtomicTools = {
   },
 
   splitMeshes: {
-    description: "Split meshes into separate objects",
+    description: "Split meshes into separate meshes",
     parameters: z.object({
       items: z
         .array(
@@ -264,6 +287,28 @@ const modelAtomicTools = {
         )
         .describe("Split results by mesh"),
     }),
+  },
+  createMeshFromPrimitive: {
+    description:
+      "Add primitive shapes (object) to the scene. \
+    All primitives are centered at the origin and aligned with the world axes (z is up) \
+      + sphere : the radius of the sphere is 1, and has 32 subdivisions. \
+      + cube : the cube is 1x1x1. \
+      + cylinder : the radius of the cylinder is 1, and has 32 subdivisions, its height axis is Z. \
+      + plane : the plane is 1x1, and is just a quad. Its normal is the Z axis  ",
+    parameters: z.object({
+      type: z
+        .enum(["sphere", "cube", "cylinder", "plane"])
+        .describe("Type of primitive to add"),
+    }),
+    returns: _OperationResponse,
+  },
+  deleteObject: {
+    description: "Delete an object from the scene",
+    parameters: z.object({
+      id: z.string().describe("ID of the object to delete"),
+    }),
+    returns: _OperationResponse,
   },
 
   // UVMap operations
@@ -384,6 +429,30 @@ const modelAtomicTools = {
             .describe("Alpha transparency"),
         })
         .describe("Parameters to tweak"),
+    }),
+    returns: _OperationResponse,
+  },
+  // Light operations
+  createLight: {
+    description: "Create a light source (object) in the scene",
+    parameters: z.object({
+      type: z.enum(["point", "sun", "spot", "area"]).describe("Light type"),
+      color: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light color (RGB)"),
+      intensity: z.number().min(0).optional().describe("Light intensity"),
+      position: _Tensor.VEC3.optional().describe("Light position"),
+      direction: _Tensor.VEC3.optional().describe("Light direction"),
+      width: z
+        .number()
+        .optional()
+        .describe("Width of the light (for area lights)"),
+      height: z
+        .number()
+        .optional()
+        .describe("Height of the light (for area lights)"),
     }),
     returns: _OperationResponse,
   },

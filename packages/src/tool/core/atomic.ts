@@ -10,9 +10,7 @@ const coreAtomicTools = {
   select: {
     description: "Select one or more objects",
     parameters: z.object({
-      ids: z
-        .array(z.string())
-        .describe("Object identifiers to select"),
+      ids: z.array(z.string()).describe("Object identifiers to select"),
       mode: z
         .enum(["replace", "add", "remove", "toggle"])
         .default("replace")
@@ -27,9 +25,7 @@ const coreAtomicTools = {
     returns: _OperationResponse.extend({
       selectedIds: z
         .array(z.string())
-        .describe(
-          "All selected object IDs after operation"
-        ),
+        .describe("All selected object IDs after operation"),
     }),
   },
 
@@ -63,9 +59,8 @@ const coreAtomicTools = {
     }),
   },
 
-  batchTransform: {
-    description:
-      "Apply transformations to multiple objects",
+  transformObjects: {
+    description: "Apply transformations to multiple objects",
     parameters: z.object({
       items: z
         .array(
@@ -80,23 +75,19 @@ const coreAtomicTools = {
             scale: _Tensor.VEC3.optional().describe(
               "New absolute scale [x, y, z]"
             ),
-            positionOffset:
-              _Tensor.VEC3.optional().describe(
-                "Relative position offset to apply [dx, dy, dz]"
-              ),
-            rotationOffset:
-              _Tensor.QUAT.optional().describe(
-                "Relative rotation to apply as quaternion [x, y, z, w]"
-              ),
+            positionOffset: _Tensor.VEC3.optional().describe(
+              "Relative position offset to apply [dx, dy, dz]"
+            ),
+            rotationOffset: _Tensor.QUAT.optional().describe(
+              "Relative rotation to apply as quaternion [x, y, z, w]"
+            ),
             scaleOffset: _Tensor.VEC3.optional().describe(
               "Relative scale to apply [sx, sy, sz]"
             ),
             space: z
               .enum(["local", "world", "parent"])
               .default("world")
-              .describe(
-                "Coordinate space for the transformation"
-              ),
+              .describe("Coordinate space for the transformation"),
           })
         )
         .describe("Transformations to apply"),
@@ -104,7 +95,7 @@ const coreAtomicTools = {
     returns: _OperationResponse,
   },
 
-  batchSetParent: {
+  setParentObjects: {
     description: "Set parent for multiple objects",
     parameters: z.object({
       items: z
@@ -114,18 +105,14 @@ const coreAtomicTools = {
             parentId: z
               .string()
               .nullable()
-              .describe(
-                "Parent object ID (null to unparent)"
-              ),
+              .describe("Parent object ID (null to unparent)"),
           })
         )
         .describe("Parent assignments to make"),
       maintainWorldTransform: z
         .boolean()
         .default(true)
-        .describe(
-          "Whether to preserve world transforms after reparenting"
-        ),
+        .describe("Whether to preserve world transforms after reparenting"),
     }),
     returns: _OperationResponse,
   },
@@ -144,80 +131,15 @@ const coreAtomicTools = {
         .describe("Filter by object types"),
     }),
     returns: _OperationResponse.extend({
-      childIds: z
-        .array(z.string())
-        .describe("Child object IDs"),
-    }),
-  },
-
-  batchSetProperty: {
-    description: "Set properties on multiple objects",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            entries: z
-              .array(
-                z.object({
-                  propertyPath: z
-                    .array(z.string())
-                    .describe("Property path to set"),
-                  value: z.any().describe("Value to set"),
-                })
-              )
-              .describe("Property entries to set"),
-          })
-        )
-        .describe("Property assignments to make"),
-    }),
-    returns: _OperationResponse,
-  },
-
-  batchGetProperty: {
-    description:
-      "Get property values from multiple objects",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            propertyPath: z
-              .array(z.string())
-              .describe(
-                "List of property paths to retrieve"
-              ),
-          })
-        )
-        .describe("Property requests to make"),
-      recursive: z
-        .boolean()
-        .default(false)
-        .describe("Whether to include all descendants"),
-    }),
-    returns: _OperationResponse.extend({
-      values: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            propertyPath: z
-              .string()
-              .describe("Path to the property"),
-            value: z.any().describe("Property value"),
-          })
-        )
-        .describe("Property values retrieved"),
+      childIds: z.array(z.string()).describe("Child object IDs"),
     }),
   },
 
   duplicate: {
-    description: "Duplicate an entity",
+    description: "Duplicate an object",
     parameters: z.object({
-      id: z.string().describe("Source entity identifier"),
-      newName: z
-        .string()
-        .optional()
-        .describe("Name for the duplicated entity"),
+      id: z.string().describe("Source object identifier"),
+      newName: z.string().optional().describe("Name for the duplicated object"),
       duplicateChildren: z
         .boolean()
         .default(true)
@@ -225,20 +147,14 @@ const coreAtomicTools = {
       duplicateDependencies: z
         .boolean()
         .default(false)
-        .describe(
-          "Whether to duplicate dependencies (materials, etc.)"
-        ),
+        .describe("Whether to duplicate dependencies (materials, etc.)"),
     }),
     returns: _OperationResponse.extend({
-      newId: z
-        .string()
-        .describe("ID of the duplicated entity"),
+      newId: z.string().describe("ID of the duplicated object"),
       childIds: z
         .array(z.string())
         .optional()
-        .describe(
-          "IDs of duplicated children if applicable"
-        ),
+        .describe("IDs of duplicated children if applicable"),
     }),
   },
 
@@ -246,10 +162,7 @@ const coreAtomicTools = {
   query: {
     description: "Query entities based on criteria",
     parameters: z.object({
-      type: z
-        .string()
-        .optional()
-        .describe("Entity type to filter by"),
+      type: z.string().optional().describe("Entity type to filter by"),
       properties: z
         .record(z.string(), z.any())
         .optional()
@@ -258,9 +171,7 @@ const coreAtomicTools = {
         ),
     }),
     returns: _OperationResponse.extend({
-      results: z
-        .array(z.string())
-        .describe("IDs of matching entities"),
+      results: z.array(z.string()).describe("IDs of matching entities"),
     }),
   },
 
@@ -290,7 +201,6 @@ const coreAtomicTools = {
 
 export type CoreTool = keyof typeof coreAtomicTools;
 
-const coreAtomicToolsWithExecute =
-  createExecutableTools(coreAtomicTools);
+const coreAtomicToolsWithExecute = createExecutableTools(coreAtomicTools);
 
 export { coreAtomicToolsWithExecute };

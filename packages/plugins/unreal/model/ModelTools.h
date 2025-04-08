@@ -883,3 +883,145 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> setMaterialParameters(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Add primitive shapes to the scene
+     * * @param type - Type of primitive to add (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> createMeshFromPrimitive(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Delete selected vertices, edges, or faces
+     * * @param type - The type parameter (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> deleteGeometry(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Delete a mesh from the scene
+     * * @param meshId - ID of the mesh to delete (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> deleteMesh(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Get selected vertices, edges, or faces
+     * * @param type - The type parameter (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> getSelectedGeometry(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Select or deselect vertices, edges, or faces
+     * * @param ids - IDs of structures to select (TArray<TSharedPtr<FJsonValue>>)
+     * @param type - The type parameter (FString)
+     * @param mode - Selection mode (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setSelectedGeometry(const TSharedPtr<FJsonObject>& Params);
+};
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Create a light source (object) in the scene
+     * * @param type - Light type (FString)
+     * @param color - Light color (RGB) (TArray<TSharedPtr<FJsonValue>>)
+     * @param intensity - Light intensity (double)
+     * @param position - Light position (TArray<TSharedPtr<FJsonValue>>)
+     * @param direction - Light direction (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> createLight(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Delete an object from the scene
+     * * @param id - ID of the object to delete (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> deleteObject(const TSharedPtr<FJsonObject>& Params);
+};
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Set geometry data for the current edited mesh
+     * * @param geometryData - Geometry data (TSharedPtr<FJsonObject>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setGeometry(const TSharedPtr<FJsonObject>& Params);
+};

@@ -6,6 +6,300 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def setGeometry(geometryData: Dict[str, Any]) -> Dict[str, Any]:
+
+    """
+    Set geometry data for the current edited mesh
+    
+    Args:
+    geometryData (Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str], "vertices": List[List[float]], "edges": List[List[int]], "faces": List[int]}): Geometry data
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setGeometry"  # Define tool name for logging
+    params = {"geometryData": geometryData}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
+def createLight(type: Literal["point", "directional", "spot"], color: Optional[List[float]] = None, intensity: Optional[float] = None, position: List[float], direction: List[float]) -> Dict[str, Any]:
+
+    """
+    Create a light source (object) in the scene
+    
+    Args:
+    type (Literal["point", "directional", "spot"]): Light type
+    color (List[float]): Light color (RGB)
+    intensity (float): Light intensity
+    position (List[float]): Light position
+    direction (List[float]): Light direction
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createLight"  # Define tool name for logging
+    params = {"type": type, "color": color, "intensity": intensity, "position": position, "direction": direction}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['point','directional','spot']:
+            raise ValueError(f"Parameter 'type' must be one of ['point','directional','spot'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteObject(id: str) -> Dict[str, Any]:
+
+    """
+    Delete an object from the scene
+    
+    Args:
+    id (str): ID of the object to delete
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteObject"  # Define tool name for logging
+    params = {"id": id}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
+def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
+
+    """
+    Add primitive shapes to the scene
+    
+    Args:
+    type (Literal["sphere", "cube", "cylinder", "plane"]): Type of primitive to add
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createMeshFromPrimitive"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['sphere','cube','cylinder','plane']:
+            raise ValueError(f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteGeometry(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Delete selected vertices, edges, or faces
+    
+    Args:
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteGeometry"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def deleteMesh(meshId: str) -> Dict[str, Any]:
+
+    """
+    Delete a mesh from the scene
+    
+    Args:
+    meshId (str): ID of the mesh to delete
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteMesh"  # Define tool name for logging
+    params = {"meshId": meshId}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def getSelectedGeometry(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
+
+    """
+    Get selected vertices, edges, or faces
+    
+    Args:
+    type (Literal["vertex", "edge", "face"]): The type parameter
+        
+    Returns:
+    success (bool): Operation success status
+    selectedIds (List[str]): IDs of selected structures
+    type (Literal["vertex", "edge", "face"]): The type return value
+    """
+    tool_name = "getSelectedGeometry"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "selectedIds": None  , # TODO: Implement  
+                "type": None  
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def setSelectedGeometry(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Optional[Literal["replace", "add", "remove"]] = None) -> Dict[str, Any]:
+
+    """
+    Select or deselect vertices, edges, or faces
+    
+    Args:
+    ids (List[str]): IDs of structures to select
+    type (Literal["vertex", "edge", "face"]): The type parameter
+    mode (Literal["replace", "add", "remove"]): Selection mode
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setSelectedGeometry"  # Define tool name for logging
+    params = {"ids": ids, "type": type, "mode": mode}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face'], got {type}")
+      
+
+        # Validate enum values for mode
+        if mode is not None and mode not in ['replace','add','remove']:
+            raise ValueError(f"Parameter 'mode' must be one of ['replace','add','remove'], got {mode}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
 def setMaterialParameters(materialId: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
 
     """
@@ -2607,6 +2901,12 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
 
 
  # === NEWLY GENERATED ===
+
+
+
+
+
+
 
 
 
