@@ -21,7 +21,8 @@ except:
 
     try:
         subprocess.call([python_exe, "-m", "ensurepip"])
-        subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.call(
+            [python_exe, "-m", "pip", "install", "--upgrade", "pip"])
         subprocess.call([python_exe, "-m", "pip", "install", "pillow"])
     except Exception as install_error:
         print(f"Failed to install Pillow: {install_error}")
@@ -334,14 +335,16 @@ def getCameraView(
                 break
 
         if not main_3d_view:
-            largest_area = max(temp_screen.areas, key=lambda a: a.width * a.height)
+            largest_area = max(temp_screen.areas,
+                               key=lambda a: a.width * a.height)
             largest_area.type = "VIEW_3D"
             main_3d_view = largest_area
 
     def calculate_scene_bounds() -> Tuple[mathutils.Vector, mathutils.Vector]:
         """Calculate bounds of all visible objects for auto-fit."""
         min_co = mathutils.Vector((float("inf"), float("inf"), float("inf")))
-        max_co = mathutils.Vector((float("-inf"), float("-inf"), float("-inf")))
+        max_co = mathutils.Vector(
+            (float("-inf"), float("-inf"), float("-inf")))
 
         has_objects = False
 
@@ -577,7 +580,8 @@ def getCameraView(
                             region_3d.view_location = (0.0, 0.0, 0.0)
 
                         # Force redraw and wait for UI update
-                        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+                        bpy.ops.wm.redraw_timer(
+                            type="DRAW_WIN_SWAP", iterations=1)
                         bpy.context.view_layer.update()
                         time.sleep(0.3)
 
@@ -587,7 +591,8 @@ def getCameraView(
                         )
                         print(f"Taking {view_name} view screenshot...")
 
-                        context_override = {"window": original_window, "area": area}
+                        context_override = {
+                            "window": original_window, "area": area}
 
                         try:
                             with bpy.context.temp_override(**context_override):
@@ -624,7 +629,8 @@ def getCameraView(
                             # Replace the original file with the resized one
                             os.replace(resized_filename, view_filename)
 
-                            print(f"Image resized to half resolution: {view_filename}")
+                            print(
+                                f"Image resized to half resolution: {view_filename}")
                             image_paths.append(view_filename)
                         except Exception as e:
                             print(f"Error resizing image: {e}")
@@ -638,7 +644,8 @@ def getCameraView(
             try:
                 for area in bpy.context.screen.areas:
                     if area.type == "VIEW_3D":
-                        context_override = {"window": original_window, "area": area}
+                        context_override = {
+                            "window": original_window, "area": area}
                         try:
                             with bpy.context.temp_override(**context_override):
                                 bpy.ops.screen.screen_full_area()
@@ -682,7 +689,8 @@ def getCameraView(
         if name_visibility_predicate:
             try:
                 # Try to evaluate the string as Python code
-                visibility_func = eval(f"lambda obj: {name_visibility_predicate}")
+                visibility_func = eval(
+                    f"lambda obj: {name_visibility_predicate}")
             except Exception as e:
                 print(
                     f"Error evaluating name_visibility_predicate: {name_visibility_predicate} - {str(e)}"

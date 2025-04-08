@@ -126,3 +126,44 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> select(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for core atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "CoreTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the core tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPCoreTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPCoreTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Set parent for multiple objects
+     * * @param items - Parent assignments to make (TArray<TSharedPtr<FJsonValue>>)
+     * @param maintainWorldTransform - Whether to preserve world transforms after reparenting (bool)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setParentObjects(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Apply transformations to multiple objects
+     * * @param items - Transformations to apply (TArray<TSharedPtr<FJsonValue>>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> transformObjects(const TSharedPtr<FJsonObject>& Params);
+};

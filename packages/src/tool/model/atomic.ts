@@ -30,8 +30,40 @@ const modelAtomicTools = {
     description: "Get geometry data for the current edited mesh",
     parameters: z.object({}),
     returns: _OperationResponse.extend({
-      geometryData: Mesh.describe("Geometry data"),
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
     }),
+  },
+
+  setGeometry: {
+    description: "Set geometry data for the current edited mesh",
+    parameters: z.object({
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
+    }),
+    returns: _OperationResponse,
   },
 
   // Edit mesh operations
@@ -225,7 +257,7 @@ const modelAtomicTools = {
   },
 
   splitMeshes: {
-    description: "Split meshes into separate objects",
+    description: "Split meshes into separate meshes",
     parameters: z.object({
       items: z
         .array(
@@ -257,7 +289,13 @@ const modelAtomicTools = {
     }),
   },
   createMeshFromPrimitive: {
-    description: "Add primitive shapes to the scene",
+    description:
+      "Add primitive shapes (object) to the scene. \
+    All primitives are centered at the origin and aligned with the world axes (z is up) \
+      + sphere : the radius of the sphere is 1, and has 32 subdivisions. \
+      + cube : the cube is 1x1x1. \
+      + cylinder : the radius of the cylinder is 1, and has 32 subdivisions, its height axis is Z. \
+      + plane : the plane is 1x1, and is just a quad. Its normal is the Z axis  ",
     parameters: z.object({
       type: z
         .enum(["sphere", "cube", "cylinder", "plane"])
@@ -265,10 +303,10 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  deleteMesh: {
-    description: "Delete a mesh from the scene",
+  deleteObject: {
+    description: "Delete an object from the scene",
     parameters: z.object({
-      meshId: z.string().describe("ID of the mesh to delete"),
+      id: z.string().describe("ID of the object to delete"),
     }),
     returns: _OperationResponse,
   },
@@ -391,6 +429,30 @@ const modelAtomicTools = {
             .describe("Alpha transparency"),
         })
         .describe("Parameters to tweak"),
+    }),
+    returns: _OperationResponse,
+  },
+  // Light operations
+  createLight: {
+    description: "Create a light source (object) in the scene",
+    parameters: z.object({
+      type: z.enum(["point", "sun", "spot", "area"]).describe("Light type"),
+      color: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light color (RGB)"),
+      intensity: z.number().min(0).optional().describe("Light intensity"),
+      position: _Tensor.VEC3.optional().describe("Light position"),
+      direction: _Tensor.VEC3.optional().describe("Light direction"),
+      width: z
+        .number()
+        .optional()
+        .describe("Width of the light (for area lights)"),
+      height: z
+        .number()
+        .optional()
+        .describe("Height of the light (for area lights)"),
     }),
     returns: _OperationResponse,
   },

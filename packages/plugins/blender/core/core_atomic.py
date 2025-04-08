@@ -5,52 +5,6 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
-def batchSetProperty(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Set properties on multiple objects
-
-    Args:
-    items (List[Dict[str, Any] with keys {"id": str, "entries": List[Dict[str, Any] with keys {"propertyPath": List[str], "value": Any}]}]): Property assignments to make
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "batchSetProperty"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # Implement actual blender API calls
-        for item in items:
-            obj = bpy.data.objects.get(item["id"])
-            if obj is None:
-                continue
-
-            for entry in item["entries"]:
-                path = entry["propertyPath"]
-                value = entry["value"]
-
-                # Navigate to the target property
-                target = obj
-                for i, path_part in enumerate(path[:-1]):
-                    if hasattr(target, path_part):
-                        target = getattr(target, path_part)
-                    else:
-                        break
-
-                # Set the value
-                if hasattr(target, path[-1]):
-                    setattr(target, path[-1], value)
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def query(
     type: Optional[str] = None, properties: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
@@ -66,7 +20,8 @@ def query(
     results (List[str]): IDs of matching entities
     """
     tool_name = "query"  # Define tool name for logging
-    params = {"type": type, "properties": properties}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"type": type, "properties": properties}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
@@ -186,7 +141,8 @@ def getChildren(
                 if recursive:
                     collect_children(child, recursive)
 
-        collect_children(parent_obj, recursive if recursive is not None else False)
+        collect_children(
+            parent_obj, recursive if recursive is not None else False)
 
         return {"success": True, "childIds": child_ids}
 
@@ -267,79 +223,7 @@ def undo() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def batchGetProperty(
-    items: List[Dict[str, Any]], recursive: Optional[bool] = None
-) -> Dict[str, Any]:
-    """
-    Get property values from multiple objects
-
-    Args:
-    items (List[Dict[str, Any] with keys {"id": str, "propertyPath": List[str]}]): Property requests to make
-    recursive (bool): Whether to include all descendants
-
-    Returns:
-    success (bool): Operation success status
-    values (List[Dict[str, Any] with keys {"id": str, "propertyPath": str, "value": Any}]): Property values retrieved
-    """
-    tool_name = "batchGetProperty"  # Define tool name for logging
-    params = {"items": items, "recursive": recursive}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # Implement actual blender API calls
-        values = []
-
-        for item in items:
-            obj_id = item["id"]
-            property_path = item["propertyPath"]
-
-            obj = bpy.data.objects.get(obj_id)
-            if not obj:
-                continue
-
-            # Handle recursive case
-            objects_to_process = [obj]
-            if recursive:
-                # Get all descendants
-                children_result = getChildren(obj_id, recursive=True)
-                if children_result["success"] and "childIds" in children_result:
-                    for child_id in children_result["childIds"]:
-                        child_obj = bpy.data.objects.get(child_id)
-                        if child_obj:
-                            objects_to_process.append(child_obj)
-
-            # Process all objects
-            for target_obj in objects_to_process:
-                # Navigate to the target property
-                current = target_obj
-                found = True
-
-                for part in property_path:
-                    if hasattr(current, part):
-                        current = getattr(current, part)
-                    else:
-                        found = False
-                        break
-
-                if found:
-                    values.append(
-                        {
-                            "id": target_obj.name,
-                            "propertyPath": property_path,
-                            "value": current,
-                        }
-                    )
-
-        return {"success": True, "values": values}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def batchTransform(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+def transformObjects(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Apply transformations to multiple objects
 
@@ -349,7 +233,7 @@ def batchTransform(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "batchTransform"  # Define tool name for logging
+    tool_name = "transformObjects"  # Define tool name for logging
     params = {"items": items}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
@@ -403,7 +287,7 @@ def batchTransform(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def batchSetParent(
+def setParentObjects(
     items: List[Dict[str, Any]], maintainWorldTransform: Optional[bool] = None
 ) -> Dict[str, Any]:
     """
@@ -416,7 +300,7 @@ def batchSetParent(
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "batchSetParent"  # Define tool name for logging
+    tool_name = "setParentObjects"  # Define tool name for logging
     params = {
         "items": items,
         "maintainWorldTransform": maintainWorldTransform,

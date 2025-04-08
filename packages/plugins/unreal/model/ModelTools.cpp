@@ -3479,3 +3479,185 @@ TSharedPtr<FJsonObject> UMCPModelTools::setSelectedGeometry(const TSharedPtr<FJs
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("createLight", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::createLight));
+    FMCPProtocolHandler::Get().RegisterTool("deleteObject", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::deleteObject));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::createLight(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing createLight in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter type
+        if (!Params->HasField("type")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter type is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter type is missing");
+            return Response;
+        }
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("point"), TEXT("directional"), TEXT("spot")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+
+        // Extract complex parameter color 
+        const TSharedPtr<FJsonValue>* colorValue = nullptr;
+        if (Params->TryGetField("color", colorValue)) {
+        }
+
+        // Extract intensity (double)
+        double intensity = 0;
+        if (Params->TryGetNumberField("intensity", intensity)) {
+        }
+        // Check required parameter position
+        if (!Params->HasField("position")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter position is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter position is missing");
+            return Response;
+        }
+        // Extract complex parameter position 
+        const TSharedPtr<FJsonValue>* positionValue = nullptr;
+        if (Params->TryGetField("position", positionValue)) {
+        }
+        // Check required parameter direction
+        if (!Params->HasField("direction")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter direction is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter direction is missing");
+            return Response;
+        }
+        // Extract complex parameter direction 
+        const TSharedPtr<FJsonValue>* directionValue = nullptr;
+        if (Params->TryGetField("direction", directionValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for createLight
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in createLight: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::deleteObject(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing deleteObject in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter id
+        if (!Params->HasField("id")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter id is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter id is missing");
+            return Response;
+        }
+        // Extract id (FString)
+        FString id;
+        if (Params->TryGetStringField("id", id)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for deleteObject
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in deleteObject: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("setGeometry", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setGeometry));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::setGeometry(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setGeometry in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter geometryData
+        if (!Params->HasField("geometryData")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter geometryData is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter geometryData is missing");
+            return Response;
+        }
+        // Extract complex parameter geometryData 
+        const TSharedPtr<FJsonValue>* geometryDataValue = nullptr;
+        if (Params->TryGetField("geometryData", geometryDataValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setGeometry
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setGeometry: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

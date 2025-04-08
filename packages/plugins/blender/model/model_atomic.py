@@ -5,25 +5,146 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
-def deleteMesh(meshId: str) -> Dict[str, Any]:
+def setGeometry(geometryData: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Delete a mesh from the scene
+    Set geometry data for the current edited mesh
 
     Args:
-    meshId (str): ID of the mesh to delete
+    geometryData (Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str], "vertices": List[List[float]], "edges": List[List[int]], "faces": List[int]}): Geometry data
 
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "deleteMesh"  # Define tool name for logging
-    params = {"meshId": meshId}  # Create params dict for logging
+    tool_name = "setGeometry"  # Define tool name for logging
+    params = {"geometryData": geometryData}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        import bmesh
+
+        # Get the active object
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        # Ensure we are in edit mode
+        if bpy.context.object.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Clear existing geometry
+        bm.clear()
+
+        # Add vertices
+        vertex_map = []
+        for vertex in geometryData["vertices"]:
+            vertex_map.append(bm.verts.new(vertex))
+
+        bm.verts.ensure_lookup_table()
+
+        # Add edges
+        for edge in geometryData["edges"]:
+            bm.edges.new((vertex_map[edge[0]], vertex_map[edge[1]]))
+
+        # Add faces
+        for face in geometryData["faces"]:
+            bm.faces.new([vertex_map[idx] for idx in face])
+
+        # Update the mesh to reflect changes
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def createLight(type: Literal["point", "sun", "spot", "area"], color: Optional[List[float]] = None, intensity: Optional[float] = None, position: List[float] = [0, 0, 0], direction: List[float] = [1, 0, 0], width: float = 1, height: float = 1) -> Dict[str, Any]:
+    """
+    Create a light source (object) in the scene
+
+    Args:
+    type (Literal["point", "directional", "spot"]): Light type
+    color (List[float]): Light color (RGB)
+    intensity (float): Light intensity
+    position (List[float]): Light position
+    direction (List[float]): Light direction
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createLight"  # Define tool name for logging
+    params = {"type": type, "color": color, "intensity": intensity,
+              "position": position, "direction": direction}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Validate enum values for type
+        if type not in ['point', 'sun', 'spot', 'area']:
+            raise ValueError(
+                f"Parameter 'type' must be one of  ['point', 'sun', 'spot', 'area'], got {type}")
+
+        # Create the light object
+        light_data = bpy.data.lights.new(
+            name=f"{type}_light", type=type.upper())
+        light_object = bpy.data.objects.new(
+            name=f"{type}_light_object", object_data=light_data)
+
+        # Set light properties
+        if color:
+            light_data.color = color
+        if intensity:
+            light_data.energy = intensity
+
+        # Set light position
+        light_object.location = position
+
+        # Add the light to the scene
+        bpy.context.collection.objects.link(light_object)
+
+        # Set light direction for directional and spot lights
+        if type in ["sun", "spot"]:
+            light_object.rotation_euler = bpy.mathutils.Vector(
+                direction).to_track_quat('Z', 'Y').to_euler()
+
+        if type == "area":
+            light_data.shape = 'RECTANGLE'
+            light_data.size = width
+            light_data.size_y = height
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def deleteObject(id: str) -> Dict[str, Any]:
+    """
+    Delete an object from the scene
+
+    Args:
+    meshId (str): ID of the deleteObject to delete
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteObject"  # Define tool name for logging
+    params = {"id": id}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
         # Get the object by its name (meshId)
-        obj = bpy.data.objects.get(meshId)
+        obj = bpy.data.objects.get(id)
         if obj is None:
-            raise ValueError(f"Object with ID '{meshId}' not found.")
+            raise ValueError(f"Object with ID '{id}' not found.")
 
         # Select the object to delete
         bpy.ops.object.select_all(action='DESELECT')  # Deselect all objects
@@ -320,7 +441,7 @@ def bridgeEdgeLoops() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-
+        import bmesh
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -397,6 +518,8 @@ def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
+        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -502,6 +625,8 @@ def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
 
     try:
 
+        import bmesh
+
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -552,6 +677,8 @@ def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
+        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -604,6 +731,8 @@ def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
+        import bmesh
 
         # Ensure we are in edit mode
         obj = bpy.context.object
@@ -660,6 +789,8 @@ def transform(translation: Optional[List[float]] = None, rotation: Optional[List
 
     try:
 
+        import bmesh
+        import mathutils
         # Ensure there is an active object
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -817,6 +948,8 @@ def inset(amount: float) -> Dict[str, Any]:
 
     try:
 
+        import bmesh
+
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -860,6 +993,8 @@ def getGeometry() -> Dict[str, Any]:
 
     try:
 
+        import bmesh
+
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
             raise RuntimeError("No active mesh object found.")
@@ -876,13 +1011,6 @@ def getGeometry() -> Dict[str, Any]:
         return {
             "success": True,
             "geometryData": {
-                "id": obj.name,
-                "name": obj.name,
-                "position": list(obj.location),
-                "rotation": list(obj.rotation_euler),
-                "scale": list(obj.scale),
-                "parentId": obj.parent.name if obj.parent else None,
-                "childIds": [child.name for child in obj.children],
                 "vertices": vertices,
                 "edges": edges,
                 "faces": faces,
@@ -1084,6 +1212,8 @@ def getSelectedGeometry(type: Literal["vertex", "edge", "face"]) -> Dict[str, An
 
     try:
 
+        import bmesh
+
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -1133,6 +1263,7 @@ def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         # Validate enum values for mode
         if mode not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -1172,6 +1303,8 @@ def setSelectedGeometry(ids: List[str], type: Literal["vertex", "edge", "face"],
 
     try:
 
+        import bmesh
+
         # Validate enum values for type
         if type not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -1191,7 +1324,7 @@ def setSelectedGeometry(ids: List[str], type: Literal["vertex", "edge", "face"],
         mesh = bmesh.from_edit_mesh(obj.data)
 
         if type == "vertex":
-            bpy.ops.mesh.select_mode(type='VERTEX')
+            bpy.ops.mesh.select_mode(type='VERT')
         elif type == "edge":
             bpy.ops.mesh.select_mode(type='EDGE')
         elif type == "face":

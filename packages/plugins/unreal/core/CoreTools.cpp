@@ -466,3 +466,97 @@ TSharedPtr<FJsonObject> UMCPCoreTools::select(const TSharedPtr<FJsonObject>& Par
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for core atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "CoreTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPCoreTools::UMCPCoreTools()
+{
+    RegisterTools();
+}
+
+void UMCPCoreTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("setParentObjects", FMCPToolDelegate::CreateUObject(this, &UMCPCoreTools::setParentObjects));
+    FMCPProtocolHandler::Get().RegisterTool("transformObjects", FMCPToolDelegate::CreateUObject(this, &UMCPCoreTools::transformObjects));
+}
+
+TSharedPtr<FJsonObject> UMCPCoreTools::setParentObjects(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setParentObjects in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter items
+        if (!Params->HasField("items")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter items is missing");
+            return Response;
+        }
+        // Extract complex parameter items 
+        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
+        if (Params->TryGetField("items", itemsValue)) {
+        }
+
+        // Extract maintainWorldTransform (bool)  
+        bool maintainWorldTransform = false;
+        if (Params->TryGetBoolField("maintainWorldTransform", maintainWorldTransform)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setParentObjects
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setParentObjects: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPCoreTools::transformObjects(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing transformObjects in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter items
+        if (!Params->HasField("items")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter items is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter items is missing");
+            return Response;
+        }
+        // Extract complex parameter items 
+        const TSharedPtr<FJsonValue>* itemsValue = nullptr;
+        if (Params->TryGetField("items", itemsValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for transformObjects
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in transformObjects: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
