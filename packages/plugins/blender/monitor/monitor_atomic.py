@@ -2,55 +2,12 @@
 # This file is generated - DO NOT EDIT DIRECTLY
 
 import bpy
+from pathlib import Path
+import mathutils
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
-
-
-def getSceneGraph() -> Dict[str, Any]:
-    """
-    Get the scene graph of the current scene.
-
-    Args:
-    No parameters
-
-    Returns:
-    success (bool): Operation success status
-    scene_graph (Dict[str, Any] with keys {"name": str, "children": List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str]}]}): Scene graph of the current scene
-    """
-    tool_name = "getSceneGraph"  # Define tool name for logging
-    params = {}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        def build_scene_graph(obj):
-            return {
-                "id": obj.name,
-                "name": obj.name,
-                "metadata": {
-                    "type": obj.type,
-                    "visible": obj.visible_get(),
-                },
-                "position": list(obj.location),
-                "rotation": list(obj.rotation_euler),
-                "scale": list(obj.scale),
-                "parentId": obj.parent.name if obj.parent else None,
-                "childIds": [child.name for child in obj.children],
-            }
-
-        scene_graph = {
-            "name": bpy.context.scene.name,
-            "children": [build_scene_graph(obj) for obj in bpy.context.scene.objects],
-        }
-
-        return {
-            "success": True,
-            "scene_graph": scene_graph,
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
- # === NEWLY GENERATED ===
+import os
+import time
+from typing import Callable
 
 
 def getQuadView(
@@ -122,7 +79,7 @@ def getQuadView(
         # Default name visibility predicate
         if name_visibility_predicate is None:
             # Default behavior: don't show any names
-            def name_visibility_predicate(obj): return {"show_name": False}
+            name_visibility_predicate = lambda obj: {"show_name": False}
 
         # Store original state
         original_state = store_original_state()
@@ -146,6 +103,7 @@ def getQuadView(
             )
 
         except Exception as ex:
+            import traceback
 
             print("=== EXCEPTION OCCURRED ===")
             traceback.print_exc()
@@ -307,16 +265,14 @@ def getQuadView(
                 break
 
         if not main_3d_view:
-            largest_area = max(temp_screen.areas,
-                               key=lambda a: a.width * a.height)
+            largest_area = max(temp_screen.areas, key=lambda a: a.width * a.height)
             largest_area.type = "VIEW_3D"
             main_3d_view = largest_area
 
     def calculate_scene_bounds() -> Tuple[mathutils.Vector, mathutils.Vector]:
         """Calculate bounds of all visible objects for auto-fit."""
         min_co = mathutils.Vector((float("inf"), float("inf"), float("inf")))
-        max_co = mathutils.Vector(
-            (float("-inf"), float("-inf"), float("-inf")))
+        max_co = mathutils.Vector((float("-inf"), float("-inf"), float("-inf")))
 
         has_objects = False
 
@@ -453,8 +409,7 @@ def getQuadView(
             view_configs = {
                 "TOP": {
                     "perspective": "ORTHO",
-                    # Quaternion for top view
-                    "rotation": (1.0, 0.0, 0.0, 0.0),
+                    "rotation": (1.0, 0.0, 0.0, 0.0),  # Quaternion for top view
                     "dimension_func": lambda d: max(d.x, d.y),
                 },
                 "FRONT": {
@@ -469,14 +424,12 @@ def getQuadView(
                 },
                 "RIGHT": {
                     "perspective": "ORTHO",
-                    # Quaternion for right view
-                    "rotation": (0.5, 0.5, 0.5, 0.5),
+                    "rotation": (0.5, 0.5, 0.5, 0.5),  # Quaternion for right view
                     "dimension_func": lambda d: max(d.y, d.z),
                 },
                 "PERSP": {
                     "perspective": "PERSP",
-                    # Default perspective
-                    "rotation": (0.8205, 0.4306, 0.1714, 0.3312),
+                    "rotation": (0.8205, 0.4306, 0.1714, 0.3312),  # Default perspective
                     "dimension_func": lambda d: max(d.x, d.y, d.z),
                 },
             }
@@ -513,8 +466,7 @@ def getQuadView(
                             region_3d.view_location = (0.0, 0.0, 0.0)
 
                         # Force redraw and wait for UI update
-                        bpy.ops.wm.redraw_timer(
-                            type="DRAW_WIN_SWAP", iterations=1)
+                        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
                         bpy.context.view_layer.update()
                         time.sleep(0.3)
 
@@ -522,13 +474,11 @@ def getQuadView(
                         view_filename = f"{base_filepath}_{view_name.lower()}.png"
                         print(f"Taking {view_name} view screenshot...")
 
-                        context_override = {
-                            "window": original_window, "area": area}
+                        context_override = {"window": original_window, "area": area}
 
                         try:
                             with bpy.context.temp_override(**context_override):
-                                bpy.ops.screen.screenshot(
-                                    filepath=str(view_filename))
+                                bpy.ops.screen.screenshot(filepath=str(view_filename))
                         except (AttributeError, TypeError):
                             bpy.ops.screen.screenshot(
                                 context_override, filepath=str(view_filename)
@@ -542,8 +492,7 @@ def getQuadView(
             try:
                 for area in bpy.context.screen.areas:
                     if area.type == "VIEW_3D":
-                        context_override = {
-                            "window": original_window, "area": area}
+                        context_override = {"window": original_window, "area": area}
                         try:
                             with bpy.context.temp_override(**context_override):
                                 bpy.ops.screen.screen_full_area()
@@ -581,8 +530,7 @@ def getQuadView(
         if name_visibility_predicate:
             try:
                 # Try to evaluate the string as Python code
-                visibility_func = eval(
-                    f"lambda obj: {name_visibility_predicate}")
+                visibility_func = eval(f"lambda obj: {name_visibility_predicate}")
             except:
                 print(
                     f"Error evaluating name_visibility_predicate: {name_visibility_predicate}"

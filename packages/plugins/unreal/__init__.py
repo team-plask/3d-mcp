@@ -53,10 +53,6 @@ def execute_on_main_thread(tool_name, params):
     }  # Initialize with proper structure
     task_queue.put(task)
 
-    # Register timer if not already registered
-    if not is_task_processor_running():
-        start_task_processor()
-
     # 작업 완료 대기
     start_time = time.time()
     timeout = 30.0  # 30초 타임아웃 설정
@@ -260,6 +256,9 @@ def start_server(host="127.0.0.1", port=8000):
     register_all_tools()
     
     server_running = True
+
+    # 초기화
+    initialize_plugin()
     
     # 서버 스레드 생성 및 시작
     server_thread = threading.Thread(target=server_loop)
@@ -295,6 +294,9 @@ def stop_server():
 def initialize_plugin():
     """플러그인 초기화 시 호출되는 함수"""
     unreal.log("[MCP] Initializing 3D-MCP Unreal plugin")
+    # Register timer if not already registered
+    if not is_task_processor_running():
+        start_task_processor()
     # 여기에 필요한 초기화 코드 추가
 
 # 언리얼 에디터 플러그인 종료 시 자동으로 실행 (옵션)
