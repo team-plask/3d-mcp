@@ -30,21 +30,6 @@ export class PythonGenerator implements IGenerator {
     let existingFunctions = new Set<string>();
     let oldContent = "";
 
-    // if (existsSync(filePath)) {
-    //   oldContent = readFileSync(filePath, "utf8");
-    //   // Parse out any existing function names
-    //   existingFunctions = plugin.parseFunction(oldContent);
-
-    //   // Remove import statements from the old content
-    //   const importRegex = /import .+|from .+ import .+/g;
-    //   oldContent = oldContent
-    //     .replace(importRegex, "")
-    //     .replace(
-    //       /# Generated .+|# This file is generated - DO NOT EDIT DIRECTLY/g,
-    //       ""
-    //     );
-    // }
-
     if (existsSync(filePath)) {
       oldContent = readFileSync(filePath, "utf8");
 
