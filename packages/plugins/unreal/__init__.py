@@ -118,21 +118,32 @@ def register_tool(name: str, func: Callable):
     tools[name] = func
 
 def register_all_tools():
-    """사용 가능한 모든 도구 함수 등록"""
+    """Register all available tool functions"""
     unreal.log("[MCP] Registering all tools...")
-    
-    # 각 도메인별 도구 등록
-    for module, prefix in [
-        (monitor_atomic, "monitor_"),
-        (core_atomic, "core_"),
-        (render_atomic, "render_"),
-        (animation_atomic, "animation_"),
-        (rig_atomic, "rig_"),
-        (model_atomic, "model_")
-    ]:
-        for name, func in inspect.getmembers(module, inspect.isfunction):
-            if name.startswith(prefix):
-                register_tool(name, func)
+
+    # Register monitor tools
+    for name, func in inspect.getmembers(monitor_atomic, inspect.isfunction):
+        register_tool(name, func)
+
+    # Register core tools
+    for name, func in inspect.getmembers(core_atomic, inspect.isfunction):
+        register_tool(name, func)
+
+    # Register render tools
+    for name, func in inspect.getmembers(render_atomic, inspect.isfunction):
+        register_tool(name, func)
+
+    # Register animation tools
+    for name, func in inspect.getmembers(animation_atomic, inspect.isfunction):
+        register_tool(name, func)
+
+    # Register rig tools
+    for name, func in inspect.getmembers(rig_atomic, inspect.isfunction):
+        register_tool(name, func)
+
+    # Register model tools
+    for name, func in inspect.getmembers(model_atomic, inspect.isfunction):
+        register_tool(name, func)
 
 
 def server_loop():
