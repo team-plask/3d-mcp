@@ -188,7 +188,6 @@ const modelAtomicTools = {
   edgeSlide: {
     description: "Slide selected edges along their adjacent edges",
     parameters: z.object({
-      edgeId: z.string().describe("IDs of edge to slide along"),
       factor: z.number().describe("Sliding factor (-1 to 1)"),
     }),
     returns: _OperationResponse,
