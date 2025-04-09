@@ -55,7 +55,7 @@ def execute_on_main_thread(tool_name, params):
 
     # 작업 완료 대기
     start_time = time.time()
-    timeout = 30.0  # 30초 타임아웃 설정
+    timeout = 60.0  # 60초 타임아웃 설정
 
     # Wait for task completion
     try:
