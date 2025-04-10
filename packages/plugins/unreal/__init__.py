@@ -55,7 +55,7 @@ def execute_on_main_thread(tool_name, params):
 
     # 작업 완료 대기
     start_time = time.time()
-    timeout = 60.0  # 60초 타임아웃 설정
+    timeout = 300.0  # 60초 타임아웃 설정
 
     # Wait for task completion
     try:
@@ -249,7 +249,6 @@ def handle_client(client_socket):
             pass  # 응답 전송 실패 무시
     finally:
         client_socket.close()
-
 
 
 def start_server(host="127.0.0.1", port=8000):

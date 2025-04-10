@@ -5,6 +5,8 @@ import unreal
 import os
 import time
 import math
+import pathlib
+import shutil
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 # -------------------------------------------------------------------
@@ -69,15 +71,7 @@ def set_camera_view(camera: unreal.CameraActor, view_name: str, center: unreal.V
     view_name에 따라 카메라 액터의 위치·회전을 설정하고,
     해당 카메라를 활성 뷰포트에서 '파일럿(pilot)' 하여 실제 캡처가 가능하도록 전환합니다.
     """
-    # 카메라 컴포넌트 가져오기
-    camera_component = camera.camera_component()  # 또는 get_component_by_class(unreal.CameraComponent)
-    if not camera_component:
-        return
-    
-    # 위치/회전 설정 (기존 로직)
-    offset = unreal.Vector(0, 0, max_dimension)
-    is_ortho = True
-
+    # 기존 로직(카메라 위치/오프셋 결정)
     if view_name == "TOP":
         offset = unreal.Vector(0, 0, max_dimension * 1.2)
     elif view_name == "FRONT":
@@ -85,32 +79,50 @@ def set_camera_view(camera: unreal.CameraActor, view_name: str, center: unreal.V
     elif view_name == "RIGHT":
         offset = unreal.Vector(0, max_dimension * 1.2, 0)
     elif view_name == "PERSP":
-        is_ortho = False  # 퍼스펙티브 모드 사용
-        norm = math.sqrt(3)
+        norm = math.sqrt(3)  # sqrt(1^2 + 1^2 + 1^2)
         factor = max_dimension * 1.5
         offset = unreal.Vector((-1 / norm) * factor, (1 / norm) * factor, (1 / norm) * factor)
-    
-    camera.set_actor_location(center + offset, False, True)
-    look_at_rotation = unreal.MathLibrary.find_look_at_rotation(center + offset, center)
+    else:
+        offset = unreal.Vector(0, 0, max_dimension)
+
+    camera_location = center + offset
+    camera.set_actor_location(camera_location, False, True)
+
+    look_at_rotation = unreal.MathLibrary.find_look_at_rotation(camera_location, center)
     camera.set_actor_rotation(look_at_rotation, False)
 
-    # 에디터에서 pilot
-    level_editor_subsys = unreal.LevelEditorSubsystem()
-    level_editor_subsys.pilot_level_actor(camera)
+    # 그 다음, 뷰포트 Type을 오소 or 퍼스펙티브로 변경
+    #   - Unreal에서 보통 0번 인덱스 뷰포트를 메인 뷰포트로 간주 (에디터 탭 여러 개인 경우 주의)
+    #   - TOP/FRONT/RIGHT일 때 오소, PERSP는 LVT_Perspective
+    camera_component = camera.camera_component
+    if camera_component:
+        if view_name in ["TOP", "FRONT", "RIGHT"]:
+            # 오소그래픽(직교) 투영 설정
+            camera_component.projection_mode = unreal.CameraProjectionMode.ORTHOGRAPHIC
 
-    # Orthographic 또는 Perspective 설정
-    if is_ortho:
-        camera_component.set_editor_property("projection_mode", unreal.CameraProjectionMode.ORTHOGRAPHIC)
-        # 필요하다면 Ortho Width도 설정해야 "얼마나 넓게" 보이는지 조절 가능
-        camera_component.set_editor_property("ortho_width", max_dimension * 2.0)  # 취향에 맞게 조절
-    else:
-        camera_component.set_editor_property("projection_mode", unreal.CameraProjectionMode.PERSPECTIVE)
+            # 오소그래픽 너비 설정 (적절한 크기로)
+            camera_component.ortho_width = max_dimension * 2
+            unreal.log("Set orthographic width to: {}".format(max_dimension * 2))
+        elif view_name == "PERSP":
+            # 원근 투영 설정
+            camera_component.projection_mode = unreal.CameraProjectionMode.PERSPECTIVE
+
+            # 카메라의 Field of View 설정 (예: 90도)
+            camera_component.field_of_view = 90.0
+            unreal.log("Set field of view to: 90.0")
+
+    # -----------------------------
+    # 추가: 에디터 뷰포트를 이 카메라로 전환
+    # -----------------------------
+    level_editor = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    # 먼저 '파일럿' 설정 (CameraActor를 직접 뷰포트에서 조종/활성)
+    level_editor.pilot_level_actor(camera)
     
 
 # -------------------------------------------------------------------
 # 헬퍼 함수: 스크린샷 캡쳐
 # -------------------------------------------------------------------
-def take_view_screenshot(screenshot_filename: str, export_width: int, export_height: int) -> None:
+def take_view_screenshot(screenshot_filename: str, export_width: int, export_height: int, camera: unreal.CameraActor) -> None:
     """
     AutomationLibrary의 고해상도 스크린샷 캡쳐 함수를 호출하여 지정한 파일 이름으로 저장합니다.
     
@@ -119,19 +131,35 @@ def take_view_screenshot(screenshot_filename: str, export_width: int, export_hei
         export_width: 캡쳐할 이미지의 가로 해상도
         export_height: 캡쳐할 이미지의 세로 해상도
     """
+
+    # UE 쪽에는 **파일명만** 전달
+    file_name_only = pathlib.Path(screenshot_filename).name
+
     # 1) 스크린샷 요청
-    unreal.AutomationLibrary.take_high_res_screenshot(export_width, export_height, screenshot_filename)
-    
+    task = unreal.AutomationLibrary.take_high_res_screenshot(export_width, export_height, file_name_only, camera=camera)
+    unreal.AutomationLibrary.automation_wait_for_loading()
+
     # 2) 파일 생성을 기다리는 루프 (최대 10초)
     start_time = time.time()
     timeout_sec = 10.0
-    while not os.path.exists(screenshot_filename):
-        # 0.2초 간격으로 확인
-        time.sleep(0.2)
+    while not task.is_task_done():
+        # 엔진 틱 요청 - 화면 업데이트를 위해 필요
+        unreal.PythonTestLib
+        unreal.SystemLibrary.execute_console_command(None, "tick")
         if time.time() - start_time > timeout_sec:
-            unreal.log_warning(f"Screenshot file not found within {timeout_sec} seconds: {screenshot_filename}")
+            unreal.log_warning(f"task is not done within {timeout_sec} seconds: {screenshot_filename}")
             break
-    # 이 시점에서 파일이 생성되었거나(성공) 혹은 10초 지남(실패 가능성)
+
+    # UE 가 저장한 실제 경로
+    real_path = os.path.join(
+        unreal.Paths.screen_shot_dir(), file_name_only)
+    
+    # Desktop으로 복사(이동)
+    shutil.move(real_path, screenshot_filename)
+
+
+    unreal.register_slate_pre_tick_callback(None)  # 슬레이트 콜백 해제
+    unreal.unregister_slate_post_tick_callback
 
 # -------------------------------------------------------------------
 # 주요 함수: getQuadView
@@ -202,14 +230,14 @@ def getQuadView(
             # auto_adjust_camera 옵션에 따라 추가 조정이 필요하면 이곳에서 구현 (현재는 카메라 위치와 회전만 적용)
             
             # 카메라 이동 후 UI 업데이트를 위해 잠시 대기
-            time.sleep(5)
+            time.sleep(3)
             
             # 스크린샷 파일 이름 생성
             screenshot_filename = "{}_{}.png".format(base_filepath, view.lower())
             unreal.log("Taking screenshot for {0} view: {1}".format(view, screenshot_filename))
             
             # 스크린샷 캡쳐
-            take_view_screenshot(screenshot_filename, export_width, export_height)
+            take_view_screenshot(screenshot_filename, export_width, export_height, camera)
             
             # 캡쳐 후 잠시 대기 (스크린샷 저장 시간 고려)
             # time.sleep(10)
