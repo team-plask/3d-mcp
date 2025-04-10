@@ -117,49 +117,64 @@ def set_camera_view(camera: unreal.CameraActor, view_name: str, center: unreal.V
     level_editor = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
     # 먼저 '파일럿' 설정 (CameraActor를 직접 뷰포트에서 조종/활성)
     level_editor.pilot_level_actor(camera)
-    
+
+# ------------------------------------------------------------------
+# 내부 헬퍼: 에디터 Task 비동기 대기
+# ------------------------------------------------------------------
+def _wait_for_editor_task(task: unreal.AutomationEditorTask,
+                          on_finished,
+                          timeout: float = 15.0) -> None:
+    """task 완료 시 on_finished() 를 호출한다. timeout 초가 지나면 경고 후 계속."""
+    start_time = time.time()
+
+    def _tick(delta_seconds: float):
+        nonlocal start_time
+        if task.is_task_done():
+            unreal.unregister_slate_post_tick_callback(_handle)
+            on_finished(True)
+            return
+
+        if time.time() - start_time > timeout:
+            unreal.log_warning(f"AutomationEditorTask timed‑out after {timeout} s")
+            unreal.unregister_slate_post_tick_callback(_handle)
+            on_finished(False)
+
+    _handle = unreal.register_slate_post_tick_callback(_tick)
+
 
 # -------------------------------------------------------------------
 # 헬퍼 함수: 스크린샷 캡쳐
 # -------------------------------------------------------------------
-def take_view_screenshot(screenshot_filename: str, export_width: int, export_height: int, camera: unreal.CameraActor) -> None:
+def take_view_screenshot(abs_path: str, export_width: int, export_height: int, camera: unreal.CameraActor, on_done) -> None:
     """
     AutomationLibrary의 고해상도 스크린샷 캡쳐 함수를 호출하여 지정한 파일 이름으로 저장합니다.
     
     Args:
-        screenshot_filename: 저장할 파일 전체 경로 (예: "C:/Users/username/Desktop/unreal_quad_view_top.png")
+        abs_path: 저장할 파일 전체 경로 (예: "C:/Users/username/Desktop/unreal_quad_view_top.png")
         export_width: 캡쳐할 이미지의 가로 해상도
         export_height: 캡쳐할 이미지의 세로 해상도
+        on_done(success: bool) : 완료/실패 콜백
     """
 
     # UE 쪽에는 **파일명만** 전달
-    file_name_only = pathlib.Path(screenshot_filename).name
+    file_name = pathlib.Path(abs_path).name
 
     # 1) 스크린샷 요청
-    task = unreal.AutomationLibrary.take_high_res_screenshot(export_width, export_height, file_name_only, camera=camera)
-    unreal.AutomationLibrary.automation_wait_for_loading()
+    task = unreal.AutomationLibrary.take_high_res_screenshot(export_width, export_height, file_name, camera=camera)
 
-    # 2) 파일 생성을 기다리는 루프 (최대 10초)
-    start_time = time.time()
-    timeout_sec = 10.0
-    while not task.is_task_done():
-        # 엔진 틱 요청 - 화면 업데이트를 위해 필요
-        unreal.PythonTestLib
-        unreal.SystemLibrary.execute_console_command(None, "tick")
-        if time.time() - start_time > timeout_sec:
-            unreal.log_warning(f"task is not done within {timeout_sec} seconds: {screenshot_filename}")
-            break
-
-    # UE 가 저장한 실제 경로
-    real_path = os.path.join(
-        unreal.Paths.screen_shot_dir(), file_name_only)
+    def _move_file(success: bool):
+        if not success:
+            on_done(False)
+            return
+        try:
+            src = os.path.join(unreal.Paths.screen_shot_dir(), file_name)
+            shutil.move(src, abs_path)
+            on_done(True)
+        except Exception as e:
+            unreal.log_warning(f"move failed: {e}")
+            on_done(False)
     
-    # Desktop으로 복사(이동)
-    shutil.move(real_path, screenshot_filename)
-
-
-    unreal.register_slate_pre_tick_callback(None)  # 슬레이트 콜백 해제
-    unreal.unregister_slate_post_tick_callback
+    _wait_for_editor_task(task, _move_file)
 
 # -------------------------------------------------------------------
 # 주요 함수: getQuadView
@@ -222,37 +237,31 @@ def getQuadView(
         
         view_names = ["TOP", "FRONT", "RIGHT", "PERSP"]
         image_paths = []
-        
-        for view in view_names:
-            # 각 뷰별로 카메라의 위치와 회전 조정
+
+        def _process_next():
+            if not view_names:                              # 모든 뷰 처리 완료
+                destroy_temp_camera(camera)
+                unreal.log("QuadView finished")
+                return
+
+            view = view_names.pop(0)
             set_camera_view(camera, view, scene_center, max_dimension)
-            
-            # auto_adjust_camera 옵션에 따라 추가 조정이 필요하면 이곳에서 구현 (현재는 카메라 위치와 회전만 적용)
-            
-            # 카메라 이동 후 UI 업데이트를 위해 잠시 대기
-            time.sleep(3)
-            
-            # 스크린샷 파일 이름 생성
-            screenshot_filename = "{}_{}.png".format(base_filepath, view.lower())
-            unreal.log("Taking screenshot for {0} view: {1}".format(view, screenshot_filename))
-            
-            # 스크린샷 캡쳐
-            take_view_screenshot(screenshot_filename, export_width, export_height, camera)
-            
-            # 캡쳐 후 잠시 대기 (스크린샷 저장 시간 고려)
-            # time.sleep(10)
-            
-            image_paths.append(screenshot_filename)
-        
-        # 임시 카메라 삭제
-        destroy_temp_camera(camera)
-        
-        # 생성된 파일 확인 (비동기 처리일 수 있으므로 시간이 걸릴 수 있음)
-        existing_paths = [path for path in image_paths if os.path.exists(path)]
-        if not existing_paths:
-            raise FileNotFoundError("No screenshot files were generated")
-        
-        return {"success": True, "image_path": existing_paths}
+
+            # 한 프레임 뒤에 스크린샷을 찍도록 살짝 지연
+            def _shoot_after_one_tick(_):
+                abs_png = f"{base_filepath}_{view.lower()}.png"
+                unreal.log(f"Taking screenshot for {view}: {abs_png}")
+
+                take_view_screenshot(
+                    abs_png, export_width, export_height, camera,
+                    lambda ok: (image_paths.append(abs_png) if ok else None) or _process_next()
+                )
+                unreal.unregister_slate_post_tick_callback(h)
+
+            h = unreal.register_slate_post_tick_callback(_shoot_after_one_tick)
+
+        _process_next()     # 파이프라인 시작
+        return {"success": True, "image_path": image_paths}
         
     except Exception as e:
         unreal.log("Error in {0}: {1}".format(tool_name, str(e)))
