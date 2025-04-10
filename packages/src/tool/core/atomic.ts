@@ -66,24 +66,38 @@ const coreAtomicTools = {
         .array(
           z.object({
             id: z.string().describe("Object identifier"),
-            position: _Tensor.VEC3.optional().describe(
-              "New absolute position [x, y, z]"
-            ),
-            rotation: _Tensor.QUAT.optional().describe(
-              "New absolute rotation quaternion [x, y, z, w]"
-            ),
-            scale: _Tensor.VEC3.optional().describe(
-              "New absolute scale [x, y, z]"
-            ),
-            positionOffset: _Tensor.VEC3.optional().describe(
-              "Relative position offset to apply [dx, dy, dz]"
-            ),
-            rotationOffset: _Tensor.QUAT.optional().describe(
-              "Relative rotation to apply as quaternion [x, y, z, w]"
-            ),
-            scaleOffset: _Tensor.VEC3.optional().describe(
-              "Relative scale to apply [sx, sy, sz]"
-            ),
+            position: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe("New absolute position [x, y, z]"),
+            rotation: z
+              .array(z.number())
+              .length(4)
+              .optional()
+              .describe("New absolute rotation quaternion [x, y, z, w]"),
+            scale: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe("New absolute scale [x, y, z]"),
+            positionOffset: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe("Relative position offset to apply [dx, dy, dz]"),
+            rotationOffset: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe(
+                "Relative rotation to apply as quaternion [x, y, z, w]"
+              ),
+            scaleOffset: z
+              .array(z.number())
+              .length(3)
+              .optional()
+              .describe("Relative scale to apply [sx, sy, sz]"),
             space: z
               .enum(["local", "world", "parent"])
               .default("world")

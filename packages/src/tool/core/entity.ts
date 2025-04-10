@@ -36,18 +36,14 @@ export const _TensorType = z.enum([
 /**
  * Helper to create tensor validators with consistent typing
  */
-const createTensor = <
-  T extends z.infer<typeof _TensorType>
->(
+const createTensor = <T extends z.infer<typeof _TensorType>>(
   length: number,
   typeName: T
 ) =>
   z
     .array(z.number())
     .length(length)
-    .describe(
-      `${typeName} tensor with ${length} components`
-    );
+    .describe(`${typeName} tensor with ${length} components`);
 
 /**
  * Type-specific tensor validators
@@ -65,38 +61,24 @@ export const _Tensor = {
   // Common value union for flexible APIs
   any: z
     .array(z.number())
-    .describe(
-      "Generic tensor value (scalar, vector, matrix, or object)"
-    ),
+    .describe("Generic tensor value (scalar, vector, matrix, or object)"),
 };
 
 /**
  * Common transformable object properties
  */
 export const _Transformable = z.object({
-  position: z
-    .array(z.number())
-    .describe("Position in 3D space [x, y, z]"),
-  rotation: z
-    .array(z.number())
-    .describe("Rotation in 3D space [x, y, z, w]"),
-  scale: z
-    .array(z.number())
-    .describe("Scale factors in 3D space [x, y, z]"),
+  position: z.array(z.number()).describe("Position in 3D space [x, y, z]"),
+  rotation: z.array(z.number()).describe("Rotation in 3D space [x, y, z, w]"),
+  scale: z.array(z.number()).describe("Scale factors in 3D space [x, y, z]"),
 });
 
 /**
  * Visual properties common to renderable entities
  */
 export const _VisualProperties = z.object({
-  visible: z
-    .boolean()
-    .default(true)
-    .describe("Visibility state"),
-  locked: z
-    .boolean()
-    .default(false)
-    .describe("Editing lock state"),
+  visible: z.boolean().default(true).describe("Visibility state"),
+  locked: z.boolean().default(false).describe("Editing lock state"),
   castShadow: z
     .boolean()
     .default(true)
@@ -105,25 +87,15 @@ export const _VisualProperties = z.object({
     .boolean()
     .default(true)
     .describe("Whether the object receives shadows"),
-  renderOrder: z
-    .number()
-    .int()
-    .default(0)
-    .describe("Render sorting order"),
+  renderOrder: z.number().int().default(0).describe("Render sorting order"),
 });
 
 /**
  * Hierarchical object properties
  */
 export const _Hierarchical = z.object({
-  parentId: z
-    .string()
-    .optional()
-    .describe("Parent object ID"),
-  childIds: z
-    .array(z.string())
-    .default([])
-    .describe("Child object IDs"),
+  parentId: z.string().optional().describe("Parent object ID"),
+  childIds: z.array(z.string()).default([]).describe("Child object IDs"),
 });
 
 /**
@@ -132,9 +104,7 @@ export const _Hierarchical = z.object({
 export const _Bounds = z.object({
   min: _Tensor.VEC3.describe("Minimum point [x, y, z]"),
   max: _Tensor.VEC3.describe("Maximum point [x, y, z]"),
-  center: _Tensor.VEC3.optional().describe(
-    "Center point [x, y, z]"
-  ),
+  center: _Tensor.VEC3.optional().describe("Center point [x, y, z]"),
   size: _Tensor.VEC3.optional().describe(
     "Size dimensions [width, height, depth]"
   ),
@@ -189,22 +159,10 @@ export const Constraint = _BaseEntity.extend({
       "lookAt",
     ])
     .describe("Constraint type"),
-  sourceId: z
-    .string()
-    .describe("Source object ID (the one that drives)"),
-  targetId: z
-    .string()
-    .describe(
-      "Target object ID (the one being constrained)"
-    ),
-  influence: z
-    .number()
-    .min(0)
-    .max(1)
-    .describe("Constraint influence strength"),
-  maintainOffset: z
-    .boolean()
-    .describe("Whether to maintain initial offset"),
+  sourceId: z.string().describe("Source object ID (the one that drives)"),
+  targetId: z.string().describe("Target object ID (the one being constrained)"),
+  influence: z.number().min(0).max(1).describe("Constraint influence strength"),
+  maintainOffset: z.boolean().describe("Whether to maintain initial offset"),
   skipRotation: z
     .array(z.enum(["x", "y", "z"]))
     .optional()
@@ -224,9 +182,7 @@ export const Constraint = _BaseEntity.extend({
     .string()
     .optional()
     .describe("Custom space reference object ID"),
-  active: z
-    .boolean()
-    .describe("Whether constraint is active"),
+  active: z.boolean().describe("Whether constraint is active"),
 });
 
 /**
@@ -243,20 +199,10 @@ export const BlendShape = _BaseEntity.extend({
   deltas: z
     .array(
       z.object({
-        vertexIndex: z
-          .number()
-          .int()
-          .nonnegative()
-          .describe("Vertex index"),
-        positionDelta: _Tensor.VEC3.describe(
-          "Position offset"
-        ),
-        normalDelta: _Tensor.VEC3.optional().describe(
-          "Normal vector offset"
-        ),
-        tangentDelta: _Tensor.VEC3.optional().describe(
-          "Tangent vector offset"
-        ),
+        vertexIndex: z.number().int().nonnegative().describe("Vertex index"),
+        positionDelta: _Tensor.VEC3.describe("Position offset"),
+        normalDelta: _Tensor.VEC3.optional().describe("Normal vector offset"),
+        tangentDelta: _Tensor.VEC3.optional().describe("Tangent vector offset"),
       })
     )
     .describe("Per-vertex deformation deltas"),
@@ -270,11 +216,7 @@ export const BlendShape = _BaseEntity.extend({
  * Joint - Base joint/bone definition for skeletal systems
  */
 export const Joint = _NodeBase.extend({
-  length: z
-    .number()
-    .nonnegative()
-    .default(1)
-    .describe("Length of the joint"),
+  length: z.number().nonnegative().default(1).describe("Length of the joint"),
 });
 
 /**
