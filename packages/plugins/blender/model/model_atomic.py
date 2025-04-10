@@ -607,12 +607,11 @@ def createFaceOrEdge() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
+def edgeSlide(factor: float) -> Dict[str, Any]:
     """
     Slide selected edges along their adjacent edges
 
     Args:
-    edgeId (str): IDs of edge to slide along
     factor (float): Sliding factor (-1 to 1)
 
     Returns:
@@ -620,7 +619,7 @@ def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
     """
     tool_name = "edgeSlide"  # Define tool name for logging
     # Create params dict for logging
-    params = {"edgeId": edgeId, "factor": factor}
+    params = {"factor": factor}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
@@ -636,21 +635,19 @@ def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
             raise RuntimeError(
                 "You must be in edit mode to perform an edge slide operation.")
 
-        # Access the mesh data in edit mode
-        bm = bmesh.from_edit_mesh(obj.data)
-
-        # Find the edge by its index
-        edge_index = int(edgeId)
-        if edge_index < 0 or edge_index >= len(bm.edges):
-            raise ValueError(f"Invalid edge ID: {edgeId}")
-
-        edge = bm.edges[edge_index]
-        # if not edge.select:
-        #     raise RuntimeError(f"Edge with ID {edgeId} is not selected.")
-
         # Perform the edge slide operation
         bpy.ops.ed.undo_push(message="Edge Slide Operation")
-        bpy.ops.transform.edge_slide(value=factor)
+        override_context = bpy.context.copy()
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override_context['area'] = area
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override_context['region'] = region
+                        break
+                break
+        with bpy.context.temp_override(**override_context):
+            bpy.ops.transform.edge_slide(value=factor)
 
         # Update the mesh to reflect changes
         bmesh.update_edit_mesh(obj.data)
@@ -704,7 +701,17 @@ def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
 
         # Use Blender's operator to select the edge loop
         bpy.ops.ed.undo_push(message="Select Edge Loop Operation")
-        bpy.ops.mesh.loop_select()
+        override_context = bpy.context.copy()
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override_context['area'] = area
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override_context['region'] = region
+                        break
+                break
+        with bpy.context.temp_override(**override_context):
+            bpy.ops.mesh.loop_multi_select()
 
         # Update the mesh to reflect the selection
         bmesh.update_edit_mesh(obj.data)
