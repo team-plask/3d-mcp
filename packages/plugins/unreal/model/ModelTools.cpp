@@ -3661,3 +3661,99 @@ TSharedPtr<FJsonObject> UMCPModelTools::setGeometry(const TSharedPtr<FJsonObject
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("setGeometryde", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setGeometryde));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::setGeometryde(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setGeometryde in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter geometryData
+        if (!Params->HasField("geometryData")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter geometryData is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter geometryData is missing");
+            return Response;
+        }
+        // Extract complex parameter geometryData 
+        const TSharedPtr<FJsonValue>* geometryDataValue = nullptr;
+        if (Params->TryGetField("geometryData", geometryDataValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setGeometryde
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setGeometryde: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("getGeometryse", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::getGeometryse));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::getGeometryse(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing getGeometryse in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        
+        // TODO: Implement actual Unreal Engine API calls for getGeometryse
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        // TODO: Set complex geometryData value
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in getGeometryse: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

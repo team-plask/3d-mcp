@@ -1025,3 +1025,67 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> setGeometry(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Set geometry data for the current edited mesh
+     * * @param geometryData - Geometry data (TSharedPtr<FJsonObject>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setGeometryde(const TSharedPtr<FJsonObject>& Params);
+};
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "ModelTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the model tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPModelTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPModelTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Get geometry data for the current edited mesh
+     * 
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> getGeometryse(const TSharedPtr<FJsonObject>& Params);
+};
