@@ -443,8 +443,16 @@ const modelAtomicTools = {
         .optional()
         .describe("Light color (RGB)"),
       intensity: z.number().min(0).optional().describe("Light intensity"),
-      position: _Tensor.VEC3.optional().describe("Light position"),
-      direction: _Tensor.VEC3.optional().describe("Light direction"),
+      position: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light position"),
+      direction: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light direction"),
       width: z
         .number()
         .optional()
