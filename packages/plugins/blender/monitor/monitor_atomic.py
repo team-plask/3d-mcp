@@ -596,9 +596,10 @@ def getCameraView(
 
                         try:
                             with bpy.context.temp_override(**context_override):
-                                bpy.ops.screen.screenshot_area(
-                                    filepath=str(view_filename), show_multiview=True
-                                )
+                                bpy.ops.screen.screenshot_area("EXEC_DEFAULT",
+                                                               filepath=str(view_filename), show_multiview=True
+                                                               )
+                                pass
                         except (AttributeError, TypeError):
                             bpy.ops.screen.screenshot_area(
                                 context_override,
