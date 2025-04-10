@@ -223,64 +223,139 @@ def undo() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def transformObjects(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None) -> Dict[str, Any]:
     """
-    Apply transformations to multiple objects
+    Apply transformations (translate, rotate, scale) to selected elements
 
     Args:
-    items (List[Dict[str, Any] with keys {"id": str, "position": List[float], "rotation": List[float], "scale": List[float], "positionOffset": List[float], "rotationOffset": List[float], "scaleOffset": List[float], "space": Literal["local", "world", "parent"]}]): Transformations to apply
+    translation (List[float]): Translation vector
+    rotation (List[float]): Rotation vector (Euler angles)
+    scale (List[float]): Scaling vector
 
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "transformObjects"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
+    tool_name = "transform"  # Define tool name for logging
+    params = {"translation": translation, "rotation": rotation,
+              "scale": scale}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        # No parameters to validate
+        import bmesh
+        import mathutils
 
-        # Implement actual blender API calls
-        for item in items:
-            obj = bpy.data.objects.get(item["id"])
-            if not obj:
-                continue
+        # Create transformation matrices
+        translation_matrix = mathutils.Matrix.Translation(
+            translation) if translation else mathutils.Matrix.Identity(4)
+        rotation_matrix = mathutils.Euler(rotation, 'XYZ').to_matrix(
+        ).to_4x4() if rotation else mathutils.Matrix.Identity(4)
+        scale_matrix = mathutils.Matrix.Diagonal(
+            scale + [1]) if scale else mathutils.Matrix.Identity(4)
+        transformation_matrix = translation_matrix @ rotation_matrix @ scale_matrix
 
-            # Handle different coordinate spaces
-            space = item.get("space", "world")
+        # Check the mode and apply transformations accordingly
+        obj = bpy.context.object
+        if obj is None:
+            raise RuntimeError("No active object found.")
 
-            # Set absolute transforms
-            if "position" in item and item["position"] is not None:
-                if space == "world":
-                    obj.location = item["position"]
-                elif space == "local" or space == "parent":
-                    obj.location = item["position"]
+        if obj.mode == 'EDIT':  # Edit mode (vertices or faces)
+            bm = bmesh.from_edit_mesh(obj.data)
 
-            if "rotation" in item and item["rotation"] is not None:
-                if space == "world":
-                    obj.rotation_euler = item["rotation"]
-                elif space == "local" or space == "parent":
-                    obj.rotation_euler = item["rotation"]
+            # Get selected elements (vertices or faces)
+            selected_verts = [v for v in bm.verts if v.select]
+            selected_faces = [f for f in bm.faces if f.select]
 
-            if "scale" in item and item["scale"] is not None:
-                obj.scale = item["scale"]
+            if selected_verts:
+                # Calculate the median point of the selected vertices
+                median_point = mathutils.Vector((0.0, 0.0, 0.0))
+                for vert in selected_verts:
+                    median_point += vert.co
+                median_point /= len(selected_verts)
 
-            # Apply offsets
-            if "positionOffset" in item and item["positionOffset"] is not None:
-                for i in range(min(len(obj.location), len(item["positionOffset"]))):
-                    obj.location[i] += item["positionOffset"][i]
+                # Apply transformations relative to the median point
+                for vert in selected_verts:
+                    local_co = vert.co - median_point
+                    transformed_co = transformation_matrix @ local_co
+                    vert.co = transformed_co + median_point
 
-            if "rotationOffset" in item and item["rotationOffset"] is not None:
-                for i in range(
-                    min(len(obj.rotation_euler), len(item["rotationOffset"]))
-                ):
-                    obj.rotation_euler[i] += item["rotationOffset"][i]
+            elif selected_faces:
+                # Apply transformations to face centers
+                for face in selected_faces:
+                    for vert in face.verts:
+                        local_co = vert.co
+                        transformed_co = transformation_matrix @ local_co
+                        vert.co = transformed_co
 
-            if "scaleOffset" in item and item["scaleOffset"] is not None:
-                for i in range(min(len(obj.scale), len(item["scaleOffset"]))):
-                    obj.scale[i] += item["scaleOffset"][i]
+            # Update the mesh to reflect changes
+            bmesh.update_edit_mesh(obj.data)
+
+        elif obj.mode == 'OBJECT':  # Object mode
+            selected_objects = bpy.context.selected_objects
+            if not selected_objects:
+                raise RuntimeError("No objects selected.")
+
+            for obj in selected_objects:
+                # Apply transformation to the object's matrix
+                obj.matrix_world = transformation_matrix @ obj.matrix_world
+
+        else:
+            raise RuntimeError("Unsupported mode for transformation.")
 
         return {"success": True}
+    # try:
+
+    #     import bmesh
+    #     import mathutils
+    #     # Ensure there is an active object
+    #     obj = bpy.context.object
+    #     if obj is None or obj.type != 'MESH':
+    #         raise RuntimeError("No active mesh object found.")
+
+    #     # Ensure we are in edit mode
+    #     if bpy.context.object.mode != 'EDIT':
+    #         bpy.ops.object.mode_set(mode='EDIT')
+
+    #     # Access the mesh data in edit mode
+    #     bm = bmesh.from_edit_mesh(obj.data)
+
+    #     # Get selected vertices
+    #     selected_verts = [v for v in bm.verts if v.select]
+    #     if not selected_verts:
+    #         raise RuntimeError("No vertices selected.")
+
+    #     # Calculate the median point of the selected vertices
+    #     median_point = mathutils.Vector((0.0, 0.0, 0.0))
+    #     for vert in selected_verts:
+    #         median_point += vert.co
+    #     median_point /= len(selected_verts)
+
+    #     # Create transformation matrices
+    #     translation_matrix = mathutils.Matrix.Translation(
+    #         translation) if translation else mathutils.Matrix.Identity(4)
+    #     rotation_matrix = mathutils.Euler(rotation, 'XYZ').to_matrix(
+    #     ).to_4x4() if rotation else mathutils.Matrix.Identity(4)
+    #     scale_matrix = mathutils.Matrix.Diagonal(
+    #         scale + [1]) if scale else mathutils.Matrix.Identity(4)
+
+    #     bpy.ops.ed.undo_push(message="Transform Operation")
+
+    #     # Combine transformations into a single matrix
+    #     transformation_matrix = translation_matrix @ rotation_matrix @ scale_matrix
+
+    #     # Apply transformations relative to the median point
+    #     for vert in selected_verts:
+    #         # Move vertex to origin relative to the median point
+    #         local_co = vert.co - median_point
+    #         # Apply transformation
+    #         transformed_co = transformation_matrix @ local_co
+    #         # Move vertex back to its original position relative to the median point
+    #         vert.co = transformed_co + median_point
+
+    #     # Update the mesh to reflect changes
+
+    #     bmesh.update_edit_mesh(obj.data)
+
+    #     return {"success": True}
 
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
@@ -437,7 +512,8 @@ def duplicate(
 def select(
     ids: List[str],
     mode: Optional[Literal["replace", "add", "remove", "toggle"]] = None,
-    domain: Optional[str] = None,
+    domain: Optional[Literal["object", "geometry", "material"]] = None,
+    subtype: Optional[Literal["vertex, edge", "face"]] = None,
 ) -> Dict[str, Any]:
     """
     Select one or more objects
@@ -456,14 +532,74 @@ def select(
         "ids": ids,
         "mode": mode,
         "domain": domain,
+        "subtype": subtype,
     }  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        # Validation already done
-
         # Implement actual blender API calls
         selection_mode = mode if mode is not None else "replace"
+
+        if domain == "geometry":
+            import bmesh
+
+            # Validate enum values for type
+            if subtype not in ['vertex', 'edge', 'face']:
+                raise ValueError(
+                    f"Parameter 'subtype' must be one of ['vertex', 'edge', 'face'], got {subtype}")
+
+            # Ensure we are in edit mode
+            if bpy.context.object.mode != 'EDIT':
+                raise RuntimeError(
+                    "You must be in edit mode to select geometry.")
+
+            # Get the active mesh
+            obj = bpy.context.object
+            mesh = bmesh.from_edit_mesh(obj.data)
+
+            if subtype == "vertex":
+                bpy.ops.mesh.select_mode(type='VERT')
+            elif subtype == "edge":
+                bpy.ops.mesh.select_mode(type='EDGE')
+            elif subtype == "face":
+                bpy.ops.mesh.select_mode(type='FACE')
+
+            toggle = False
+            if selection_mode == "replace":
+                # Deselect all first
+                bpy.ops.mesh.select_all(action='DESELECT')
+                select = True
+            elif selection_mode == "add":
+                select = True
+            elif selection_mode == "remove":
+                select = False
+            elif select == "toggle":
+                toggle = True
+            else:
+                raise ValueError(f"Invalid selection mode: {selection_mode}")
+
+            for id in ids:
+                index = int(id)
+                if subtype == "vertex":
+                    mesh.verts[index].select_set(select and (
+                        not toggle or not mesh.verts[index].select_get()))
+                elif subtype == "edge":
+                    mesh.edges[index].select_set(select and (
+                        not toggle or not mesh.edges[index].select_get()))
+                elif subtype == "face":
+                    mesh.faces[index].select_set(select and (
+                        not toggle or not mesh.faces[index].select_get()))
+
+            # Update the mesh to reflect changes
+            bmesh.update_edit_mesh(obj.data)
+
+            return {"success": True}
+
+        # domain material or object
+
+        if bpy.context.object.mode != 'OBJECT':
+            raise RuntimeError(
+                "You must be in object mode to select objects or materials.")
 
         # Handle replace mode by clearing current selection
         if selection_mode == "replace":
