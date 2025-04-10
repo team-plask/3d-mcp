@@ -8,18 +8,32 @@ import { _OperationResponse, _Tensor } from "./entity";
 const coreAtomicTools = {
   // Selection Operations
   select: {
-    description: "Select one or more objects",
+    description: "Set the current selection",
     parameters: z.object({
-      ids: z.array(z.string()).describe("Object identifiers to select"),
+      ids: z
+        .array(z.string())
+        .describe(
+          "Identifiers to select. Points to different kinds of structures, depending on the domain. Give an empty array to clear the selection."
+        ),
       mode: z
         .enum(["replace", "add", "remove", "toggle"])
         .default("replace")
-        .describe("Selection mode operation"),
+        .describe(
+          "Selection mode operation, can be 'replace', 'add', 'remove' or 'toggle'. Default is 'replace'"
+        ),
       domain: z
-        .string()
+        .enum(["object", "geometry", "material"])
+        .default("object")
         .optional()
         .describe(
-          "Optional domain to restrict selection (e.g., 'mesh', 'animation')"
+          "Selection domain, can be 'object', 'geometry' or 'material'. Default is 'object'"
+        ),
+      subtype: z
+        .enum(["vertex", "edge", "face"])
+        .default("face")
+        .optional()
+        .describe(
+          "Subtype for selection. Only relevant for geometry domain. Can be 'vertex', 'edge' or 'face'. Default is 'face'"
         ),
     }),
     returns: _OperationResponse.extend({
@@ -28,83 +42,42 @@ const coreAtomicTools = {
         .describe("All selected object IDs after operation"),
     }),
   },
+  // getSelection: {
+  //   description: "Get currently selected objects",
+  //   parameters: z.object({
+  //     domain: z
+  //       .string()
+  //       .optional()
+  //       .describe(
+  //         "Optional domain to filter results (e.g., 'mesh', 'animation')"
+  //       ),
+  //   }),
+  //   returns: _OperationResponse.extend({
+  //     selectedIds: z
+  //       .array(z.string())
+  //       .describe("Currently selected object IDs"),
+  //   }),
+  // },
 
-  clearSelection: {
-    description: "Clear current selection",
+  transform: {
+    description:
+      "Apply transformations (translate, rotate, scale) to selected elements",
     parameters: z.object({
-      domain: z
-        .string()
+      translation: z
+        .array(z.number())
+        .length(3)
         .optional()
-        .describe(
-          "Optional domain to restrict clearing (e.g., 'mesh', 'animation')"
-        ),
-    }),
-    returns: _OperationResponse,
-  },
-
-  getSelection: {
-    description: "Get currently selected objects",
-    parameters: z.object({
-      domain: z
-        .string()
+        .describe("Translation vector"),
+      rotation: z
+        .array(z.number())
+        .length(3)
         .optional()
-        .describe(
-          "Optional domain to filter results (e.g., 'mesh', 'animation')"
-        ),
-    }),
-    returns: _OperationResponse.extend({
-      selectedIds: z
-        .array(z.string())
-        .describe("Currently selected object IDs"),
-    }),
-  },
-
-  transformObjects: {
-    description: "Apply transformations to multiple objects",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            position: z
-              .array(z.number())
-              .length(3)
-              .optional()
-              .describe("New absolute position [x, y, z]"),
-            rotation: z
-              .array(z.number())
-              .length(4)
-              .optional()
-              .describe("New absolute rotation quaternion [x, y, z, w]"),
-            scale: z
-              .array(z.number())
-              .length(3)
-              .optional()
-              .describe("New absolute scale [x, y, z]"),
-            positionOffset: z
-              .array(z.number())
-              .length(3)
-              .optional()
-              .describe("Relative position offset to apply [dx, dy, dz]"),
-            rotationOffset: z
-              .array(z.number())
-              .length(3)
-              .optional()
-              .describe(
-                "Relative rotation to apply as quaternion [x, y, z, w]"
-              ),
-            scaleOffset: z
-              .array(z.number())
-              .length(3)
-              .optional()
-              .describe("Relative scale to apply [sx, sy, sz]"),
-            space: z
-              .enum(["local", "world", "parent"])
-              .default("world")
-              .describe("Coordinate space for the transformation"),
-          })
-        )
-        .describe("Transformations to apply"),
+        .describe("Rotation vector (Euler angles)"),
+      scale: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Scaling vector"),
     }),
     returns: _OperationResponse,
   },

@@ -66,32 +66,6 @@ const modelAtomicTools = {
     returns: _OperationResponse,
   },
 
-  // Edit mesh operations
-
-  // Selection operations
-  setSelectedGeometry: {
-    description: "Select or deselect vertices, edges, or faces",
-    parameters: z.object({
-      ids: z.array(z.string()).describe("IDs of structures to select"),
-      type: z.enum(["vertex", "edge", "face"]),
-      mode: z
-        .enum(["replace", "add", "remove"])
-        .default("replace")
-        .describe("Selection mode"),
-    }),
-    returns: _OperationResponse,
-  },
-  getSelectedGeometry: {
-    description: "Get selected vertices, edges, or faces",
-    parameters: z.object({
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-    returns: _OperationResponse.extend({
-      selectedIds: z.array(z.string()).describe("IDs of selected structures"),
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-  },
-
   // Structure operations
   setMode: {
     description:
@@ -163,28 +137,28 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  transform: {
-    description:
-      "Apply transformations (translate, rotate, scale) to selected elements",
-    parameters: z.object({
-      translation: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Translation vector"),
-      rotation: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Rotation vector (Euler angles)"),
-      scale: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Scaling vector"),
-    }),
-    returns: _OperationResponse,
-  },
+  // transform: {
+  //   description:
+  //     "Apply transformations (translate, rotate, scale) to selected elements",
+  //   parameters: z.object({
+  //     translation: z
+  //       .array(z.number())
+  //       .length(3)
+  //       .optional()
+  //       .describe("Translation vector"),
+  //     rotation: z
+  //       .array(z.number())
+  //       .length(3)
+  //       .optional()
+  //       .describe("Rotation vector (Euler angles)"),
+  //     scale: z
+  //       .array(z.number())
+  //       .length(3)
+  //       .optional()
+  //       .describe("Scaling vector"),
+  //   }),
+  //   returns: _OperationResponse,
+  // },
   edgeSlide: {
     description: "Slide selected edges along their adjacent edges",
     parameters: z.object({
