@@ -362,6 +362,52 @@ def transform(translation: Optional[List[float]] = None, rotation: Optional[List
         return {"success": False, "error": str(e)}
 
 
+def delete(type: Optional[Literal["vertex", "edge", "face", "only_faces", "only_edges_and_faces"]] = "face") -> Dict[str, Any]:
+    """
+    Deletes the current selection. Additional optional type can be provided to filter the deletion
+
+    Args:
+    type (Optional[Literal["vertex", "edge", "face", "only_faces", "only_edges_and_faces"]]): Type of elements to delete. Only relevant for geometry domain, when a mesh is being edited. Can be 'vertex', 'edge', 'face', 'only_faces' or 'only_edges_and_faces'
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "delete"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        if bpy.context.object.mode == 'EDIT':
+            # Map the type to Blender's delete operation
+            type_map = {
+                "vertex": "VERT",
+                "edge": "EDGE",
+                "face": "FACE",
+                "only_faces": "ONLY_FACE",
+                "only_edges_and_faces": "EDGE_FACE",
+            }
+
+            if type not in type_map:
+                raise ValueError(f"Invalid type: {type}")
+
+            bpy.ops.ed.undo_push(message="Delete Operation")
+
+            # Perform the delete operation
+            bpy.ops.mesh.delete(type=type_map[type])
+
+            return {"success": True}
+        elif bpy.context.object.mode == 'OBJECT':
+            bpy.ops.ed.undo_push(message="Delete Operation")
+
+            # Use the object delete operator
+            bpy.ops.object.delete()
+            return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 def setParentObjects(
     items: List[Dict[str, Any]], maintainWorldTransform: Optional[bool] = None
 ) -> Dict[str, Any]:
@@ -575,6 +621,7 @@ def select(
                 select = False
             elif select == "toggle":
                 toggle = True
+                select = True
             else:
                 raise ValueError(f"Invalid selection mode: {selection_mode}")
 

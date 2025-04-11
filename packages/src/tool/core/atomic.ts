@@ -81,7 +81,20 @@ const coreAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-
+  delete: {
+    description:
+      "Deletes the current selection. Additional optional type can be provided to filter the deletion",
+    parameters: z.object({
+      type: z
+        .enum(["vertex", "edge", "face", "only_faces", "only_edges_and_faces"])
+        .optional()
+        .default("face")
+        .describe(
+          "Type of elements to delete. Only relevant for geometry domain, when a mesh is being edited. Can be 'vertex', 'edge', 'face', 'only_faces' or 'only_edges_and_faces'"
+        ),
+    }),
+    returns: _OperationResponse,
+  },
   setParentObjects: {
     description: "Set parent for multiple objects",
     parameters: z.object({

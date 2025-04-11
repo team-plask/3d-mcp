@@ -779,89 +779,6 @@ def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
  # === NEWLY GENERATED ===
 
 
-def deleteGeometry(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
-    """
-    Delete selected vertices, edges, or faces
-
-    Args:
-    type (Literal["vertex", "edge", "face"]): The type parameter
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteGeometry"  # Define tool name for logging
-    params = {"type": type}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        obj = bpy.context.object
-        if obj is None or obj.type != 'MESH':
-            raise RuntimeError("No active mesh object found.")
-
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError("You must be in edit mode to delete geometry.")
-
-        # Map the type to Blender's delete operation
-        type_map = {
-            "vertex": "VERT",
-            "edge": "EDGE",
-            "face": "FACE"
-        }
-
-        if type not in type_map:
-            raise ValueError(f"Invalid type: {type}")
-
-        bpy.ops.ed.undo_push(message="Delete Operation")
-
-        # Perform the delete operation
-        bpy.ops.mesh.delete(type=type_map[type])
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
- # === NEWLY GENERATED ===
-
-
-def deleteOnlyEdgesAndFaces() -> Dict[str, Any]:
-    """
-    Delete only selected edges and faces, keeping vertices
-
-    Args:
-    No parameters
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteOnlyEdgesAndFaces"  # Define tool name for logging
-    params = {}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        obj = bpy.context.object
-        if obj is None or obj.type != 'MESH':
-            raise RuntimeError("No active mesh object found.")
-
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You must be in edit mode to delete edges and faces.")
-
-        # Perform the delete operation for edges and faces only
-        bpy.ops.mesh.delete(type='EDGE_FACE')
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
- # === NEWLY GENERATED ===
-
-
 def inset(amount: float) -> Dict[str, Any]:
     """
     Inset selected faces
@@ -952,38 +869,6 @@ def getGeometry() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
-
-
-def deleteOnlyFaces() -> Dict[str, Any]:
-    """
-    Delete only selected faces, keeping edges and vertices
-
-    Args:
-    No parameters
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteOnlyFaces"  # Define tool name for logging
-    params = {}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You have to start editing the mesh to delete faces.")
-
-        # Perform the delete operation for faces only
-        bpy.ops.mesh.delete(type='ONLY_FACE')
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
 
 
 def dissolve(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
