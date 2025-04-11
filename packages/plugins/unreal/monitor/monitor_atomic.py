@@ -1,270 +1,224 @@
-# Generated unreal implementation for monitor atomic tools
+# Generated unreal implementation for monitor‑atomic tools
 # 이 파일은 코드 생성 파이프라인에 의해 생성되었습니다. 직접 수정하지 마십시오.
 
 import unreal
 import os
-import time
 import math
+import time
 import pathlib
 import shutil
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
-# -------------------------------------------------------------------
-# 헬퍼 함수: 씬 경계(중심 및 최대 치수)를 계산
-# -------------------------------------------------------------------
-def calculate_scene_bounds() -> Tuple[unreal.Vector, float]:
-    """
-    씬 내 모든 액터들의 바운딩 박스를 고려하여 씬의 중심과 최대 치수를 계산합니다.
-    만약 액터가 없으면 기본값(center=(0,0,0), max_dimension=500)을 반환합니다.
-    """
+# ------------------------------------------------------------------
+# 씬 경계(중심, 최대치수) 계산
+# ------------------------------------------------------------------
+def _calculate_scene_bounds() -> Tuple[unreal.Vector, float]:
     actors = unreal.EditorLevelLibrary.get_all_level_actors()
     if not actors:
         return unreal.Vector(0, 0, 0), 500.0
 
-    min_x = float('inf')
-    min_y = float('inf')
-    min_z = float('inf')
-    max_x = float('-inf')
-    max_y = float('-inf')
-    max_z = float('-inf')
+    mins = unreal.Vector(float("inf"), float("inf"), float("inf"))
+    maxs = unreal.Vector(float("-inf"), float("-inf"), float("-inf"))
 
-    for actor in actors:
-        # get_actor_bounds(include_non_colliding: bool) 반환값: (origin, box_extent)
-        origin, extent = actor.get_actor_bounds(True)
-        ax_min = origin - extent
-        ax_max = origin + extent
+    for a in actors:
+        origin, extent = a.get_actor_bounds(True)
+        mins = unreal.Vector.get_min(mins, origin - extent)
+        maxs = unreal.Vector.get_max(maxs, origin + extent)
 
-        min_x = min(min_x, ax_min.x)
-        min_y = min(min_y, ax_min.y)
-        min_z = min(min_z, ax_min.z)
-        max_x = max(max_x, ax_max.x)
-        max_y = max(max_y, ax_max.y)
-        max_z = max(max_z, ax_max.z)
+    center = (mins + maxs) * 0.5
+    max_dim  = max(maxs.x - mins.x, maxs.y - mins.y, maxs.z - mins.z)
+    return center, max_dim
 
-    center = unreal.Vector((min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2)
-    dimension = unreal.Vector(max_x - min_x, max_y - min_y, max_z - min_z)
-    max_dimension = max(dimension.x, dimension.y, dimension.z)
-    return center, max_dimension
-
-# -------------------------------------------------------------------
-# 헬퍼 함수: 임시 카메라 액터 생성/삭제
-# -------------------------------------------------------------------
-def spawn_temp_camera() -> unreal.CameraActor:
-    """
-    임시 카메라 액터를 생성하여 반환합니다.
-    """
+# ------------------------------------------------------------------
+# 임시 카메라 생성/삭제
+# ------------------------------------------------------------------
+def _spawn_temp_camera() -> unreal.CameraActor:
     world = unreal.EditorLevelLibrary.get_editor_world()
-    camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CameraActor, unreal.Vector(0, 0, 0), unreal.Rotator(0, 0, 0))
-    return camera
+    return unreal.EditorLevelLibrary.spawn_actor_from_class(
+        unreal.CameraActor, unreal.Vector(), unreal.Rotator()
+    )
 
-def destroy_temp_camera(camera: unreal.CameraActor) -> None:
-    """
-    생성한 임시 카메라 액터를 삭제합니다.
-    """
-    unreal.EditorLevelLibrary.destroy_actor(camera)
+def _destroy_temp_camera(cam: unreal.CameraActor):
+    unreal.EditorLevelLibrary.destroy_actor(cam)
 
-# -------------------------------------------------------------------
-# 헬퍼 함수: 카메라 뷰 설정 (뷰 이름에 따라 위치 및 회전 지정)
-# -------------------------------------------------------------------
-def set_camera_view(camera: unreal.CameraActor, view_name: str, center: unreal.Vector, max_dimension: float) -> None:
-    """
-    view_name에 따라 카메라 액터의 위치·회전을 설정하고,
-    해당 카메라를 활성 뷰포트에서 '파일럿(pilot)' 하여 실제 캡처가 가능하도록 전환합니다.
-    """
-    # 기존 로직(카메라 위치/오프셋 결정)
-    if view_name == "TOP":
-        offset = unreal.Vector(0, 0, max_dimension * 1.2)
-    elif view_name == "FRONT":
-        offset = unreal.Vector(-max_dimension * 1.2, 0, 0)
-    elif view_name == "RIGHT":
-        offset = unreal.Vector(0, max_dimension * 1.2, 0)
-    elif view_name == "PERSP":
-        norm = math.sqrt(3)  # sqrt(1^2 + 1^2 + 1^2)
-        factor = max_dimension * 1.5
-        offset = unreal.Vector((-1 / norm) * factor, (1 / norm) * factor, (1 / norm) * factor)
+# ------------------------------------------------------------------
+# 카메라 파라미터 설정
+# ------------------------------------------------------------------
+def _setup_camera(cam: unreal.CameraActor,
+                  view_cfg: Dict[str, Any],
+                  center: unreal.Vector,
+                  max_dim: float,
+                  auto_fit: bool):
+
+    comp = cam.camera_component
+    # 투영 모드
+    if view_cfg["perspective"] == "ORTHO":
+        comp.projection_mode = unreal.CameraProjectionMode.ORTHOGRAPHIC
+        comp.ortho_width     = max_dim * 2
     else:
-        offset = unreal.Vector(0, 0, max_dimension)
+        comp.projection_mode = unreal.CameraProjectionMode.PERSPECTIVE
+        comp.field_of_view   = 90.0
 
-    camera_location = center + offset
-    camera.set_actor_location(camera_location, False, True)
+    # 위치‧회전
+    if "location" in view_cfg and view_cfg["location"] and not auto_fit:
+        cam.set_actor_location(unreal.Vector(*view_cfg["location"]), False, True)
+    else:
+        cam.set_actor_location(center + view_cfg["offset"](max_dim), False, True)
 
-    look_at_rotation = unreal.MathLibrary.find_look_at_rotation(camera_location, center)
-    camera.set_actor_rotation(look_at_rotation, False)
+    if "rotation" in view_cfg and isinstance(view_cfg["rotation"], (list, tuple)):
+        # quaternion → rotator
+        q = unreal.Quat(*view_cfg["rotation"])
+        cam.set_actor_rotation(q.rotator(), False)
+    else:
+        look = unreal.MathLibrary.find_look_at_rotation(cam.get_actor_location(), center)
+        cam.set_actor_rotation(look, False)
 
-    # 그 다음, 뷰포트 Type을 오소 or 퍼스펙티브로 변경
-    #   - Unreal에서 보통 0번 인덱스 뷰포트를 메인 뷰포트로 간주 (에디터 탭 여러 개인 경우 주의)
-    #   - TOP/FRONT/RIGHT일 때 오소, PERSP는 LVT_Perspective
-    camera_component = camera.camera_component
-    if camera_component:
-        if view_name in ["TOP", "FRONT", "RIGHT"]:
-            # 오소그래픽(직교) 투영 설정
-            camera_component.projection_mode = unreal.CameraProjectionMode.ORTHOGRAPHIC
-
-            # 오소그래픽 너비 설정 (적절한 크기로)
-            camera_component.ortho_width = max_dimension * 2
-            unreal.log("Set orthographic width to: {}".format(max_dimension * 2))
-        elif view_name == "PERSP":
-            # 원근 투영 설정
-            camera_component.projection_mode = unreal.CameraProjectionMode.PERSPECTIVE
-
-            # 카메라의 Field of View 설정 (예: 90도)
-            camera_component.field_of_view = 90.0
-            unreal.log("Set field of view to: 90.0")
-
-    # -----------------------------
-    # 추가: 에디터 뷰포트를 이 카메라로 전환
-    # -----------------------------
-    level_editor = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
-    # 먼저 '파일럿' 설정 (CameraActor를 직접 뷰포트에서 조종/활성)
-    level_editor.pilot_level_actor(camera)
+    # 뷰포트 파일럿
+    unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).pilot_level_actor(cam)
 
 # ------------------------------------------------------------------
-# 내부 헬퍼: 에디터 Task 비동기 대기
+# 스크린샷 요청 → 실제 파일로 이동
 # ------------------------------------------------------------------
-def _wait_for_editor_task(task: unreal.AutomationEditorTask,
-                          on_finished,
-                          timeout: float = 15.0) -> None:
-    """task 완료 시 on_finished() 를 호출한다. timeout 초가 지나면 경고 후 계속."""
-    start_time = time.time()
+def _take_screenshot(abs_path: str,
+                     w: int,
+                     h: int,
+                     cam: unreal.CameraActor,
+                     on_done):
 
-    def _tick(delta_seconds: float):
-        nonlocal start_time
+    filename = pathlib.Path(abs_path).name
+    task = unreal.AutomationLibrary.take_high_res_screenshot(w, h, filename, camera=cam)
+
+    start = time.time()
+
+    def _tick(_):
+        nonlocal start
         if task.is_task_done():
-            unreal.unregister_slate_post_tick_callback(_handle)
-            on_finished(True)
-            return
+            unreal.unregister_slate_post_tick_callback(handle)
+            try:
+                src = os.path.join(unreal.Paths.screen_shot_dir(), filename)
+                shutil.move(src, abs_path)
+                on_done(True)
+            except Exception as e:
+                unreal.log_warning(f"파일 이동 실패: {e}")
+                on_done(False)
 
-        if time.time() - start_time > timeout:
-            unreal.log_warning(f"AutomationEditorTask timed‑out after {timeout} s")
-            unreal.unregister_slate_post_tick_callback(_handle)
-            on_finished(False)
-
-    _handle = unreal.register_slate_post_tick_callback(_tick)
-
-
-# -------------------------------------------------------------------
-# 헬퍼 함수: 스크린샷 캡쳐
-# -------------------------------------------------------------------
-def take_view_screenshot(abs_path: str, export_width: int, export_height: int, camera: unreal.CameraActor, on_done) -> None:
-    """
-    AutomationLibrary의 고해상도 스크린샷 캡쳐 함수를 호출하여 지정한 파일 이름으로 저장합니다.
-    
-    Args:
-        abs_path: 저장할 파일 전체 경로 (예: "C:/Users/username/Desktop/unreal_quad_view_top.png")
-        export_width: 캡쳐할 이미지의 가로 해상도
-        export_height: 캡쳐할 이미지의 세로 해상도
-        on_done(success: bool) : 완료/실패 콜백
-    """
-
-    # UE 쪽에는 **파일명만** 전달
-    file_name = pathlib.Path(abs_path).name
-
-    # 1) 스크린샷 요청
-    task = unreal.AutomationLibrary.take_high_res_screenshot(export_width, export_height, file_name, camera=camera)
-
-    def _move_file(success: bool):
-        if not success:
+        # 15초 타임아웃
+        elif time.time() - start > 15.0:
+            unreal.unregister_slate_post_tick_callback(handle)
+            unreal.log_warning("스크린샷 작업 타임아웃")
             on_done(False)
-            return
-        try:
-            src = os.path.join(unreal.Paths.screen_shot_dir(), file_name)
-            shutil.move(src, abs_path)
-            on_done(True)
-        except Exception as e:
-            unreal.log_warning(f"move failed: {e}")
-            on_done(False)
-    
-    _wait_for_editor_task(task, _move_file)
 
-# -------------------------------------------------------------------
-# 주요 함수: getQuadView
-# -------------------------------------------------------------------
-def getQuadView(
+    handle = unreal.register_slate_post_tick_callback(_tick)
+
+# ------------------------------------------------------------------
+# 메인 함수: getCameraView (Unreal)
+# ------------------------------------------------------------------
+def getCameraView(
     shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None,
-    name_visibility_predicate: Optional[str] = None,
+    name_visibility_predicate: Optional[str] = None,   # Unreal 미지원 (무시)
     auto_adjust_camera: Optional[bool] = None,
-    export_width: int = 1920,
-    export_height: int = 1080,
+    export_width: int = 960,
+    export_height: int = 540,
+    perspective: Optional[Union[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
-    Unreal Engine에서 씬의 TOP, FRONT, RIGHT, PERSP 뷰의 스크린샷을 생성합니다.
-    
+    Unreal Editor 뷰포트에서 원하는 각도의 스크린샷을 찍어 반환합니다.
+
     Args:
-        shading_mode (Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]): 뷰포트의 셰이딩 모드
-        name_visibility_predicate (str): 객체의 표시 설정을 위한 함수 문자열 (현재 Unreal에서는 지원되지 않음)
-        auto_adjust_camera (bool): 카메라 자동 조정 여부
-        export_width (int): 캡쳐 이미지의 가로 해상도
-        export_height (int): 캡쳐 이미지의 세로 해상도
-        
+        shading_mode: 뷰 모드 (UE ViewModeIndex) - **현재 샘플은 미구현**.
+        name_visibility_predicate: 객체명 표시 제어 - Unreal 에디터에서는 불가, 무시.
+        auto_adjust_camera: True 시 씬 중심으로 카메라 자동 배치.
+        export_width/height: 출력 해상도(px)
+        perspective:
+            - "TOP" / "FRONT" / "RIGHT" / "PERSP": 해당 뷰 한 장
+            - "ALL" : 네 장 모두
+            - dict {"type": "PERSP"|"ORTHO", "rotation": [w,x,y,z], "location":[x,y,z]}
+              사용자 정의 카메라 한 장
+
     Returns:
-        {"success": bool, "image_path": List[str]} 형태의 결과 반환
+        {"content": {"path": [파일경로...], "type": "image"}}
     """
-    tool_name = "getQuadView"  # 툴 이름 설정 (로그용)
-    params = {
-        "shading_mode": shading_mode,
-        "name_visibility_predicate": name_visibility_predicate,
-        "auto_adjust_camera": auto_adjust_camera,
-        "export_width": export_width,
-        "export_height": export_height,
-    }
-    unreal.log("Executing {0} in Unreal Engine with params: {1}".format(tool_name, params))
-    
+    tool_name = "getCameraView"
+    unreal.log(f"{tool_name} 실행, params: perspective={perspective}, auto_adjust={auto_adjust_camera}")
+
     try:
-        # 셰이딩 모드 파라미터 검증
-        if shading_mode is not None and shading_mode not in ['WIREFRAME', 'RENDERED', 'SOLID', 'MATERIAL']:
-            raise ValueError("Parameter 'shading_mode' must be one of ['WIREFRAME','RENDERED','SOLID','MATERIAL'], got {}".format(shading_mode))
-        
-        # 기본값 설정
         if shading_mode is None:
             shading_mode = "WIREFRAME"
         if auto_adjust_camera is None:
             auto_adjust_camera = True
+        if perspective is None:
+            perspective = "FRONT"
 
-        # Unreal에서는 Blender와 달리 객체 이름 표시 제어 기능이 없으므로 단순 로그 처리
-        if name_visibility_predicate:
-            unreal.log("name_visibility_predicate is provided but not supported in Unreal Engine. Ignoring.")
-        
-        # 저장 경로 설정: Desktop 디렉터리 아래에 unreal_quad_view_*.png 형태
-        desktop_dir = os.path.expanduser("~/Desktop")
-        base_filepath = os.path.join(desktop_dir, "unreal_quad_view")
-        unreal.log("Saving quad view images to: {}_*.png".format(base_filepath))
-        
-        # 씬의 중심과 최대 치수 계산
-        scene_center, max_dimension = calculate_scene_bounds()
-        
-        # 임시 카메라 생성
-        camera = spawn_temp_camera()
-        
-        view_names = ["TOP", "FRONT", "RIGHT", "PERSP"]
-        image_paths = []
+        # ===== (1) 셰이딩 모드 처리 =====
+        # ViewportClient.set_view_mode(ViewModeIndex) 사용 가능.
+        # 예시는 생략. (UE 공식 문서: EditorViewportClient)
 
-        def _process_next():
-            if not view_names:                              # 모든 뷰 처리 완료
-                destroy_temp_camera(camera)
-                unreal.log("QuadView finished")
+        # ===== (2) 파일 경로 =====
+        desk = os.path.expanduser("~/Desktop")
+        base = os.path.join(desk, "unreal_camera_view")
+
+        # ===== (3) 씬 정보 & 카메라 준비 =====
+        center, max_dim = _calculate_scene_bounds()
+        cam = _spawn_temp_camera()
+
+        # ===== (4) 뷰 정의 =====
+        def _offset_top(md):   return unreal.Vector(0, 0, md * 1.2)
+        def _offset_front(md): return unreal.Vector(-md * 1.2, 0, 0)
+        def _offset_right(md): return unreal.Vector(0, md * 1.2, 0)
+        def _offset_persp(md):
+            n = math.sqrt(3)
+            f = md * 1.5
+            return unreal.Vector(-f/n, f/n, f/n)
+
+        presets = {
+            "TOP"  : {"perspective": "ORTHO", "offset": _offset_top , "rotation": None},
+            "FRONT": {"perspective": "ORTHO", "offset": _offset_front, "rotation": None},
+            "RIGHT": {"perspective": "ORTHO", "offset": _offset_right, "rotation": None},
+            "PERSP": {"perspective": "PERSP", "offset": _offset_persp , "rotation": None},
+        }
+
+        if isinstance(perspective, dict):
+            views = [("CUSTOM", {
+                "perspective": perspective.get("type", "PERSP"),
+                "offset"     : lambda _: unreal.Vector(),   # location 직접 지정
+                "rotation"   : perspective.get("rotation"),
+                "location"   : perspective.get("location")
+            })]
+        elif perspective == "ALL":
+            views = list(presets.items())
+        elif perspective in presets:
+            views = [(perspective, presets[perspective])]
+        else:
+            raise ValueError(f"잘못된 perspective 값: {perspective}")
+
+        # ===== (5) 비동기 파이프라인 =====
+        image_paths: List[str] = []
+
+        def _next():
+            if not views:
+                _destroy_temp_camera(cam)
+                unreal.log("getCameraView 완료")
                 return
 
-            view = view_names.pop(0)
-            set_camera_view(camera, view, scene_center, max_dimension)
+            v_name, cfg = views.pop(0)
+            _setup_camera(cam, cfg, center, max_dim, auto_adjust_camera)
 
-            # 한 프레임 뒤에 스크린샷을 찍도록 살짝 지연
-            def _shoot_after_one_tick(_):
-                abs_png = f"{base_filepath}_{view.lower()}.png"
-                unreal.log(f"Taking screenshot for {view}: {abs_png}")
+            # 한 프레임 뒤에 캡처
+            def _shoot(_):
+                out_png = f"{base}_{v_name.lower()}.png"
+                unreal.log(f"▶ {v_name} 스크린샷: {out_png}")
 
-                take_view_screenshot(
-                    abs_png, export_width, export_height, camera,
-                    lambda ok: (image_paths.append(abs_png) if ok else None) or _process_next()
-                )
+                _take_screenshot(out_png, export_width, export_height, cam,
+                                 lambda ok: (image_paths.append(out_png) if ok else None) or _next())
                 unreal.unregister_slate_post_tick_callback(h)
 
-            h = unreal.register_slate_post_tick_callback(_shoot_after_one_tick)
+            h = unreal.register_slate_post_tick_callback(_shoot)
 
-        _process_next()     # 파이프라인 시작
-        return {"success": True, "image_path": image_paths}
-        
+        _next()
+        return {"content": {"path": image_paths, "type": "image"}}
+
     except Exception as e:
-        unreal.log("Error in {0}: {1}".format(tool_name, str(e)))
+        unreal.log_error(f"{tool_name} 실패: {e}")
         return {"success": False, "error": str(e)}
 
 # -------------------------------------------------------------------
