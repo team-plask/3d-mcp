@@ -302,60 +302,6 @@ def transform(translation: Optional[List[float]] = None, rotation: Optional[List
             raise RuntimeError("Unsupported mode for transformation.")
 
         return {"success": True}
-    # try:
-
-    #     import bmesh
-    #     import mathutils
-    #     # Ensure there is an active object
-    #     obj = bpy.context.object
-    #     if obj is None or obj.type != 'MESH':
-    #         raise RuntimeError("No active mesh object found.")
-
-    #     # Ensure we are in edit mode
-    #     if bpy.context.object.mode != 'EDIT':
-    #         bpy.ops.object.mode_set(mode='EDIT')
-
-    #     # Access the mesh data in edit mode
-    #     bm = bmesh.from_edit_mesh(obj.data)
-
-    #     # Get selected vertices
-    #     selected_verts = [v for v in bm.verts if v.select]
-    #     if not selected_verts:
-    #         raise RuntimeError("No vertices selected.")
-
-    #     # Calculate the median point of the selected vertices
-    #     median_point = mathutils.Vector((0.0, 0.0, 0.0))
-    #     for vert in selected_verts:
-    #         median_point += vert.co
-    #     median_point /= len(selected_verts)
-
-    #     # Create transformation matrices
-    #     translation_matrix = mathutils.Matrix.Translation(
-    #         translation) if translation else mathutils.Matrix.Identity(4)
-    #     rotation_matrix = mathutils.Euler(rotation, 'XYZ').to_matrix(
-    #     ).to_4x4() if rotation else mathutils.Matrix.Identity(4)
-    #     scale_matrix = mathutils.Matrix.Diagonal(
-    #         scale + [1]) if scale else mathutils.Matrix.Identity(4)
-
-    #     bpy.ops.ed.undo_push(message="Transform Operation")
-
-    #     # Combine transformations into a single matrix
-    #     transformation_matrix = translation_matrix @ rotation_matrix @ scale_matrix
-
-    #     # Apply transformations relative to the median point
-    #     for vert in selected_verts:
-    #         # Move vertex to origin relative to the median point
-    #         local_co = vert.co - median_point
-    #         # Apply transformation
-    #         transformed_co = transformation_matrix @ local_co
-    #         # Move vertex back to its original position relative to the median point
-    #         vert.co = transformed_co + median_point
-
-    #     # Update the mesh to reflect changes
-
-    #     bmesh.update_edit_mesh(obj.data)
-
-    #     return {"success": True}
 
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
