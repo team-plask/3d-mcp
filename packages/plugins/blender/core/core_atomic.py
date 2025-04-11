@@ -619,7 +619,7 @@ def select(
                 select = True
             elif selection_mode == "remove":
                 select = False
-            elif select == "toggle":
+            elif selection_mode == "toggle":
                 toggle = True
                 select = True
             else:
