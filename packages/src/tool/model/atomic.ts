@@ -46,52 +46,6 @@ const modelAtomicTools = {
     }),
   },
 
-  setGeometry: {
-    description: "Set geometry data for the current edited mesh",
-    parameters: z.object({
-      geometryData: z
-        .object({
-          vertices: z
-            .array(_Tensor.VEC3)
-            .describe("Array of vertex positions [x, y, z]. Z is up"),
-          edges: z
-            .array(z.array(z.number().int()).length(2))
-            .describe("Array of edges defined by vertex indices"),
-          faces: z
-            .array(z.number().int())
-            .describe("Vertex indices defining polygons"),
-        })
-        .describe("Geometry data"),
-    }),
-    returns: _OperationResponse,
-  },
-
-  // Edit mesh operations
-
-  // Selection operations
-  setSelectedGeometry: {
-    description: "Select or deselect vertices, edges, or faces",
-    parameters: z.object({
-      ids: z.array(z.string()).describe("IDs of structures to select"),
-      type: z.enum(["vertex", "edge", "face"]),
-      mode: z
-        .enum(["replace", "add", "remove"])
-        .default("replace")
-        .describe("Selection mode"),
-    }),
-    returns: _OperationResponse,
-  },
-  getSelectedGeometry: {
-    description: "Get selected vertices, edges, or faces",
-    parameters: z.object({
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-    returns: _OperationResponse.extend({
-      selectedIds: z.array(z.string()).describe("IDs of selected structures"),
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-  },
-
   // Structure operations
   setMode: {
     description:
