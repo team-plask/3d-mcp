@@ -46,6 +46,26 @@ const modelAtomicTools = {
     }),
   },
 
+  setGeometry: {
+    description: "Set geometry data for the current edited mesh",
+    parameters: z.object({
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
+    }),
+    returns: _OperationResponse,
+  },
+
   // Structure operations
   setMode: {
     description:
@@ -60,23 +80,6 @@ const modelAtomicTools = {
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
     }),
-    returns: _OperationResponse,
-  },
-  deleteGeometry: {
-    description: "Delete selected vertices, edges, or faces",
-    parameters: z.object({
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-    returns: _OperationResponse,
-  },
-  deleteOnlyFaces: {
-    description: "Delete only selected faces, keeping edges and vertices",
-    parameters: z.object({}),
-    returns: _OperationResponse,
-  },
-  deleteOnlyEdgesAndFaces: {
-    description: "Delete only selected edges and faces, keeping vertices",
-    parameters: z.object({}),
     returns: _OperationResponse,
   },
   subdivide: {
@@ -114,28 +117,6 @@ const modelAtomicTools = {
     parameters: z.object({
       amount: z.number().describe("Bevel amount"),
       type: z.enum(["vertex", "edge"]),
-    }),
-    returns: _OperationResponse,
-  },
-  transform: {
-    description:
-      "Apply transformations (translate, rotate, scale) to selected elements",
-    parameters: z.object({
-      translation: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Translation vector"),
-      rotation: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Rotation vector (Euler angles)"),
-      scale: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Scaling vector"),
     }),
     returns: _OperationResponse,
   },
@@ -253,13 +234,6 @@ const modelAtomicTools = {
       type: z
         .enum(["sphere", "cube", "cylinder", "plane"])
         .describe("Type of primitive to add"),
-    }),
-    returns: _OperationResponse,
-  },
-  deleteObject: {
-    description: "Delete an object from the scene",
-    parameters: z.object({
-      id: z.string().describe("ID of the object to delete"),
     }),
     returns: _OperationResponse,
   },
