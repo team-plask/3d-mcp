@@ -1,11 +1,11 @@
 import sys
 plugin_dir = "/Users/kminseong/3d-mcp/packages"
 sys.path.append(plugin_dir)
-import packages.plugins.unreal.monitor.monitor_atomic_legacy as monitor_atomic_legacy
+# import packages.plugins.unreal.monitor.monitor_atomic_legacy as monitor_atomic_legacy
 import packages.plugins.unreal.monitor.monitor_atomic as monitor_atomic
 import importlib
 
-importlib.reload(monitor_atomic_legacy)
+# importlib.reload(monitor_atomic_legacy)
 importlib.reload(monitor_atomic)
 
 # 1) 4‑way 캡처

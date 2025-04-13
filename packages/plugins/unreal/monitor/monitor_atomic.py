@@ -1,5 +1,5 @@
-# Generated unreal implementation for monitor‑atomic tools
-# 이 파일은 코드 생성 파이프라인에 의해 생성되었습니다. 직접 수정하지 마십시오.
+# Generated unreal implementation for monitor atomic tools
+# This file is generated - DO NOT EDIT DIRECTLY
 
 import unreal
 import os
@@ -8,6 +8,38 @@ import time
 import pathlib
 import shutil
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
+
+def getSceneGraph() -> Dict[str, Any]:
+
+    """
+    Get the scene graph of the current scene.
+    
+    Args:
+    No parameters
+        
+    Returns:
+    success (bool): Operation success status
+    scene_graph (Dict[str, Any] with keys {"name": str, "children": List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str]}]}): Scene graph of the current scene
+    """
+    tool_name = "getSceneGraph"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    unreal.log(f"Executing {tool_name} in Unreal Engine")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual unreal API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True, # TODO: Implement  
+                "scene_graph": None  
+        }
+        
+    except Exception as e:
+        unreal.log("Error in {0}: %s", tool_name, str(e))
+        return {"success": False, "error": str(e)}
+
 
 # ------------------------------------------------------------------
 # 씬 경계(중심, 최대치수) 계산
@@ -110,36 +142,40 @@ def _take_screenshot(abs_path: str,
 
     handle = unreal.register_slate_post_tick_callback(_tick)
 
+
 # ------------------------------------------------------------------
 # 메인 함수: getCameraView (Unreal)
 # ------------------------------------------------------------------
 def getCameraView(
-    shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None,
-    name_visibility_predicate: Optional[str] = None,   # Unreal 미지원 (무시)
-    auto_adjust_camera: Optional[bool] = None,
-    export_width: int = 960,
-    export_height: int = 540,
-    perspective: Optional[Union[str, Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
-    """
-    Unreal Editor 뷰포트에서 원하는 각도의 스크린샷을 찍어 반환합니다.
+        shading_mode: Optional[Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]] = None, 
+        name_visibility_predicate: Optional[str] = None, 
+        auto_adjust_camera: Optional[bool] = None, 
+        perspective: Optional[Union[Literal["TOP", "FRONT", "RIGHT", "PERSP"], Dict[str, Any]]] = None
+        ) -> Dict[str, Any]:
 
+    """
+    Get a customizable view of the 3D scene from any camera angle.
+    
     Args:
-        shading_mode: 뷰 모드 (UE ViewModeIndex) - **현재 샘플은 미구현**.
-        name_visibility_predicate: 객체명 표시 제어 - Unreal 에디터에서는 불가, 무시.
-        auto_adjust_camera: True 시 씬 중심으로 카메라 자동 배치.
-        export_width/height: 출력 해상도(px)
-        perspective:
-            - "TOP" / "FRONT" / "RIGHT" / "PERSP": 해당 뷰 한 장
-            - "ALL" : 네 장 모두
-            - dict {"type": "PERSP"|"ORTHO", "rotation": [w,x,y,z], "location":[x,y,z]}
-              사용자 정의 카메라 한 장
-
+    shading_mode (Literal["WIREFRAME", "RENDERED", "SOLID", "MATERIAL"]): Rendering style for the viewport (WIREFRAME: line rendering, SOLID: basic shading, MATERIAL: with materials, RENDERED: fully rendered)
+    name_visibility_predicate (str): Python lambda function that takes an object as input and returns display settings (e.g., 'lambda obj: {"show_name": obj.type == "MESH"}')
+    auto_adjust_camera (bool): When true, automatically positions the camera to frame all scene objects
+    perspective (Union[Literal["TOP", "FRONT", "RIGHT", "PERSP"], Dict[str, Any] with keys {"type": Literal["PERSP", "ORTHO"], "rotation": List[float], "location": List[float]}]): Predefined view angle (TOP/FRONT/RIGHT/PERSP) or custom camera configuration
+        
     Returns:
-        {"content": {"path": [파일경로...], "type": "image"}}
+    success (bool): Operation success status
+    image_path (List[str]): File paths to the generated image
     """
-    tool_name = "getCameraView"
-    unreal.log(f"{tool_name} 실행, params: perspective={perspective}, auto_adjust={auto_adjust_camera}")
+    tool_name = "getCameraView"  # Define tool name for logging
+    params = {
+        "shading_mode": shading_mode, 
+        "name_visibility_predicate": name_visibility_predicate, 
+        "auto_adjust_camera": auto_adjust_camera, 
+        "perspective": perspective}  # Create params dict for logging
+    unreal.log(f"Executing {tool_name} in Unreal Engine")
+    
+    export_width = 960
+    export_height = 540
 
     try:
         if shading_mode is None:
@@ -221,53 +257,4 @@ def getCameraView(
         unreal.log_error(f"{tool_name} 실패: {e}")
         return {"success": False, "error": str(e)}
 
-# -------------------------------------------------------------------
-# 주요 함수: getSceneGraph
-# -------------------------------------------------------------------
-def getSceneGraph() -> Dict[str, Any]:
-    """
-    현재 씬의 Scene Graph(액터 계층 구조)를 추출합니다.
-    
-    Returns:
-        {"success": bool, "scene_graph": List[Dict[str, Any]]} 형태의 결과 반환.
-        각 노드는 다음의 필드를 포함합니다:
-          - id (str): 액터의 고유 이름
-          - name (str): 액터 라벨
-          - metadata (dict): 추가 메타데이터 (필요 시 확장)
-          - position ([float, float, float]): 월드 공간 내 위치
-          - rotation ([float, float, float]): 회전값 (pitch, yaw, roll)
-          - scale ([float, float, float]): 스케일 값
-          - parentId (str): 부모 액터의 이름 (없으면 빈 문자열)
-          - childIds (List[str]): 자식 액터들의 이름 리스트
-    """
-    tool_name = "getSceneGraph"
-    unreal.log("Executing {0} in Unreal Engine".format(tool_name))
-    
-    try:
-        scene_graph = []
-        actors = unreal.EditorLevelLibrary.get_all_level_actors()
-        for actor in actors:
-            actor_id = actor.get_name()
-            actor_label = actor.get_actor_label()
-            position = actor.get_actor_location()
-            rotation = actor.get_actor_rotation()
-            scale = actor.get_actor_scale3d()
-            parent_actor = actor.get_attach_parent_actor()
-            child_actors = actor.get_attached_actors()
-            
-            node = {
-                "id": actor_id,
-                "name": actor_label,
-                "metadata": {},  # 필요에 따라 추가 메타데이터 추출 가능
-                "position": [position.x, position.y, position.z],
-                "rotation": [rotation.pitch, rotation.yaw, rotation.roll],
-                "scale": [scale.x, scale.y, scale.z],
-                "parentId": parent_actor.get_name() if parent_actor else "",
-                "childIds": [child.get_name() for child in child_actors] if child_actors else []
-            }
-            scene_graph.append(node)
-        return {"success": True, "scene_graph": scene_graph}
-    
-    except Exception as e:
-        unreal.log("Error in {0}: {1}".format(tool_name, str(e)))
-        return {"success": False, "error": str(e)}
+ # === NEWLY GENERATED ===
