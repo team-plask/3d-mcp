@@ -232,8 +232,16 @@ const modelAtomicTools = {
       + plane : the plane is 1x1, and is just a quad. Its normal is the Z axis  ",
     parameters: z.object({
       type: z
-        .enum(["sphere", "cube", "cylinder", "plane"])
-        .describe("Type of primitive to add"),
+        .enum(["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"])
+        .describe("Type of primitive to add, can be sphere, cube, cylinder, plane, cone, torus, or circle"),
+      params: z.object({
+        subdivisions: z
+          .number()
+          .int()
+          .default(32)
+          .optional()
+          .describe("Number of subdivisions. Default is 32"),
+      }).optional().describe("Primitive parameters, optional"),
     }),
     returns: _OperationResponse,
   },
