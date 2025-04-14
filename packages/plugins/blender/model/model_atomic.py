@@ -347,7 +347,7 @@ def bevel(amount: float, type: Literal["edge", "vertex"]) -> Dict[str, Any]:
  # === NEWLY GENERATED ===
 
 
-def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"], params: List[Dict[str, Any]]) -> Dict[str, Any]:
+def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"], primitive_params: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """
     Add primitive shapes to the scene
 
@@ -359,7 +359,8 @@ def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane",
     success (bool): Operation success status
     """
     tool_name = "createMeshFromPrimitive"  # Define tool name for logging
-    params = {"type": type, "params": params}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"type": type, "params": primitive_params}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
@@ -370,8 +371,8 @@ def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane",
                 f"Parameter 'type' must be one of ['sphere', 'cube', 'cylinder', 'plane', 'cone', 'torus', 'circle'], got {type}")
 
         subdivisions = 32
-        if params is not None and hasattr(params, 'subdivisions'):
-            subdivisions = params.subdivisions
+        if primitive_params is not None and 'subdivisions' in primitive_params:
+            subdivisions = primitive_params['subdivisions']
 
         # Add the specified primitive to the scene
         if type == "sphere":
