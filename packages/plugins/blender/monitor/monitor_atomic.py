@@ -82,9 +82,13 @@ def getCameraView(
     shading_mode: Optional[str] = None,
     name_visibility_predicate: Optional[str] = None,
     auto_adjust_camera: Optional[bool] = None,
+    projection: Optional[Literal["ORTHO", "PERSP"]] = None,
+    pointOfView: Optional[Literal["TOP", "BOTTOM",
+                                  "BACK", "FRONT", "LEFT", "RIGHT"]] = None,
+    freeRotation: Optional[List[float]] = None,
+    freeLocation: Optional[List[float]] = None,
     export_width: int = 960,
     export_height: int = 540,
-    perspective: Optional[Union[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
     Get a customizable view of the 3D scene from any camera angle.
@@ -108,7 +112,8 @@ def getCameraView(
         "auto_adjust_camera": auto_adjust_camera,
         "export_width": export_width,
         "export_height": export_height,
-        "perspective": perspective,
+        "projection": projection,
+        "pointOfView": pointOfView,
     }  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
@@ -118,8 +123,7 @@ def getCameraView(
         auto_adjust_camera=True,
         export_width=960,
         export_height=540,
-        name_visibility_predicate=None,
-        perspective="FRONT",
+        name_visibility_predicate=None
     ):
         """
         Create a screenshot from the specified perspective view.
@@ -169,7 +173,6 @@ def getCameraView(
                 temp_screen_name,
                 shading_mode,
                 auto_adjust_camera,
-                perspective,
             )
             return image_paths
 
@@ -452,7 +455,6 @@ def getCameraView(
         temp_screen_name: str,
         shading_mode: str,
         auto_adjust_camera: bool,
-        perspective: Union[str, Dict[str, Any]],
     ) -> List[str]:
         """Take a screenshot based on the specified perspective."""
         original_window = bpy.context.window
@@ -479,16 +481,32 @@ def getCameraView(
             )
 
             # Define standard view configurations
+            if (pointOfView not in ["TOP", "BOTTOM", "FRONT", "BACK", "LEFT", "RIGHT", "FREE"]):
+                return ValueError('Invalid pointOfView: {pointOfView}. Must be one of ["TOP", "BOTTOM", "FRONT", "BACK", "LEFT", "RIGHT", "FREE"].')
             view_configs = {
                 "TOP": {
-                    "perspective": "ORTHO",
+                    "perspective": projection or "ORTHO",
                     # Quaternion for top view
                     "rotation": (1.0, 0.0, 0.0, 0.0),
                     "dimension_func": lambda d: max(d.x, d.y),
                     "filename": f"{base_filepath}_top.png",
                 },
+                "BOTTOM": {
+                    "perspective": projection or "ORTHO",
+                    # Quaternion for bottom view
+                    "rotation": (0.0, 1.0, 0.0, 0.0),
+                    "dimension_func": lambda d: max(d.x, d.y),
+                    "filename": f"{base_filepath}_bottom.png",
+                },
+                "LEFT": {
+                    "perspective": projection or "ORTHO",
+                    # Quaternion for left view
+                    "rotation": (0.0, 0.5, 0.5, 0.5),
+                    "dimension_func": lambda d: max(d.y, d.z),
+                    "filename": f"{base_filepath}_left.png",
+                },
                 "FRONT": {
-                    "perspective": "ORTHO",
+                    "perspective": projection or "ORTHO",
                     "rotation": (
                         0.7071068,
                         0.7071068,
@@ -499,40 +517,31 @@ def getCameraView(
                     "filename": f"{base_filepath}_front.png",
                 },
                 "RIGHT": {
-                    "perspective": "ORTHO",
+                    "perspective": projection or "ORTHO",
                     # Quaternion for right view
                     "rotation": (0.5, 0.5, 0.5, 0.5),
                     "dimension_func": lambda d: max(d.y, d.z),
                     "filename": f"{base_filepath}_right.png",
                 },
-                "PERSP": {
-                    "perspective": "PERSP",
-                    # Default perspective
-                    "rotation": (0.8205, 0.4306, 0.1714, 0.3312),
-                    "dimension_func": lambda d: max(d.x, d.y, d.z),
-                    "filename": f"{base_filepath}_persp.png",
+                "BACK": {
+                    "perspective": projection or "ORTHO",
+                    # Quaternion for back view
+                    "rotation": (0.0, 0.0, 1.0, 0.0),
+                    "dimension_func": lambda d: max(d.x, d.y),
+                    "filename": f"{base_filepath}_back.png",
                 },
+                "FREE": {
+                    "perspective": projection or "PERSP",
+                    "rotation": freeRotation or (0.0, 0.0, 0.0, 1.0),
+                    "location": freeLocation or (-2.0, -2.0, 2.0),
+                    "dimension_func": lambda d: max(d.x, d.y, d.z),
+                    "filename": f"{base_filepath}_free.png",
+                }
             }
 
             # Determine which views to render
-            views_to_render = []
 
-            if isinstance(perspective, dict):
-                # Custom perspective configuration
-                custom_view = {
-                    "perspective": perspective.get("type", "PERSP"),
-                    "rotation": tuple(perspective.get("rotation")),
-                    "location": perspective.get("location"),
-                    "dimension_func": lambda d: max(d.x, d.y, d.z),
-                    "filename": f"{base_filepath}_custom.png",
-                }
-                views_to_render = [("CUSTOM", custom_view)]
-            elif perspective == "ALL":
-                views_to_render = list(view_configs.items())
-            elif perspective in view_configs:
-                views_to_render = [(perspective, view_configs[perspective])]
-            else:
-                raise ValueError(f"Invalid perspective: {perspective}")
+            views_to_render = [(pointOfView, view_configs[pointOfView])]
 
             # Take screenshots for each selected view
             image_paths = []
@@ -675,8 +684,6 @@ def getCameraView(
             shading_mode = "WIREFRAME"
         if auto_adjust_camera is None:
             auto_adjust_camera = True
-        if perspective is None:
-            perspective = "FRONT"  # Changed default from "ALL" to "FRONT"
 
         # Use Desktop directory instead of temp directory
         desktop_dir = os.path.expanduser("~/Desktop")
@@ -706,7 +713,6 @@ def getCameraView(
             export_width=export_width,
             export_height=export_height,
             name_visibility_predicate=visibility_func,
-            perspective=perspective,
         )
 
         # Verify files exist
