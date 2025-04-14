@@ -227,12 +227,12 @@ const modelAtomicTools = {
       "Add primitive shapes (object) to the scene. \
     All primitives are centered at the origin and aligned with the world axes (z is up) \
       + sphere : the radius of the sphere is 1 \
-      + cube : the cube is 1x1x1. \
-      + cylinder : the radius of the cylinder is 1, its height axis is Z. \
-      + plane : the plane is 1x1, and is just a quad. Its normal is the Z axis \
-      + torus : the radius of the torus is 1, its height axis is Z. \
+      + cube : the cube is 2x2x2. \
+      + cylinder : the radius of the cylinder is 1, its height is 2 and the height axis is Z. \
+      + plane : the plane is 2x2, and is just a quad. Its normal is the Z axis \
+      + torus : the major radius of the torus is 1, its minor radius is 0.25, its normal axis is Z. \
       + circle : the radius of the circle is 1, its height axis is Z. \
-      + cone : the radius of the cone is 1, its height axis is Z.",
+      + cone : the radius of the cone is 1, its height is 2, its height axis is Z, and the cone is facing downwards. The cone spans on the Z axis from -1 to 1",
     parameters: z.object({
       type: z
         .enum([
