@@ -131,6 +131,13 @@ const modelAtomicTools = {
     description: "Create an edge loop on a mesh",
     parameters: z.object({
       edgeId: z.string().describe("ID of the edge to create a loop from"),
+      numCuts: z
+        .number()
+        .int()
+        .min(1)
+        .optional()
+        .default(1)
+        .describe("Number of cuts"),
     }),
     returns: _OperationResponse,
   },
