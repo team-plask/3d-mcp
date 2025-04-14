@@ -228,7 +228,7 @@ const modelAtomicTools = {
     All primitives are centered at the origin and aligned with the world axes (z is up) \
       + sphere : the radius of the sphere is 1 \
       + cube : the cube is 1x1x1. \
-      + cylinder : the radius of the cylinder is 11, its height axis is Z. \
+      + cylinder : the radius of the cylinder is 1, its height axis is Z. \
       + plane : the plane is 1x1, and is just a quad. Its normal is the Z axis \
       + torus : the radius of the torus is 1, its height axis is Z. \
       + circle : the radius of the circle is 1, its height axis is Z. \
