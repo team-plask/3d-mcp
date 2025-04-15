@@ -926,6 +926,10 @@ def editStart(meshIds: List[str]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+        # Ensure we are in object mode before entering edit mode
+        if bpy.context.object.mode == 'EDIT':
+            return {"success": True,
+                    "message": "Object was already edited."}
         # Deselect all objects first
         bpy.ops.object.select_all(action='DESELECT')
 
