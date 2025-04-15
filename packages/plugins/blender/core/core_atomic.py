@@ -502,7 +502,8 @@ def duplicate(
 
 
 def select(
-    ids: List[str],
+    ids:  Optional[List[str]] = None,
+    predicate: Optional[str] = None,
     mode: Optional[Literal["replace", "add", "remove", "toggle"]] = None,
     domain: Optional[Literal["object", "geometry", "material"]] = None,
     subtype: Optional[Literal["vertex, edge", "face"]] = None,
@@ -511,7 +512,8 @@ def select(
     Select one or more objects
 
     Args:
-    ids (List[str]): Object identifiers to select
+    ids (List[str]): Optional object identifiers to select
+    predicate (str): Optional predicate to filter objects
     mode (Literal["replace", "add", "remove", "toggle"]): Selection mode operation
     domain (str): Optional domain to restrict selection (e.g., 'mesh', 'animation')
 
@@ -522,6 +524,7 @@ def select(
     tool_name = "select"  # Define tool name for logging
     params = {
         "ids": ids,
+        "predicate": predicate,
         "mode": mode,
         "domain": domain,
         "subtype": subtype,
@@ -571,18 +574,29 @@ def select(
             else:
                 raise ValueError(f"Invalid selection mode: {selection_mode}")
 
-            for id in ids:
-                index = int(id)
-                if subtype == "vertex":
-                    mesh.verts[index].select_set(select and (
-                        not toggle or not mesh.verts[index].select_get()))
-                elif subtype == "edge":
-                    mesh.edges[index].select_set(select and (
-                        not toggle or not mesh.edges[index].select_get()))
-                elif subtype == "face":
-                    mesh.faces[index].select_set(select and (
-                        not toggle or not mesh.faces[index].select_get()))
+            if ids is None and predicate is not None:
+                # Use the predicate to filter vertices, edges, or faces
+                predicate_fn = eval(predicate)
+                for elem in mesh.verts if subtype == "vertex" else mesh.edges if subtype == "edge" else mesh.faces:
+                    if predicate_fn(elem):
+                        elem.select_set(select and (
+                            not toggle or not elem.select_get()))
 
+            elif ids is not None:
+                for id in ids:
+                    index = int(id)
+                    if subtype == "vertex":
+                        mesh.verts[index].select_set(select and (
+                            not toggle or not mesh.verts[index].select_get()))
+                    elif subtype == "edge":
+                        mesh.edges[index].select_set(select and (
+                            not toggle or not mesh.edges[index].select_get()))
+                    elif subtype == "face":
+                        mesh.faces[index].select_set(select and (
+                            not toggle or not mesh.faces[index].select_get()))
+            else:
+                raise ValueError(
+                    "Either 'ids' or 'predicate' must be provided.")
             # Update the mesh to reflect changes
             bmesh.update_edit_mesh(obj.data)
 
@@ -599,8 +613,16 @@ def select(
             bpy.ops.object.select_all(action="DESELECT")
 
         # Process each object
-        for obj_id in ids:
-            obj = bpy.data.objects.get(obj_id)
+        if ids is None and predicate is not None:
+            predicate_fn = eval(predicate)
+            objects = [obj for obj in bpy.data.objects if predicate_fn(obj)]
+        elif ids is not None:
+            objects = [bpy.data.objects.get(obj_id) for obj_id in ids]
+        else:
+            raise ValueError(
+                "Either 'ids' or 'predicate' must be provided.")
+
+        for obj in objects:
             if not obj:
                 continue
 

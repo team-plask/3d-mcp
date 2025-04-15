@@ -10,11 +10,16 @@ const coreAtomicTools = {
   select: {
     description: "Set the current selection",
     parameters: z.object({
-      ids: z
-        .array(z.string())
-        .describe(
-          "Identifiers to select. Points to different kinds of structures, depending on the domain. Give an empty array to clear the selection."
-        ),
+      ids: z.array(z.string()).optional().describe(
+        "Identifiers to select. Points to different kinds of structures, depending on the domain. Give an empty array to clear the selection. \
+          This field is optional, you can also use the predicate to select objects."
+      ),
+      predicate: z.string().optional().describe(
+        'Predicate function to filter objects. Should return true for objects to select. \
+          This is used only if ids are not provided. \
+          The predicate function should be a string that can be evaluated in the context of the application. \
+          For example if you want to select vertices that are in the positive X half-space, you can use: "lambda v: v.co.x > 0".  '
+      ),
       mode: z
         .enum(["replace", "add", "remove", "toggle"])
         .default("replace")
