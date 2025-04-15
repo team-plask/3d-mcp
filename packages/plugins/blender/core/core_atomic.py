@@ -490,3 +490,44 @@ def select(
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
+
+# === NEWLY GENERATED ===
+
+def execute_blender_code(code: str) -> Dict[str, Any]:
+    """
+    Execute arbitrary Python code in Blender. Make sure to do it step-by-step by breaking it into smaller chunks.
+
+    Args:
+    code (str): The Python code to execute
+
+    Returns:
+    success (bool): Operation success status
+    result (str): Result of the execution, if any
+    """
+    tool_name = "execute_blender_code"  # Define tool name for logging
+    params = {"code": code}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Create a dictionary to capture local variables from the executed code
+        local_vars = {}
+        # Execute the code
+        exec(code, globals(), local_vars)
+        
+        # Optionally, capture the result if there is one
+        # This part is tricky as exec doesn't directly return values.
+        # You might need to agree on a convention, e.g., the code sets a specific variable.
+        result_value = local_vars.get('result', '') # Example: looking for a variable named 'result'
+
+        return {
+            "success": True,
+            "result": str(result_value)  # Ensure result is a string
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===

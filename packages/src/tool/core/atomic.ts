@@ -109,68 +109,68 @@ const coreAtomicTools = {
     returns: _OperationResponse,
   },
 
-  setParentObjects: {
-    description: "Set parent for multiple objects",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            parentId: z
-              .string()
-              .nullable()
-              .describe("Parent object ID (null to unparent)"),
-          })
-        )
-        .describe("Parent assignments to make"),
-      maintainWorldTransform: z
-        .boolean()
-        .default(true)
-        .describe("Whether to preserve world transforms after reparenting"),
-    }),
-    returns: _OperationResponse,
-  },
+  // setParentObjects: {
+  //   description: "Set parent for multiple objects",
+  //   parameters: z.object({
+  //     items: z
+  //       .array(
+  //         z.object({
+  //           id: z.string().describe("Object identifier"),
+  //           parentId: z
+  //             .string()
+  //             .nullable()
+  //             .describe("Parent object ID (null to unparent)"),
+  //         })
+  //       )
+  //       .describe("Parent assignments to make"),
+  //     maintainWorldTransform: z
+  //       .boolean()
+  //       .default(true)
+  //       .describe("Whether to preserve world transforms after reparenting"),
+  //   }),
+  //   returns: _OperationResponse,
+  // },
 
-  getChildren: {
-    description: "Get all children of an object",
-    parameters: z.object({
-      id: z.string().describe("Parent object identifier"),
-      recursive: z
-        .boolean()
-        .default(false)
-        .describe("Whether to include all descendants"),
-      typeFilter: z
-        .array(z.string())
-        .optional()
-        .describe("Filter by object types"),
-    }),
-    returns: _OperationResponse.extend({
-      childIds: z.array(z.string()).describe("Child object IDs"),
-    }),
-  },
+  // getChildren: {
+  //   description: "Get all children of an object",
+  //   parameters: z.object({
+  //     id: z.string().describe("Parent object identifier"),
+  //     recursive: z
+  //       .boolean()
+  //       .default(false)
+  //       .describe("Whether to include all descendants"),
+  //     typeFilter: z
+  //       .array(z.string())
+  //       .optional()
+  //       .describe("Filter by object types"),
+  //   }),
+  //   returns: _OperationResponse.extend({
+  //     childIds: z.array(z.string()).describe("Child object IDs"),
+  //   }),
+  // },
 
-  duplicate: {
-    description: "Duplicate an object",
-    parameters: z.object({
-      id: z.string().describe("Source object identifier"),
-      newName: z.string().optional().describe("Name for the duplicated object"),
-      duplicateChildren: z
-        .boolean()
-        .default(true)
-        .describe("Whether to duplicate children"),
-      duplicateDependencies: z
-        .boolean()
-        .default(false)
-        .describe("Whether to duplicate dependencies (materials, etc.)"),
-    }),
-    returns: _OperationResponse.extend({
-      newId: z.string().describe("ID of the duplicated object"),
-      childIds: z
-        .array(z.string())
-        .optional()
-        .describe("IDs of duplicated children if applicable"),
-    }),
-  },
+  // duplicate: {
+  //   description: "Duplicate an object",
+  //   parameters: z.object({
+  //     id: z.string().describe("Source object identifier"),
+  //     newName: z.string().optional().describe("Name for the duplicated object"),
+  //     duplicateChildren: z
+  //       .boolean()
+  //       .default(true)
+  //       .describe("Whether to duplicate children"),
+  //     duplicateDependencies: z
+  //       .boolean()
+  //       .default(false)
+  //       .describe("Whether to duplicate dependencies (materials, etc.)"),
+  //   }),
+  //   returns: _OperationResponse.extend({
+  //     newId: z.string().describe("ID of the duplicated object"),
+  //     childIds: z
+  //       .array(z.string())
+  //       .optional()
+  //       .describe("IDs of duplicated children if applicable"),
+  //   }),
+  // },
 
   // Query and filtering
   query: {
@@ -209,6 +209,15 @@ const coreAtomicTools = {
         .string()
         .optional()
         .describe("Name of the redone operation"),
+    }),
+  },
+  execute_blender_code: {
+    description: "Execute arbitrary Python code in Blender. Make sure to do it step-by-step by breaking it into smaller chunks.",
+    parameters: z.object({
+      code: z.string().describe("The Python code to execute"),
+    }),
+    returns: _OperationResponse.extend({
+      result: z.string().optional().describe("Result of the execution, if any")
     }),
   },
 } as const;
