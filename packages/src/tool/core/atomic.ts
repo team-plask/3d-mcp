@@ -77,12 +77,23 @@ const coreAtomicTools = {
         .array(z.number())
         .length(3)
         .optional()
-        .describe("Rotation vector (Euler angles)"),
+        .describe("Rotation vector (Euler angles). Order is XYZ"),
       scale: z
         .array(z.number())
         .length(3)
         .optional()
         .describe("Scaling vector"),
+      proportional: z
+        .object({
+          radius: z
+            .number()
+            .optional()
+            .describe("Radius for proportional editing"),
+        })
+        .optional()
+        .describe(
+          "Proportional edition options. If not provided, proportional editing is disabled."
+        ),
     }),
     returns: _OperationResponse,
   },

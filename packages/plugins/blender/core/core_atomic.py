@@ -223,7 +223,7 @@ def undo() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None) -> Dict[str, Any]:
+def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None, proportional: Optional[Dict[str, any]] = None) -> Dict[str, Any]:
     """
     Apply transformations (translate, rotate, scale) to selected elements
 
@@ -231,75 +231,40 @@ def transform(translation: Optional[List[float]] = None, rotation: Optional[List
     translation (List[float]): Translation vector
     rotation (List[float]): Rotation vector (Euler angles)
     scale (List[float]): Scaling vector
+    proportional (Dict[str, any]): Proportional editing options
 
     Returns:
     success (bool): Operation success status
     """
     tool_name = "transform"  # Define tool name for logging
     params = {"translation": translation, "rotation": rotation,
-              "scale": scale}  # Create params dict for logging
+              "scale": scale, "proportional": proportional}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        import bmesh
-        import mathutils
-
-        # Create transformation matrices
-        translation_matrix = mathutils.Matrix.Translation(
-            translation) if translation else mathutils.Matrix.Identity(4)
-        rotation_matrix = mathutils.Euler(rotation, 'XYZ').to_matrix(
-        ).to_4x4() if rotation else mathutils.Matrix.Identity(4)
-        scale_matrix = mathutils.Matrix.Diagonal(
-            scale + [1]) if scale else mathutils.Matrix.Identity(4)
-        transformation_matrix = translation_matrix @ rotation_matrix @ scale_matrix
-
-        # Check the mode and apply transformations accordingly
+        # Ensure there is an active object
         obj = bpy.context.object
         if obj is None:
             raise RuntimeError("No active object found.")
 
-        if obj.mode == 'EDIT':  # Edit mode (vertices or faces)
-            bm = bmesh.from_edit_mesh(obj.data)
+        # Apply translation
+        if translation:
+            bpy.ops.transform.translate(value=translation, use_proportional_edit=bool(proportional),
+                                        proportional_size=proportional.get("radius", 1) if proportional else 0)
 
-            # Get selected elements (vertices or faces)
-            selected_verts = [v for v in bm.verts if v.select]
-            selected_faces = [f for f in bm.faces if f.select]
+        # Apply rotation
+        if rotation:
+            bpy.ops.transform.rotate(value=rotation[0], orient_axis='X', use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
+            bpy.ops.transform.rotate(value=rotation[1], orient_axis='Y', use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
+            bpy.ops.transform.rotate(value=rotation[2], orient_axis='Z', use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
 
-            if selected_verts:
-                # Calculate the median point of the selected vertices
-                median_point = mathutils.Vector((0.0, 0.0, 0.0))
-                for vert in selected_verts:
-                    median_point += vert.co
-                median_point /= len(selected_verts)
-
-                # Apply transformations relative to the median point
-                for vert in selected_verts:
-                    local_co = vert.co - median_point
-                    transformed_co = transformation_matrix @ local_co
-                    vert.co = transformed_co + median_point
-
-            elif selected_faces:
-                # Apply transformations to face centers
-                for face in selected_faces:
-                    for vert in face.verts:
-                        local_co = vert.co
-                        transformed_co = transformation_matrix @ local_co
-                        vert.co = transformed_co
-
-            # Update the mesh to reflect changes
-            bmesh.update_edit_mesh(obj.data)
-
-        elif obj.mode == 'OBJECT':  # Object mode
-            selected_objects = bpy.context.selected_objects
-            if not selected_objects:
-                raise RuntimeError("No objects selected.")
-
-            for obj in selected_objects:
-                # Apply transformation to the object's matrix
-                obj.matrix_world = transformation_matrix @ obj.matrix_world
-
-        else:
-            raise RuntimeError("Unsupported mode for transformation.")
+        # Apply scaling
+        if scale:
+            bpy.ops.transform.resize(value=scale, use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
 
         return {"success": True}
 
