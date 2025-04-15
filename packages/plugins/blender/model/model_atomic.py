@@ -503,7 +503,7 @@ def createEdge() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
+def createEdgeLoop(edgeId: str, numCuts: Optional[int] = 1) -> Dict[str, Any]:
     """
     Create an edge loop on a mesh
 
@@ -514,7 +514,8 @@ def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
     success (bool): Operation success status
     """
     tool_name = "createEdgeLoop"  # Define tool name for logging
-    params = {"edgeId": edgeId}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"edgeId": edgeId, "numCuts": numCuts}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
@@ -559,7 +560,7 @@ def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
         bpy.ops.ed.undo_push(message="Create edge loop Operation")
 
         with bpy.context.temp_override(**override_context):
-            bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": 1,
+            bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": numCuts,
                                                         "smoothness": 0, "falloff": 'INVERSE_SQUARE',
                                                         "object_index": 0, "edge_index": edge_index},)
             # # Update the mesh to reflect changes
