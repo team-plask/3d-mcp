@@ -41,6 +41,7 @@ import queue
 
 from .animation import animation_atomic
 from .core import core_atomic
+from .geometry import geometry_atomic
 from .model import model_atomic
 from .monitor import monitor_atomic
 from .render import render_atomic
@@ -128,6 +129,11 @@ def register_all_tools():
 
     # Register core tools
     for name, func in inspect.getmembers(core_atomic, inspect.isfunction):
+        print(f"Registering tool: {name}")
+        register_tool(name, func)
+
+    # Register geometry tools
+    for name, func in inspect.getmembers(geometry_atomic, inspect.isfunction):
         print(f"Registering tool: {name}")
         register_tool(name, func)
 

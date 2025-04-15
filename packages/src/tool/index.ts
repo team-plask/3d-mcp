@@ -10,6 +10,7 @@ import {
   modelAtomicToolsWithExecute,
   ModelEntities,
 } from "./model";
+import { geometryTools, geometryAtomicToolsWithExecute } from "./geometry";
 import { rigTools, rigAtomicToolsWithExecute, RigEntities } from "./rig";
 import { monitorTools, monitorAtomicToolsWithExecute } from "./monitor";
 
@@ -18,6 +19,7 @@ const tools = {
   // ...renderTools,
   ...coreTools,
   ...modelTools,
+  ...geometryTools,
   // ...rigTools,
   ...monitorTools,
 } as const;
@@ -27,6 +29,7 @@ const atomicTools = {
   // ...renderAtomicToolsWithExecute,
   ...coreAtomicToolsWithExecute,
   ...modelAtomicToolsWithExecute,
+  ...geometryAtomicToolsWithExecute,
   // ...rigAtomicToolsWithExecute,
   ...monitorAtomicToolsWithExecute,
 } as const;
@@ -39,4 +42,4 @@ const entities = {
 } as const;
 
 // Export the tools and entities for direct access
-export { tools, atomicTools, coreTools, modelTools, entities };
+export { tools, atomicTools, coreTools, modelTools, geometryTools, entities };

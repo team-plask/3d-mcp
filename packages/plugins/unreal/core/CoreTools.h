@@ -167,3 +167,46 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> transformObjects(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for core atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "CoreTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the core tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPCoreTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPCoreTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Deletes the current selection. Additional optional type can be provided to filter the deletion
+     * * @param type - Type of elements to delete. Only relevant for geometry domain, when a mesh is being edited. Can be 'vertex', 'edge', 'face', 'only_faces' or 'only_edges_and_faces' (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> delete(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Apply transformations (translate, rotate, scale) to selected elements
+     * * @param translation - Translation vector (TArray<TSharedPtr<FJsonValue>>)
+     * @param rotation - Rotation vector (Euler angles). Order is XYZ (TArray<TSharedPtr<FJsonValue>>)
+     * @param scale - Scaling vector (TArray<TSharedPtr<FJsonValue>>)
+     * @param proportional - Proportional edition options. If not provided, proportional editing is disabled. (TSharedPtr<FJsonObject>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> transform(const TSharedPtr<FJsonObject>& Params);
+};
