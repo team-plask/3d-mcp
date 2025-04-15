@@ -347,36 +347,50 @@ def bevel(amount: float, type: Literal["edge", "vertex"]) -> Dict[str, Any]:
  # === NEWLY GENERATED ===
 
 
-def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
+def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"], primitive_params: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """
     Add primitive shapes to the scene
 
     Args:
-    type (Literal["sphere", "cube", "cylinder", "plane"]): Type of primitive to add
+    type (Literal["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"]): Type of primitive to add
+    params (List[Dict[str, Any]]): Parameters for the primitive
 
     Returns:
     success (bool): Operation success status
     """
     tool_name = "createMeshFromPrimitive"  # Define tool name for logging
-    params = {"type": type}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"type": type, "params": primitive_params}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
 
         # Validate enum values for type
-        if type is not None and type not in ['sphere', 'cube', 'cylinder', 'plane']:
+        if type is not None and type not in ['sphere', 'cube', 'cylinder', 'plane', 'cone', 'torus', 'circle']:
             raise ValueError(
-                f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
+                f"Parameter 'type' must be one of ['sphere', 'cube', 'cylinder', 'plane', 'cone', 'torus', 'circle'], got {type}")
+
+        subdivisions = 32
+        if primitive_params is not None and 'subdivisions' in primitive_params:
+            subdivisions = primitive_params['subdivisions']
 
         # Add the specified primitive to the scene
         if type == "sphere":
-            bpy.ops.mesh.primitive_uv_sphere_add()
+            bpy.ops.mesh.primitive_uv_sphere_add(
+                segments=subdivisions, ring_count=subdivisions)
         elif type == "cube":
             bpy.ops.mesh.primitive_cube_add()
         elif type == "cylinder":
-            bpy.ops.mesh.primitive_cylinder_add()
+            bpy.ops.mesh.primitive_cylinder_add(vertices=subdivisions)
         elif type == "plane":
             bpy.ops.mesh.primitive_plane_add()
+        elif type == "cone":
+            bpy.ops.mesh.primitive_cone_add(vertices=subdivisions)
+        elif type == "torus":
+            bpy.ops.mesh.primitive_torus_add(
+                major_segments=subdivisions, minor_segments=subdivisions)
+        elif type == "circle":
+            bpy.ops.mesh.primitive_circle_add(vertices=subdivisions)
 
         return {"success": True}
 
