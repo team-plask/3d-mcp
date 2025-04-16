@@ -9,7 +9,7 @@ import importlib
 importlib.reload(monitor_atomic)
 
 # 1) 4‑way 캡처
-monitor_atomic.getCameraView(shading_mode="SOLID", perspective="ALL")
+monitor_atomic.getCameraView(shading_mode="MATERIAL", perspective="ALL")
 
 # 2) custom 캡처
 # custom = {
