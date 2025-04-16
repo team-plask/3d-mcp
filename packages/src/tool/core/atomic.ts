@@ -8,103 +8,110 @@ import { _OperationResponse, _Tensor } from "./entity";
 const coreAtomicTools = {
   // Selection Operations
   select: {
-    description: "Select one or more objects",
+    description: "Set the current selection",
     parameters: z.object({
-      ids: z
-        .array(z.string())
-        .describe("Object identifiers to select"),
+      ids: z.array(z.string()).optional().describe(
+        "Identifiers to select. Points to different kinds of structures, depending on the domain. Give an empty array to clear the selection. \
+          This field is optional, you can also use the predicate to select objects."
+      ),
+      predicate: z.string().optional().describe(
+        'Predicate function to filter objects. Should return true for objects to select. \
+          This is used only if ids are not provided. \
+          The predicate function should be a string that can be evaluated in the context of the application. \
+          For example if you want to select vertices that are in the positive X half-space, you can use: "lambda v: v.co.x > 0".  '
+      ),
       mode: z
         .enum(["replace", "add", "remove", "toggle"])
         .default("replace")
-        .describe("Selection mode operation"),
+        .describe(
+          "Selection mode operation, can be 'replace', 'add', 'remove' or 'toggle'. Default is 'replace'"
+        ),
       domain: z
-        .string()
+        .enum(["object", "geometry", "material"])
+        .default("object")
         .optional()
         .describe(
-          "Optional domain to restrict selection (e.g., 'mesh', 'animation')"
+          "Selection domain, can be 'object', 'geometry' or 'material'. Default is 'object'"
+        ),
+      subtype: z
+        .enum(["vertex", "edge", "face"])
+        .default("face")
+        .optional()
+        .describe(
+          "Subtype for selection. Only relevant for geometry domain. Can be 'vertex', 'edge' or 'face'. Default is 'face'"
         ),
     }),
     returns: _OperationResponse.extend({
       selectedIds: z
         .array(z.string())
-        .describe(
-          "All selected object IDs after operation"
-        ),
+        .describe("All selected object IDs after operation"),
     }),
   },
+  // getSelection: {
+  //   description: "Get currently selected objects",
+  //   parameters: z.object({
+  //     domain: z
+  //       .string()
+  //       .optional()
+  //       .describe(
+  //         "Optional domain to filter results (e.g., 'mesh', 'animation')"
+  //       ),
+  //   }),
+  //   returns: _OperationResponse.extend({
+  //     selectedIds: z
+  //       .array(z.string())
+  //       .describe("Currently selected object IDs"),
+  //   }),
+  // },
 
-  clearSelection: {
-    description: "Clear current selection",
-    parameters: z.object({
-      domain: z
-        .string()
-        .optional()
-        .describe(
-          "Optional domain to restrict clearing (e.g., 'mesh', 'animation')"
-        ),
-    }),
-    returns: _OperationResponse,
-  },
-
-  getSelection: {
-    description: "Get currently selected objects",
-    parameters: z.object({
-      domain: z
-        .string()
-        .optional()
-        .describe(
-          "Optional domain to filter results (e.g., 'mesh', 'animation')"
-        ),
-    }),
-    returns: _OperationResponse.extend({
-      selectedIds: z
-        .array(z.string())
-        .describe("Currently selected object IDs"),
-    }),
-  },
-
-  batchTransform: {
+  transform: {
     description:
-      "Apply transformations to multiple objects",
+      "Apply transformations (translate, rotate, scale) to selected elements",
     parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            position: _Tensor.VEC3.optional().describe(
-              "New absolute position [x, y, z]"
-            ),
-            rotation: _Tensor.QUAT.optional().describe(
-              "New absolute rotation quaternion [x, y, z, w]"
-            ),
-            scale: _Tensor.VEC3.optional().describe(
-              "New absolute scale [x, y, z]"
-            ),
-            positionOffset:
-              _Tensor.VEC3.optional().describe(
-                "Relative position offset to apply [dx, dy, dz]"
-              ),
-            rotationOffset:
-              _Tensor.QUAT.optional().describe(
-                "Relative rotation to apply as quaternion [x, y, z, w]"
-              ),
-            scaleOffset: _Tensor.VEC3.optional().describe(
-              "Relative scale to apply [sx, sy, sz]"
-            ),
-            space: z
-              .enum(["local", "world", "parent"])
-              .default("world")
-              .describe(
-                "Coordinate space for the transformation"
-              ),
-          })
-        )
-        .describe("Transformations to apply"),
+      translation: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Translation vector"),
+      rotation: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Rotation vector (Euler angles). Order is XYZ"),
+      scale: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Scaling vector"),
+      proportional: z
+        .object({
+          radius: z
+            .number()
+            .optional()
+            .describe("Radius for proportional editing"),
+        })
+        .optional()
+        .describe(
+          "Proportional edition options. If not provided, proportional editing is disabled."
+        ),
     }),
     returns: _OperationResponse,
   },
-
-  batchSetParent: {
+  delete: {
+    description:
+      "Deletes the current selection. Additional optional type can be provided to filter the deletion",
+    parameters: z.object({
+      type: z
+        .enum(["vertex", "edge", "face", "only_faces", "only_edges_and_faces"])
+        .optional()
+        .default("face")
+        .describe(
+          "Type of elements to delete. Only relevant for geometry domain, when a mesh is being edited. Can be 'vertex', 'edge', 'face', 'only_faces' or 'only_edges_and_faces'"
+        ),
+    }),
+    returns: _OperationResponse,
+  },
+  setParentObjects: {
     description: "Set parent for multiple objects",
     parameters: z.object({
       items: z
@@ -114,18 +121,14 @@ const coreAtomicTools = {
             parentId: z
               .string()
               .nullable()
-              .describe(
-                "Parent object ID (null to unparent)"
-              ),
+              .describe("Parent object ID (null to unparent)"),
           })
         )
         .describe("Parent assignments to make"),
       maintainWorldTransform: z
         .boolean()
         .default(true)
-        .describe(
-          "Whether to preserve world transforms after reparenting"
-        ),
+        .describe("Whether to preserve world transforms after reparenting"),
     }),
     returns: _OperationResponse,
   },
@@ -144,80 +147,15 @@ const coreAtomicTools = {
         .describe("Filter by object types"),
     }),
     returns: _OperationResponse.extend({
-      childIds: z
-        .array(z.string())
-        .describe("Child object IDs"),
-    }),
-  },
-
-  batchSetProperty: {
-    description: "Set properties on multiple objects",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            entries: z
-              .array(
-                z.object({
-                  propertyPath: z
-                    .array(z.string())
-                    .describe("Property path to set"),
-                  value: z.any().describe("Value to set"),
-                })
-              )
-              .describe("Property entries to set"),
-          })
-        )
-        .describe("Property assignments to make"),
-    }),
-    returns: _OperationResponse,
-  },
-
-  batchGetProperty: {
-    description:
-      "Get property values from multiple objects",
-    parameters: z.object({
-      items: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            propertyPath: z
-              .array(z.string())
-              .describe(
-                "List of property paths to retrieve"
-              ),
-          })
-        )
-        .describe("Property requests to make"),
-      recursive: z
-        .boolean()
-        .default(false)
-        .describe("Whether to include all descendants"),
-    }),
-    returns: _OperationResponse.extend({
-      values: z
-        .array(
-          z.object({
-            id: z.string().describe("Object identifier"),
-            propertyPath: z
-              .string()
-              .describe("Path to the property"),
-            value: z.any().describe("Property value"),
-          })
-        )
-        .describe("Property values retrieved"),
+      childIds: z.array(z.string()).describe("Child object IDs"),
     }),
   },
 
   duplicate: {
-    description: "Duplicate an entity",
+    description: "Duplicate an object",
     parameters: z.object({
-      id: z.string().describe("Source entity identifier"),
-      newName: z
-        .string()
-        .optional()
-        .describe("Name for the duplicated entity"),
+      id: z.string().describe("Source object identifier"),
+      newName: z.string().optional().describe("Name for the duplicated object"),
       duplicateChildren: z
         .boolean()
         .default(true)
@@ -225,20 +163,14 @@ const coreAtomicTools = {
       duplicateDependencies: z
         .boolean()
         .default(false)
-        .describe(
-          "Whether to duplicate dependencies (materials, etc.)"
-        ),
+        .describe("Whether to duplicate dependencies (materials, etc.)"),
     }),
     returns: _OperationResponse.extend({
-      newId: z
-        .string()
-        .describe("ID of the duplicated entity"),
+      newId: z.string().describe("ID of the duplicated object"),
       childIds: z
         .array(z.string())
         .optional()
-        .describe(
-          "IDs of duplicated children if applicable"
-        ),
+        .describe("IDs of duplicated children if applicable"),
     }),
   },
 
@@ -246,10 +178,7 @@ const coreAtomicTools = {
   query: {
     description: "Query entities based on criteria",
     parameters: z.object({
-      type: z
-        .string()
-        .optional()
-        .describe("Entity type to filter by"),
+      type: z.string().optional().describe("Entity type to filter by"),
       properties: z
         .record(z.string(), z.any())
         .optional()
@@ -258,9 +187,7 @@ const coreAtomicTools = {
         ),
     }),
     returns: _OperationResponse.extend({
-      results: z
-        .array(z.string())
-        .describe("IDs of matching entities"),
+      results: z.array(z.string()).describe("IDs of matching entities"),
     }),
   },
 
@@ -290,7 +217,6 @@ const coreAtomicTools = {
 
 export type CoreTool = keyof typeof coreAtomicTools;
 
-const coreAtomicToolsWithExecute =
-  createExecutableTools(coreAtomicTools);
+const coreAtomicToolsWithExecute = createExecutableTools(coreAtomicTools);
 
 export { coreAtomicToolsWithExecute };

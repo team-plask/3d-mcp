@@ -1,3 +1,4 @@
+import { imageContent } from "fastmcp";
 import { z } from "zod";
 
 /**
@@ -49,13 +50,14 @@ function getPluginForTool(toolName: string): PluginConfig {
 
   // Try to determine the category from the tool name
   // This is a simple implementation - in a real system you might have a more robust way to map tools to plugins
-  const category = Object.keys(TOOL_PLUGIN_MAP).find((cat) =>
-    toolName.toLowerCase().includes(cat.toLowerCase())
+  const category = Object.keys(TOOL_PLUGIN_MAP).find(
+    (cat) =>
+      toolName.toLowerCase().includes(cat.toLowerCase())
   );
 
   const pluginName = category
     ? TOOL_PLUGIN_MAP[category]
-    : "unreal"; // Default to blender if no match
+    : "blender"; // Default to blender if no match
   return PLUGINS[pluginName!]!;
 }
 
@@ -64,14 +66,15 @@ function getPluginForTool(toolName: string): PluginConfig {
  * @param params Request parameters
  * @returns Response data
  */
-async function request<T extends { toolName: string; parameters: any }>(
-  params: T,
-  log: any
-): Promise<unknown> {
+async function request<
+  T extends { toolName: string; parameters: any }
+>(params: T, log: any): Promise<unknown> {
   // Determine which plugin to use based on the tool name
   const plugin = getPluginForTool(params.toolName);
   const url = `http://${plugin.url}:${plugin.port}`;
-  log.info(`Request to ${url} with tool ${params.toolName}`);
+  log.info(
+    `Request to ${url} with tool ${params.toolName}`
+  );
   try {
     const result = await fetch(url, {
       method: "POST",
@@ -85,7 +88,9 @@ async function request<T extends { toolName: string; parameters: any }>(
     });
 
     if (!result.ok) {
-      throw new Error(`Request failed: ${result.status} ${result.statusText}`);
+      throw new Error(
+        `Request failed: ${result.status} ${result.statusText}`
+      );
     }
 
     return await result.json();
@@ -139,17 +144,33 @@ function createExecutableTools<
           },
           log
         );
-        const parsedResponse = toolDefs[toolName]!.returns.parse(response);
+        let parsedResponse =
+          toolDefs[toolName]!.returns.parse(response);
+
         return parsedResponse;
       },
       executeString: async (args, { log }) => {
-        const response = await request(
+        let response = await request(
           {
             toolName,
             parameters: args,
           },
           log
         );
+
+        if (response.content !== undefined) {
+          return {
+            content: await Promise.all(
+              response.content.path.map((c: any) => {
+                if (response.content.type === "image") {
+                  return imageContent({
+                    path: c,
+                  });
+                }
+              })
+            ),
+          };
+        }
 
         return JSON.stringify(response);
       },
@@ -162,7 +183,10 @@ function createExecutableTools<
 /**
  * Interface for tool configuration
  */
-interface CompoundToolConfig<P extends z.ZodType, R extends z.ZodType> {
+interface CompoundToolConfig<
+  P extends z.ZodType,
+  R extends z.ZodType
+> {
   description: string;
   parameters: P;
   returns: R;
@@ -172,7 +196,10 @@ interface CompoundToolConfig<P extends z.ZodType, R extends z.ZodType> {
 /**
  * Helper function to define a compound tool with proper typing
  */
-function defineCompoundTool<P extends z.ZodType, R extends z.ZodType>(
+function defineCompoundTool<
+  P extends z.ZodType,
+  R extends z.ZodType
+>(
   config: CompoundToolConfig<P, R>
 ): {
   description: string;
@@ -184,7 +211,9 @@ function defineCompoundTool<P extends z.ZodType, R extends z.ZodType>(
     description: config.description,
     parameters: config.parameters,
     returns: config.returns,
-    execute: async (params: unknown): Promise<z.infer<R>> => {
+    execute: async (
+      params: unknown
+    ): Promise<z.infer<R>> => {
       // Parse and validate parameters using the tool's schema
       const validParams = config.parameters.parse(params);
       return config.execute(validParams);

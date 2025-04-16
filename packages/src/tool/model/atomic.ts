@@ -11,7 +11,7 @@ const entityCruds = createCrudOperations(ModelEntities);
  * Modeling atomic tools with focus on domain-specific batch operations
  */
 const modelAtomicTools = {
-  ...entityCruds,
+  // ...entityCruds,
 
   // General operations
   editStart: {
@@ -30,34 +30,40 @@ const modelAtomicTools = {
     description: "Get geometry data for the current edited mesh",
     parameters: z.object({}),
     returns: _OperationResponse.extend({
-      geometryData: Mesh.describe("Geometry data"),
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
     }),
   },
 
-  // Edit mesh operations
-
-  // Selection operations
-  setSelect: {
-    description: "Select or deselect vertices, edges, or faces",
+  setGeometry: {
+    description: "Set geometry data for the current edited mesh",
     parameters: z.object({
-      ids: z.array(z.string()).describe("IDs of structures to select"),
-      type: z.enum(["vertex", "edge", "face"]),
-      mode: z
-        .enum(["replace", "add", "remove"])
-        .default("replace")
-        .describe("Selection mode"),
+      geometryData: z
+        .object({
+          vertices: z
+            .array(_Tensor.VEC3)
+            .describe("Array of vertex positions [x, y, z]. Z is up"),
+          edges: z
+            .array(z.array(z.number().int()).length(2))
+            .describe("Array of edges defined by vertex indices"),
+          faces: z
+            .array(z.number().int())
+            .describe("Vertex indices defining polygons"),
+        })
+        .describe("Geometry data"),
     }),
     returns: _OperationResponse,
-  },
-  getSelect: {
-    description: "Get selected vertices, edges, or faces",
-    parameters: z.object({
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-    returns: _OperationResponse.extend({
-      selectedIds: z.array(z.string()).describe("IDs of selected structures"),
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
   },
 
   // Structure operations
@@ -74,23 +80,6 @@ const modelAtomicTools = {
     parameters: z.object({
       type: z.enum(["vertex", "edge", "face"]),
     }),
-    returns: _OperationResponse,
-  },
-  delete: {
-    description: "Delete selected vertices, edges, or faces",
-    parameters: z.object({
-      type: z.enum(["vertex", "edge", "face"]),
-    }),
-    returns: _OperationResponse,
-  },
-  deleteOnlyFaces: {
-    description: "Delete only selected faces, keeping edges and vertices",
-    parameters: z.object({}),
-    returns: _OperationResponse,
-  },
-  deleteOnlyEdgesAndFaces: {
-    description: "Delete only selected edges and faces, keeping vertices",
-    parameters: z.object({}),
     returns: _OperationResponse,
   },
   subdivide: {
@@ -131,32 +120,9 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
-  transform: {
-    description:
-      "Apply transformations (translate, rotate, scale) to selected elements",
-    parameters: z.object({
-      translation: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Translation vector"),
-      rotation: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Rotation vector (Euler angles)"),
-      scale: z
-        .array(z.number())
-        .length(3)
-        .optional()
-        .describe("Scaling vector"),
-    }),
-    returns: _OperationResponse,
-  },
   edgeSlide: {
     description: "Slide selected edges along their adjacent edges",
     parameters: z.object({
-      edgeId: z.string().describe("IDs of edge to slide along"),
       factor: z.number().describe("Sliding factor (-1 to 1)"),
     }),
     returns: _OperationResponse,
@@ -165,6 +131,13 @@ const modelAtomicTools = {
     description: "Create an edge loop on a mesh",
     parameters: z.object({
       edgeId: z.string().describe("ID of the edge to create a loop from"),
+      numCuts: z
+        .number()
+        .int()
+        .min(1)
+        .optional()
+        .default(1)
+        .describe("Number of cuts"),
     }),
     returns: _OperationResponse,
   },
@@ -191,15 +164,6 @@ const modelAtomicTools = {
     description:
       "Create a face or an edge from selected vertices or edges. Wether a face or an edge is created depends on how many vertices or edges are selected.",
     parameters: z.object({}),
-    returns: _OperationResponse,
-  },
-  addPrimitives: {
-    description: "Add primitive shapes to the scene",
-    parameters: z.object({
-      type: z
-        .enum(["sphere", "cube", "cylinder", "plane"])
-        .describe("Type of primitive to add"),
-    }),
     returns: _OperationResponse,
   },
   addSubsurfModifierLevel: {
@@ -234,7 +198,7 @@ const modelAtomicTools = {
   },
 
   splitMeshes: {
-    description: "Split meshes into separate objects",
+    description: "Split meshes into separate meshes",
     parameters: z.object({
       items: z
         .array(
@@ -264,6 +228,45 @@ const modelAtomicTools = {
         )
         .describe("Split results by mesh"),
     }),
+  },
+  createMeshFromPrimitive: {
+    description:
+      "Add primitive shapes (object) to the scene. \
+    All primitives are centered at the origin and aligned with the world axes (z is up) \
+      + sphere : the radius of the sphere is 1 \
+      + cube : the cube is 2x2x2. \
+      + cylinder : the radius of the cylinder is 1, its height is 2 and the height axis is Z. \
+      + plane : the plane is 2x2, and is just a quad. Its normal is the Z axis \
+      + torus : the major radius of the torus is 1, its minor radius is 0.25, its normal axis is Z. \
+      + circle : the radius of the circle is 1, its height axis is Z. \
+      + cone : the radius of the cone is 1, its height is 2, its height axis is Z, and the cone is facing downwards. The cone spans on the Z axis from -1 to 1",
+    parameters: z.object({
+      type: z
+        .enum([
+          "sphere",
+          "cube",
+          "cylinder",
+          "plane",
+          "cone",
+          "torus",
+          "circle",
+        ])
+        .describe(
+          "Type of primitive to add, can be sphere, cube, cylinder, plane, cone, torus, or circle"
+        ),
+      primitive_params: z
+        .object({
+          subdivisions: z
+            .number()
+            .int()
+            .default(32)
+            .optional()
+            .describe("Number of subdivisions. Default is 32"),
+        })
+        .optional()
+        .describe("Primitive parameters, optional"),
+    }),
+    returns: _OperationResponse,
   },
 
   // UVMap operations
@@ -322,55 +325,100 @@ const modelAtomicTools = {
     }),
   },
 
-  // transformUVs: {
-  //   description: "Transform UV coordinates for vertices",
-  //   parameters: z.object({
-  //     items: z
-  //       .array(
-  //         z.object({
-  //           meshId: z.string().describe("Mesh identifier"),
-  //           channel: z
-  //             .number()
-  //             .int()
-  //             .nonnegative()
-  //             .default(0)
-  //             .describe("Target UV channel"),
-  //           vertexTransforms: z
-  //             .array(
-  //               z.object({
-  //                 vertexId: z.string().describe("Vertex identifier"),
-  //                 u: z.number().optional().describe("New U coordinate"),
-  //                 v: z.number().optional().describe("New V coordinate"),
-  //                 offsetU: z.number().optional().describe("U offset to apply"),
-  //                 offsetV: z.number().optional().describe("V offset to apply"),
-  //               })
-  //             )
-  //             .describe("Per-vertex UV transformations"),
-  //         })
-  //       )
-  //       .describe("UV transformation operations"),
-  //   }),
-  //   returns: _OperationResponse,
-  // },
-
-  // Material operations
-  assignMaterials: {
-    description: "Assign materials to meshes or specific faces",
-    parameters: z.object({
-      items: z
+  getMaterials: {
+    description: "Get materials for the current edited mesh",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      materials: z
         .array(
           z.object({
-            materialId: z.string().describe("Material identifier"),
-            meshId: z.string().describe("Mesh identifier"),
-            faceIds: z
-              .array(z.string())
-              .optional()
-              .describe(
-                "Specific face IDs (if omitted, applies to entire mesh)"
-              ),
+            id: z.string().describe("Material identifier"),
+            name: z.string().describe("Material name"),
           })
         )
-        .describe("Material assignments to make"),
+        .describe("List of materials"),
+    }),
+  },
+  setMaterialParameters: {
+    description: "Set all parameters of a BSDF material",
+    parameters: z.object({
+      materialId: z.string().describe("Material identifier"),
+      parameters: z
+        .object({
+          baseColor: z
+            .array(z.number())
+            .length(3)
+            .optional()
+            .describe("Base color (RGB)"),
+          metallic: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Metallic factor"),
+          roughness: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Roughness factor"),
+          transmission: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Transmission factor"),
+          transmissionRoughness: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Transmission roughness factor"),
+          emission: z
+            .array(z.number())
+            .length(3)
+            .optional()
+            .describe("Emission color (RGB)"),
+          alpha: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Alpha transparency"),
+        })
+        .describe("Parameters to tweak"),
+    }),
+    returns: _OperationResponse,
+  },
+  // Light operations
+  createLight: {
+    description: "Create a light source (object) in the scene",
+    parameters: z.object({
+      type: z.enum(["point", "sun", "spot", "area"]).describe("Light type"),
+      color: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light color (RGB)"),
+      intensity: z.number().min(0).optional().describe("Light intensity"),
+      position: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light position"),
+      direction: z
+        .array(z.number())
+        .length(3)
+        .optional()
+        .describe("Light direction"),
+      width: z
+        .number()
+        .optional()
+        .describe("Width of the light (for area lights)"),
+      height: z
+        .number()
+        .optional()
+        .describe("Height of the light (for area lights)"),
     }),
     returns: _OperationResponse,
   },

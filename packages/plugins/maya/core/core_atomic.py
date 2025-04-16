@@ -6,6 +6,74 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def setParentObjects(items: List[Dict[str, Any]], maintainWorldTransform: Optional[bool] = None) -> Dict[str, Any]:
+
+    """
+    Set parent for multiple objects
+    
+    Args:
+    items (List[Dict[str, Any] with keys {"id": str, "parentId": str}]): Parent assignments to make
+    maintainWorldTransform (bool): Whether to preserve world transforms after reparenting
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setParentObjects"  # Define tool name for logging
+    params = {"items": items, "maintainWorldTransform": maintainWorldTransform}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def transformObjects(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    """
+    Apply transformations to multiple objects
+    
+    Args:
+    items (List[Dict[str, Any] with keys {"id": str, "position": List[float], "rotation": List[float], "scale": List[float], "positionOffset": List[float], "rotationOffset": List[float], "scaleOffset": List[float], "space": Literal["local", "world", "parent"]}]): Transformations to apply
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "transformObjects"  # Define tool name for logging
+    params = {"items": items}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
+
+
+
+
 def batchSetProperty(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     """
@@ -388,3 +456,4 @@ def select(ids: List[str], mode: Optional[Literal["replace", "add", "remove", "t
 
 
  # === NEWLY GENERATED ===
+

@@ -5,6 +5,262 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
+def setGeometry(geometryData: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Set geometry data for the current edited mesh
+
+    Args:
+    geometryData (Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "parentId": str, "childIds": List[str], "vertices": List[List[float]], "edges": List[List[int]], "faces": List[int]}): Geometry data
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setGeometry"  # Define tool name for logging
+    params = {"geometryData": geometryData}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        import bmesh
+
+        # Get the active object
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        # Ensure we are in edit mode
+        if bpy.context.object.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        # Access the mesh data in edit mode
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Clear existing geometry
+        bm.clear()
+
+        # Add vertices
+        vertex_map = []
+        for vertex in geometryData["vertices"]:
+            vertex_map.append(bm.verts.new(vertex))
+
+        bm.verts.ensure_lookup_table()
+
+        # Add edges
+        for edge in geometryData["edges"]:
+            bm.edges.new((vertex_map[edge[0]], vertex_map[edge[1]]))
+
+        # Add faces
+        for face in geometryData["faces"]:
+            bm.faces.new([vertex_map[idx] for idx in face])
+
+        # Update the mesh to reflect changes
+        bmesh.update_edit_mesh(obj.data)
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def createLight(type: Literal["point", "sun", "spot", "area"], color: Optional[List[float]] = None, intensity: Optional[float] = None, position: List[float] = [0, 0, 0], direction: List[float] = [1, 0, 0], width: float = 1, height: float = 1) -> Dict[str, Any]:
+    """
+    Create a light source (object) in the scene
+
+    Args:
+    type (Literal["point", "directional", "spot"]): Light type
+    color (List[float]): Light color (RGB)
+    intensity (float): Light intensity
+    position (List[float]): Light position
+    direction (List[float]): Light direction
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "createLight"  # Define tool name for logging
+    params = {"type": type, "color": color, "intensity": intensity,
+              "position": position, "direction": direction}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Validate enum values for type
+        if type not in ['point', 'sun', 'spot', 'area']:
+            raise ValueError(
+                f"Parameter 'type' must be one of  ['point', 'sun', 'spot', 'area'], got {type}")
+
+        # Create the light object
+        light_data = bpy.data.lights.new(
+            name=f"{type}_light", type=type.upper())
+        light_object = bpy.data.objects.new(
+            name=f"{type}_light_object", object_data=light_data)
+
+        # Set light properties
+        if color:
+            light_data.color = color
+        if intensity:
+            light_data.energy = intensity
+
+        # Set light position
+        light_object.location = position
+
+        # Add the light to the scene
+        bpy.context.collection.objects.link(light_object)
+
+        # Set light direction for directional and spot lights
+        if type in ["sun", "spot"]:
+            light_object.rotation_euler = bpy.mathutils.Vector(
+                direction).to_track_quat('Z', 'Y').to_euler()
+
+        if type == "area":
+            light_data.shape = 'RECTANGLE'
+            light_data.size = width
+            light_data.size_y = height
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def deleteObject(id: str) -> Dict[str, Any]:
+    """
+    Delete an object from the scene
+
+    Args:
+    meshId (str): ID of the deleteObject to delete
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "deleteObject"  # Define tool name for logging
+    params = {"id": id}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Get the object by its name (meshId)
+        obj = bpy.data.objects.get(id)
+        if obj is None:
+            raise ValueError(f"Object with ID '{id}' not found.")
+
+        # Select the object to delete
+        bpy.ops.object.select_all(action='DESELECT')  # Deselect all objects
+        obj.select_set(True)  # Select the target object
+        bpy.context.view_layer.objects.active = obj  # Set it as the active object
+
+        # Use the delete operator
+        bpy.ops.object.delete()
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def unwrapUVs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Generate UV coordinates using automatic unwrapping
+
+    Args:
+    items (List[Dict[str, Any] with keys {"meshId": str, "method": Literal["angle", "conformal", "lscm", "abf", "sphere", "box", "cylinder"], "channel": int, "packIslands": bool, "normalizeUVs": bool, "margin": float}]): UV unwrapping operations
+
+    Returns:
+    success (bool): Operation success status
+    results (List[Dict[str, Any] with keys {"meshId": str, "uvMapId": str}]): Unwrapping results
+    """
+    tool_name = "unwrapUVs"  # Define tool name for logging
+    params = {"items": items}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        # TODO: Implement actual blender API calls
+        # This is a placeholder implementation
+
+        return {
+            "success": True,  # TODO: Implement
+            "results": None
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def setMaterialParameters(materialId: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Set all parameters of a BSDF material
+
+    Args:
+    materialId (str): Material identifier
+    parameters (Dict[str, Any] with keys {"baseColor": List[float], "metallic": float, "roughness": float, "transmission": float, "transmissionRoughness": float, "emission": List[float], "alpha": float}): Parameters to tweak
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setMaterialParameters"  # Define tool name for logging
+    # Create params dict for logging
+    params = {"materialId": materialId, "parameters": parameters}
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Get the material by its name
+        material = bpy.data.materials.get(materialId)
+        if not material:
+            raise ValueError(f"Material '{materialId}' not found.")
+
+        # Ensure the material uses nodes
+        if not material.use_nodes:
+            raise RuntimeError(f"Material '{materialId}' does not use nodes.")
+
+        # Find the Principled BSDF node
+        principled_node = None
+        for node in material.node_tree.nodes:
+            if node.type == 'BSDF_PRINCIPLED':
+                principled_node = node
+                break
+
+        if not principled_node:
+            raise RuntimeError(
+                f"Principled BSDF node not found in material '{materialId}'.")
+
+        # Apply the parameters to the Principled BSDF node
+        map_names = {
+            "baseColor": "Base Color",
+            "metallic": "Metallic",
+            "roughness": "Roughness",
+            "alpha": "Alpha",
+            "emission": "Emission Color",
+
+        }
+        for key, value in parameters.items():
+            named_key = map_names.get(key, key)
+            if named_key in principled_node.inputs:
+                input_socket = principled_node.inputs[named_key]
+                if isinstance(value, list) and len(value) == 3:  # For RGB values
+                    input_socket.default_value[:3] = value
+                else:
+                    input_socket.default_value = value
+            else:
+                print(
+                    f"Warning: Parameter '{key}' is not valid for Principled BSDF.")
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
 def extrudeAlongNormals(distance: float) -> Dict[str, Any]:
     """
     Extrude selected faces along their normals
@@ -91,36 +347,50 @@ def bevel(amount: float, type: Literal["edge", "vertex"]) -> Dict[str, Any]:
  # === NEWLY GENERATED ===
 
 
-def addPrimitives(type: Literal["sphere", "cube", "cylinder", "plane"]) -> Dict[str, Any]:
+def createMeshFromPrimitive(type: Literal["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"], primitive_params: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """
     Add primitive shapes to the scene
 
     Args:
-    type (Literal["sphere", "cube", "cylinder", "plane"]): Type of primitive to add
+    type (Literal["sphere", "cube", "cylinder", "plane", "cone", "torus", "circle"]): Type of primitive to add
+    params (List[Dict[str, Any]]): Parameters for the primitive
 
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "addPrimitives"  # Define tool name for logging
-    params = {"type": type}  # Create params dict for logging
+    tool_name = "createMeshFromPrimitive"  # Define tool name for logging
+    # Create params dict for logging
+    params = {"type": type, "params": primitive_params}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
 
         # Validate enum values for type
-        if type is not None and type not in ['sphere', 'cube', 'cylinder', 'plane']:
+        if type is not None and type not in ['sphere', 'cube', 'cylinder', 'plane', 'cone', 'torus', 'circle']:
             raise ValueError(
-                f"Parameter 'type' must be one of ['sphere','cube','cylinder','plane'], got {type}")
+                f"Parameter 'type' must be one of ['sphere', 'cube', 'cylinder', 'plane', 'cone', 'torus', 'circle'], got {type}")
+
+        subdivisions = 32
+        if primitive_params is not None and 'subdivisions' in primitive_params:
+            subdivisions = primitive_params['subdivisions']
 
         # Add the specified primitive to the scene
         if type == "sphere":
-            bpy.ops.mesh.primitive_uv_sphere_add()
+            bpy.ops.mesh.primitive_uv_sphere_add(
+                segments=subdivisions, ring_count=subdivisions)
         elif type == "cube":
             bpy.ops.mesh.primitive_cube_add()
         elif type == "cylinder":
-            bpy.ops.mesh.primitive_cylinder_add()
+            bpy.ops.mesh.primitive_cylinder_add(vertices=subdivisions)
         elif type == "plane":
             bpy.ops.mesh.primitive_plane_add()
+        elif type == "cone":
+            bpy.ops.mesh.primitive_cone_add(vertices=subdivisions)
+        elif type == "torus":
+            bpy.ops.mesh.primitive_torus_add(
+                major_segments=subdivisions, minor_segments=subdivisions)
+        elif type == "circle":
+            bpy.ops.mesh.primitive_circle_add(vertices=subdivisions)
 
         return {"success": True}
 
@@ -186,7 +456,6 @@ def bridgeEdgeLoops() -> Dict[str, Any]:
 
     try:
         import bmesh
-
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -248,7 +517,7 @@ def createEdge() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
+def createEdgeLoop(edgeId: str, numCuts: Optional[int] = 1) -> Dict[str, Any]:
     """
     Create an edge loop on a mesh
 
@@ -259,10 +528,12 @@ def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
     success (bool): Operation success status
     """
     tool_name = "createEdgeLoop"  # Define tool name for logging
-    params = {"edgeId": edgeId}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"edgeId": edgeId, "numCuts": numCuts}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         import bmesh
 
         # Ensure we are in edit mode
@@ -303,7 +574,7 @@ def createEdgeLoop(edgeId: str) -> Dict[str, Any]:
         bpy.ops.ed.undo_push(message="Create edge loop Operation")
 
         with bpy.context.temp_override(**override_context):
-            bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": 1,
+            bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": numCuts,
                                                         "smoothness": 0, "falloff": 'INVERSE_SQUARE',
                                                         "object_index": 0, "edge_index": edge_index},)
             # # Update the mesh to reflect changes
@@ -351,12 +622,11 @@ def createFaceOrEdge() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
+def edgeSlide(factor: float) -> Dict[str, Any]:
     """
     Slide selected edges along their adjacent edges
 
     Args:
-    edgeId (str): IDs of edge to slide along
     factor (float): Sliding factor (-1 to 1)
 
     Returns:
@@ -364,11 +634,13 @@ def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
     """
     tool_name = "edgeSlide"  # Define tool name for logging
     # Create params dict for logging
-    params = {"edgeId": edgeId, "factor": factor}
+    params = {"factor": factor}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         import bmesh
+
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -378,21 +650,19 @@ def edgeSlide(edgeId: str, factor: float) -> Dict[str, Any]:
             raise RuntimeError(
                 "You must be in edit mode to perform an edge slide operation.")
 
-        # Access the mesh data in edit mode
-        bm = bmesh.from_edit_mesh(obj.data)
-
-        # Find the edge by its index
-        edge_index = int(edgeId)
-        if edge_index < 0 or edge_index >= len(bm.edges):
-            raise ValueError(f"Invalid edge ID: {edgeId}")
-
-        edge = bm.edges[edge_index]
-        # if not edge.select:
-        #     raise RuntimeError(f"Edge with ID {edgeId} is not selected.")
-
         # Perform the edge slide operation
         bpy.ops.ed.undo_push(message="Edge Slide Operation")
-        bpy.ops.transform.edge_slide(value=factor)
+        override_context = bpy.context.copy()
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override_context['area'] = area
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override_context['region'] = region
+                        break
+                break
+        with bpy.context.temp_override(**override_context):
+            bpy.ops.transform.edge_slide(value=factor)
 
         # Update the mesh to reflect changes
         bmesh.update_edit_mesh(obj.data)
@@ -419,6 +689,7 @@ def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         import bmesh
 
         # Ensure we are in edit mode
@@ -445,7 +716,17 @@ def selectEdgeLoop(edgeId: str) -> Dict[str, Any]:
 
         # Use Blender's operator to select the edge loop
         bpy.ops.ed.undo_push(message="Select Edge Loop Operation")
-        bpy.ops.mesh.loop_select()
+        override_context = bpy.context.copy()
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override_context['area'] = area
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override_context['region'] = region
+                        break
+                break
+        with bpy.context.temp_override(**override_context):
+            bpy.ops.mesh.loop_multi_select()
 
         # Update the mesh to reflect the selection
         bmesh.update_edit_mesh(obj.data)
@@ -472,6 +753,7 @@ def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         import bmesh
 
         # Ensure we are in edit mode
@@ -509,166 +791,6 @@ def selectEdgeRing(edgeId: str) -> Dict[str, Any]:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}
 
-
-def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None) -> Dict[str, Any]:
-    """
-    Apply transformations (translate, rotate, scale) to selected elements
-
-    Args:
-    translation (List[float]): Translation vector
-    rotation (List[float]): Rotation vector (Euler angles)
-    scale (List[float]): Scaling vector
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "transform"  # Define tool name for logging
-    params = {"translation": translation, "rotation": rotation,
-              "scale": scale}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        import mathutils
-        import bmesh
-
-        # Ensure there is an active object
-        obj = bpy.context.object
-        if obj is None or obj.type != 'MESH':
-            raise RuntimeError("No active mesh object found.")
-
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
-
-        # Access the mesh data in edit mode
-        bm = bmesh.from_edit_mesh(obj.data)
-
-        # Get selected vertices
-        selected_verts = [v for v in bm.verts if v.select]
-        if not selected_verts:
-            raise RuntimeError("No vertices selected.")
-
-        # Calculate the median point of the selected vertices
-        median_point = mathutils.Vector((0.0, 0.0, 0.0))
-        for vert in selected_verts:
-            median_point += vert.co
-        median_point /= len(selected_verts)
-
-        # Create transformation matrices
-        translation_matrix = mathutils.Matrix.Translation(
-            translation) if translation else mathutils.Matrix.Identity(4)
-        rotation_matrix = mathutils.Euler(rotation, 'XYZ').to_matrix(
-        ).to_4x4() if rotation else mathutils.Matrix.Identity(4)
-        scale_matrix = mathutils.Matrix.Diagonal(
-            scale + [1]) if scale else mathutils.Matrix.Identity(4)
-
-        bpy.ops.ed.undo_push(message="Transform Operation")
-
-        # Combine transformations into a single matrix
-        transformation_matrix = translation_matrix @ rotation_matrix @ scale_matrix
-
-        # Apply transformations relative to the median point
-        for vert in selected_verts:
-            # Move vertex to origin relative to the median point
-            local_co = vert.co - median_point
-            # Apply transformation
-            transformed_co = transformation_matrix @ local_co
-            # Move vertex back to its original position relative to the median point
-            vert.co = transformed_co + median_point
-
-        # Update the mesh to reflect changes
-
-        bmesh.update_edit_mesh(obj.data)
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
- # === NEWLY GENERATED ===
-
-
-def delete(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
-    """
-    Delete selected vertices, edges, or faces
-
-    Args:
-    type (Literal["vertex", "edge", "face"]): The type parameter
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "delete"  # Define tool name for logging
-    params = {"type": type}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        obj = bpy.context.object
-        if obj is None or obj.type != 'MESH':
-            raise RuntimeError("No active mesh object found.")
-
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError("You must be in edit mode to delete geometry.")
-
-        # Map the type to Blender's delete operation
-        type_map = {
-            "vertex": "VERT",
-            "edge": "EDGE",
-            "face": "FACE"
-        }
-
-        if type not in type_map:
-            raise ValueError(f"Invalid type: {type}")
-
-        bpy.ops.ed.undo_push(message="Delete Operation")
-
-        # Perform the delete operation
-        bpy.ops.mesh.delete(type=type_map[type])
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
- # === NEWLY GENERATED ===
-
-
-def deleteOnlyEdgesAndFaces() -> Dict[str, Any]:
-    """
-    Delete only selected edges and faces, keeping vertices
-
-    Args:
-    No parameters
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteOnlyEdgesAndFaces"  # Define tool name for logging
-    params = {}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        obj = bpy.context.object
-        if obj is None or obj.type != 'MESH':
-            raise RuntimeError("No active mesh object found.")
-
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You must be in edit mode to delete edges and faces.")
-
-        # Perform the delete operation for edges and faces only
-        bpy.ops.mesh.delete(type='EDGE_FACE')
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
  # === NEWLY GENERATED ===
 
 
@@ -687,7 +809,9 @@ def inset(amount: float) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         import bmesh
+
         # Ensure we are in edit mode
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
@@ -730,7 +854,9 @@ def getGeometry() -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         import bmesh
+
         obj = bpy.context.object
         if obj is None or obj.type != 'MESH':
             raise RuntimeError("No active mesh object found.")
@@ -747,13 +873,6 @@ def getGeometry() -> Dict[str, Any]:
         return {
             "success": True,
             "geometryData": {
-                "id": obj.name,
-                "name": obj.name,
-                "position": list(obj.location),
-                "rotation": list(obj.rotation_euler),
-                "scale": list(obj.scale),
-                "parentId": obj.parent.name if obj.parent else None,
-                "childIds": [child.name for child in obj.children],
                 "vertices": vertices,
                 "edges": edges,
                 "faces": faces,
@@ -765,38 +884,6 @@ def getGeometry() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
-
-
-def deleteOnlyFaces() -> Dict[str, Any]:
-    """
-    Delete only selected faces, keeping edges and vertices
-
-    Args:
-    No parameters
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteOnlyFaces"  # Define tool name for logging
-    params = {}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You have to start editing the mesh to delete faces.")
-
-        # Perform the delete operation for faces only
-        bpy.ops.mesh.delete(type='ONLY_FACE')
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
 
 
 def dissolve(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
@@ -854,6 +941,10 @@ def editStart(meshIds: List[str]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+        # Ensure we are in object mode before entering edit mode
+        if bpy.context.object.mode == 'EDIT':
+            return {"success": True,
+                    "message": "Object was already edited."}
         # Deselect all objects first
         bpy.ops.object.select_all(action='DESELECT')
 
@@ -937,58 +1028,6 @@ def extrude(offset: List[float]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def getSelect(type: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
-    """
-    Get selected geometry structures
-
-    Args:
-    type (Literal["vertex", "edge", "face"]): The type parameter
-
-    Returns:
-    success (bool): Operation success status
-    selectedIds (List[str]): IDs of selected structures
-    type (Literal["vertex", "edge", "face"]): The type return value
-    """
-    tool_name = "getSelect"  # Define tool name for logging
-    params = {"type": type}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        import bmesh
-        # Validate enum values for type
-        if type not in ['vertex', 'edge', 'face']:
-            raise ValueError(
-                f"Parameter 'type' must be one of ['vertex', 'edge', 'face'], got {type}")
-
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError(
-                "You must be in edit mode to get selected geometry.")
-
-        # Get the active mesh
-        obj = bpy.context.object
-        mesh = bmesh.from_edit_mesh(obj.data)
-
-        # Retrieve selected elements based on type
-        selected_ids = []
-        if type == "vertex":
-            selected_ids = [str(v.index) for v in mesh.verts if v.select]
-        elif type == "edge":
-            selected_ids = [str(e.index) for e in mesh.edges if e.select]
-        elif type == "face":
-            selected_ids = [str(f.index) for f in mesh.faces if f.select]
-
-        return {
-            "success": True,
-            "selectedIds": selected_ids,
-            "type": type
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     """
     Sets the current geometry structure to edit (vertex, edge, face)
@@ -1004,6 +1043,7 @@ def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
+
         # Validate enum values for mode
         if mode not in ['vertex', 'edge', 'face']:
             raise ValueError(
@@ -1016,80 +1056,6 @@ def setMode(mode: Literal["vertex", "edge", "face"]) -> Dict[str, Any]:
             'face': 'FACE'
         }
         bpy.ops.mesh.select_mode(type=mode_map[mode])
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def setSelect(ids: List[str], type: Literal["vertex", "edge", "face"], mode: Optional[Literal["replace", "add", "remove"]] = None) -> Dict[str, Any]:
-    """
-    Select or deselect geometry structures
-
-    Args:
-    ids (List[str]): IDs of structures to select
-    type (Literal["vertex", "edge", "face"]): The type parameter
-    mode (Literal["replace", "add", "remove"]): Selection mode
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "setSelect"  # Define tool name for logging
-    # Create params dict for logging
-    params = {"ids": ids, "type": type, "mode": mode}
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        import bmesh
-        # Validate enum values for type
-        if type not in ['vertex', 'edge', 'face']:
-            raise ValueError(
-                f"Parameter 'type' must be one of ['vertex', 'edge', 'face'], got {type}")
-
-        # Validate enum values for mode
-        if mode not in ['replace', 'add', 'remove']:
-            raise ValueError(
-                f"Parameter 'mode' must be one of ['replace', 'add', 'remove'], got {mode}")
-
-        # Ensure we are in edit mode
-        if bpy.context.object.mode != 'EDIT':
-            raise RuntimeError("You must be in edit mode to select geometry.")
-
-        # Get the active mesh
-        obj = bpy.context.object
-        mesh = bmesh.from_edit_mesh(obj.data)
-
-        if type == "vertex":
-            bpy.ops.mesh.select_mode(type='VERTEX')
-        elif type == "edge":
-            bpy.ops.mesh.select_mode(type='EDGE')
-        elif type == "face":
-            bpy.ops.mesh.select_mode(type='FACE')
-
-        if mode == "replace":
-            # Deselect all first
-            bpy.ops.mesh.select_all(action='DESELECT')
-            select = True
-        elif mode == "add":
-            select = True
-        elif mode == "remove":
-            select = False
-        else:
-            raise ValueError(f"Invalid selection mode: {mode}")
-
-        for id in ids:
-            index = int(id)
-            if type == "vertex":
-                mesh.verts[index].select_set(select)
-            elif type == "edge":
-                mesh.edges[index].select_set(select)
-            elif type == "face":
-                mesh.faces[index].select_set(select)
-
-        # Update the mesh to reflect changes
-        bmesh.update_edit_mesh(obj.data)
 
         return {"success": True}
 
@@ -1132,159 +1098,6 @@ def subdivide(count: Optional[int] = None) -> Dict[str, Any]:
  # === NEWLY GENERATED ===
 
 
-def createEdges(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Edges
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Edges
-    """
-    tool_name = "createEdges"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getGroups(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Groups by IDs
-
-    Args:
-    ids (List[str]): Group identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups objects
-    """
-    tool_name = "getGroups"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def bridge(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create bridges between face loops
-
-    Args:
-    items (List[Dict[str, Any] with keys {"meshId": str, "faceLoopA": List[str], "faceLoopB": List[str], "twist": int, "smooth": bool}]): Bridge operations
-
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any] with keys {"meshId": str, "bridgeFaceIds": List[str], "bridgeEdgeIds": List[str]}]): Bridge results
-    """
-    tool_name = "bridge"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "results": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def setEdgeCreases(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Set crease weights for edges
-
-    Args:
-    items (List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}]): Edge crease operations
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "setEdgeCreases"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getMeshs(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Meshs by IDs
-
-    Args:
-    ids (List[str]): Mesh identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs objects
-    """
-    tool_name = "getMeshs"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def deleteMaterials(ids: List[str]) -> Dict[str, Any]:
     """
     Delete multiple Materials
@@ -1307,419 +1120,6 @@ def deleteMaterials(ids: List[str]) -> Dict[str, Any]:
 
         return {
             "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getSubdivisionModifiers(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple SubdivisionModifiers by IDs
-
-    Args:
-    ids (List[str]): SubdivisionModifier identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers objects
-    """
-    tool_name = "getSubdivisionModifiers"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createCurves(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Curves
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Curves
-    """
-    tool_name = "createCurves"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getFaces(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Faces by IDs
-
-    Args:
-    ids (List[str]): Face identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces objects
-    """
-    tool_name = "getFaces"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteCurves(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple Curves
-
-    Args:
-    ids (List[str]): Curve identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteCurves"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateCurves(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Curves in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateCurves"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listCurves(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all Curves
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listCurves"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Faces
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Faces
-    """
-    tool_name = "createFaces"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createMeshs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Meshs
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Meshs
-    """
-    tool_name = "createMeshs"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getEdges(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Edges by IDs
-
-    Args:
-    ids (List[str]): Edge identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges objects
-    """
-    tool_name = "getEdges"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listMeshs(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all Meshs
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listMeshs"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateMeshs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Meshs in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "vertices": List[List[float]], "normals": List[List[float]], "tangents": List[List[float]], "uvs": List[List[float]], "colors": List[List[float]], "indices": List[int], "materialId": str, "modifiers": List[Union[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]]}]): Array of Meshs to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateMeshs"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def transformUVs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Transform UV coordinates for vertices
-
-    Args:
-    items (List[Dict[str, Any] with keys {"meshId": str, "channel": int, "vertexTransforms": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float, "offsetU": float, "offsetV": float}]}]): UV transformation operations
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "transformUVs"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listUVMaps(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all UVMaps
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listUVMaps"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
         }
 
     except Exception as e:
@@ -1758,997 +1158,36 @@ def splitMeshes(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def listFaces(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
+def getMaterials() -> Dict[str, Any]:
     """
-    List all Faces
+    Get materials for the current edited mesh
 
     Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
 
     Returns:
     success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listFaces"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getVertexs(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Vertexs by IDs
-
-    Args:
-    ids (List[str]): Vertex identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs objects
-    """
-    tool_name = "getVertexs"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def assignMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Assign materials to meshes or specific faces
-
-    Args:
-    items (List[Dict[str, Any] with keys {"materialId": str, "meshId": str, "faceIds": List[str]}]): Material assignments to make
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "assignMaterials"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateFaces(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Faces in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[str], "normal": List[float], "materialId": str, "smoothingGroup": int, "selected": bool}]): Array of Faces to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateFaces"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateUVMaps(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple UVMaps in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateUVMaps"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listMaterials(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all Materials
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listMaterials"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteUVMaps(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple UVMaps
-
-    Args:
-    ids (List[str]): UVMap identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteUVMaps"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Materials
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Materials
-    """
-    tool_name = "createMaterials"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createUVMaps(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple UVMaps
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created UVMaps
-    """
-    tool_name = "createUVMaps"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def transformVertices(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Transform multiple vertices
-
-    Args:
-    items (List[Dict[str, Any] with keys {"vertexId": str, "position": List[float], "offset": List[float], "normal": List[float]}]): Vertex transformations to apply
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "transformVertices"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateEdges(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Edges in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateEdges"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def unwrapUVs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Generate UV coordinates using automatic unwrapping
-
-    Args:
-    items (List[Dict[str, Any] with keys {"meshId": str, "method": Literal["angle", "conformal", "lscm", "abf", "sphere", "box", "cylinder"], "channel": int, "packIslands": bool, "normalizeUVs": bool, "margin": float}]): UV unwrapping operations
-
-    Returns:
-    success (bool): Operation success status
-    results (List[Dict[str, Any] with keys {"meshId": str, "uvMapId": str}]): Unwrapping results
-    """
-    tool_name = "unwrapUVs"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "results": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listEdges(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all Edges
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "vertexIds": List[Any], "sharp": bool, "crease": float, "hidden": bool, "selected": bool}]): Array of Edges objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listEdges"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listGroups(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all Groups
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listGroups"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listVertexs(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all Vertexs
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listVertexs"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteVertexs(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple Vertexs
-
-    Args:
-    ids (List[str]): Vertex identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteVertexs"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateMaterials(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Materials in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateMaterials"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateGroups(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Groups in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateGroups"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createSubdivisionModifiers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple SubdivisionModifiers
-
-    Args:
-    items (List[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created SubdivisionModifiers
-    """
-    tool_name = "createSubdivisionModifiers"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createVertexs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Vertexs
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Vertexs
-    """
-    tool_name = "createVertexs"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getCurves(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Curves by IDs
-
-    Args:
-    ids (List[str]): Curve identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "position": List[float], "rotation": List[float], "scale": List[float], "visible": bool, "locked": bool, "castShadow": bool, "receiveShadow": bool, "renderOrder": int, "parentId": str, "childIds": List[str], "degree": int, "controlPoints": List[Dict[str, Any] with keys {"position": List[float], "weight": float}], "knots": List[float], "closed": bool}]): Array of Curves objects
-    """
-    tool_name = "getCurves"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteSubdivisionModifiers(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple SubdivisionModifiers
-
-    Args:
-    ids (List[str]): SubdivisionModifier identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteSubdivisionModifiers"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getMaterials(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple Materials by IDs
-
-    Args:
-    ids (List[str]): Material identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "normalScale": float, "textures": Dict[str, Any] with keys {"baseColor": str, "normal": str, "metallic": str, "roughness": str, "emissive": str, "ambientOcclusion": str, "height": str, "opacity": str}}]): Array of Materials objects
+    items (List[Dict[str, Any] with keys {"id": str, "name": str}}]): Array of Materials objects
     """
     tool_name = "getMaterials"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
+    params = {}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        # No parameters to validate
+        # Get the active object
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
 
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteGroups(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple Groups
-
-    Args:
-    ids (List[str]): Group identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteGroups"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
+        # Retrieve materials from the object
+        materials = []
+        for index, material in enumerate(obj.data.materials):
+            if material:
+                materials.append({"id": str(index), "name": material.name})
 
         return {
-            "success": True
+            "success": True,
+            "items": materials
         }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def createGroups(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Create multiple Groups
-
-    Args:
-    items (List[Dict[str, Any] with keys {"name": str, "metadata": Dict[str, Any], "objectIds": List[str], "parentId": str, "visible": bool, "locked": bool}]): Array of Groups to create
-
-    Returns:
-    success (bool): Operation success status
-    ids (List[str]): IDs of the created Groups
-    """
-    tool_name = "createGroups"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "ids": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateSubdivisionModifiers(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple SubdivisionModifiers in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateSubdivisionModifiers"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteFaces(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple Faces
-
-    Args:
-    ids (List[str]): Face identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteFaces"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def getUVMaps(ids: List[str]) -> Dict[str, Any]:
-    """
-    Get multiple UVMaps by IDs
-
-    Args:
-    ids (List[str]): UVMap identifiers
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"id": str, "name": str, "metadata": Dict[str, Any], "meshId": str, "channel": int, "coordinates": List[Dict[str, Any] with keys {"vertexId": str, "u": float, "v": float}]}]): Array of UVMaps objects
-    """
-    tool_name = "getUVMaps"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteMeshs(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple Meshs
-
-    Args:
-    ids (List[str]): Mesh identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteMeshs"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def listSubdivisionModifiers(parentId: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> Dict[str, Any]:
-    """
-    List all SubdivisionModifiers
-
-    Args:
-    parentId (str): Optional parent ID to filter by
-    filters (Dict[str, Any]): Optional filters to apply
-    limit (int): Maximum number of results
-    offset (int): Starting offset for pagination
-
-    Returns:
-    success (bool): Operation success status
-    items (List[Dict[str, Any] with keys {"type": Literal["subdivision"], "enabled": bool, "order": int, "subdivisionLevel": int, "scheme": Literal["catmull-clark", "loop", "bilinear"], "creaseEdges": List[Dict[str, Any] with keys {"edgeId": str, "creaseWeight": float}], "boundaryInterpolation": Literal["none", "edges", "all"]}]): Array of SubdivisionModifiers objects
-    totalCount (int): Total count for pagination
-    """
-    tool_name = "listSubdivisionModifiers"  # Define tool name for logging
-    params = {"parentId": parentId, "filters": filters, "limit": limit,
-              "offset": offset}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True,  # TODO: Implement
-            "items": None,  # TODO: Implement
-            "totalCount": None
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def deleteEdges(ids: List[str]) -> Dict[str, Any]:
-    """
-    Delete multiple Edges
-
-    Args:
-    ids (List[str]): Edge identifiers to delete
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "deleteEdges"  # Define tool name for logging
-    params = {"ids": ids}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def updateVertexs(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Update multiple Vertexs in a single operation
-
-    Args:
-    items (List[Dict[str, Any] with keys {"ids": List[str], "name": str, "metadata": Dict[str, Any], "meshId": str, "position": List[float], "normal": List[float], "uv": List[List[float]], "color": List[float], "weight": Dict[str, float], "selected": bool}]): Array of Vertexs to update with their IDs
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "updateVertexs"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # TODO: Implement actual blender API calls
-        # This is a placeholder implementation
-
-        return {
-            "success": True
-        }
-
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")
         return {"success": False, "error": str(e)}

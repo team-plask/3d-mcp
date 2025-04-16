@@ -5,52 +5,6 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
-def batchSetProperty(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Set properties on multiple objects
-
-    Args:
-    items (List[Dict[str, Any] with keys {"id": str, "entries": List[Dict[str, Any] with keys {"propertyPath": List[str], "value": Any}]}]): Property assignments to make
-
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "batchSetProperty"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # Implement actual blender API calls
-        for item in items:
-            obj = bpy.data.objects.get(item["id"])
-            if obj is None:
-                continue
-
-            for entry in item["entries"]:
-                path = entry["propertyPath"]
-                value = entry["value"]
-
-                # Navigate to the target property
-                target = obj
-                for i, path_part in enumerate(path[:-1]):
-                    if hasattr(target, path_part):
-                        target = getattr(target, path_part)
-                    else:
-                        break
-
-                # Set the value
-                if hasattr(target, path[-1]):
-                    setattr(target, path[-1], value)
-
-        return {"success": True}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
 def query(
     type: Optional[str] = None, properties: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
@@ -66,7 +20,8 @@ def query(
     results (List[str]): IDs of matching entities
     """
     tool_name = "query"  # Define tool name for logging
-    params = {"type": type, "properties": properties}  # Create params dict for logging
+    # Create params dict for logging
+    params = {"type": type, "properties": properties}
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
@@ -186,7 +141,8 @@ def getChildren(
                 if recursive:
                     collect_children(child, recursive)
 
-        collect_children(parent_obj, recursive if recursive is not None else False)
+        collect_children(
+            parent_obj, recursive if recursive is not None else False)
 
         return {"success": True, "childIds": child_ids}
 
@@ -267,134 +223,48 @@ def undo() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def batchGetProperty(
-    items: List[Dict[str, Any]], recursive: Optional[bool] = None
-) -> Dict[str, Any]:
+def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None, proportional: Optional[Dict[str, any]] = None) -> Dict[str, Any]:
     """
-    Get property values from multiple objects
+    Apply transformations (translate, rotate, scale) to selected elements
 
     Args:
-    items (List[Dict[str, Any] with keys {"id": str, "propertyPath": List[str]}]): Property requests to make
-    recursive (bool): Whether to include all descendants
-
-    Returns:
-    success (bool): Operation success status
-    values (List[Dict[str, Any] with keys {"id": str, "propertyPath": str, "value": Any}]): Property values retrieved
-    """
-    tool_name = "batchGetProperty"  # Define tool name for logging
-    params = {"items": items, "recursive": recursive}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
-
-    try:
-        # No parameters to validate
-
-        # Implement actual blender API calls
-        values = []
-
-        for item in items:
-            obj_id = item["id"]
-            property_path = item["propertyPath"]
-
-            obj = bpy.data.objects.get(obj_id)
-            if not obj:
-                continue
-
-            # Handle recursive case
-            objects_to_process = [obj]
-            if recursive:
-                # Get all descendants
-                children_result = getChildren(obj_id, recursive=True)
-                if children_result["success"] and "childIds" in children_result:
-                    for child_id in children_result["childIds"]:
-                        child_obj = bpy.data.objects.get(child_id)
-                        if child_obj:
-                            objects_to_process.append(child_obj)
-
-            # Process all objects
-            for target_obj in objects_to_process:
-                # Navigate to the target property
-                current = target_obj
-                found = True
-
-                for part in property_path:
-                    if hasattr(current, part):
-                        current = getattr(current, part)
-                    else:
-                        found = False
-                        break
-
-                if found:
-                    values.append(
-                        {
-                            "id": target_obj.name,
-                            "propertyPath": property_path,
-                            "value": current,
-                        }
-                    )
-
-        return {"success": True, "values": values}
-
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-def batchTransform(items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Apply transformations to multiple objects
-
-    Args:
-    items (List[Dict[str, Any] with keys {"id": str, "position": List[float], "rotation": List[float], "scale": List[float], "positionOffset": List[float], "rotationOffset": List[float], "scaleOffset": List[float], "space": Literal["local", "world", "parent"]}]): Transformations to apply
+    translation (List[float]): Translation vector
+    rotation (List[float]): Rotation vector (Euler angles)
+    scale (List[float]): Scaling vector
+    proportional (Dict[str, any]): Proportional editing options
 
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "batchTransform"  # Define tool name for logging
-    params = {"items": items}  # Create params dict for logging
+    tool_name = "transform"  # Define tool name for logging
+    params = {"translation": translation, "rotation": rotation,
+              "scale": scale, "proportional": proportional}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        # No parameters to validate
+        # Ensure there is an active object
+        obj = bpy.context.object
+        if obj is None:
+            raise RuntimeError("No active object found.")
 
-        # Implement actual blender API calls
-        for item in items:
-            obj = bpy.data.objects.get(item["id"])
-            if not obj:
-                continue
+        # Apply translation
+        if translation:
+            bpy.ops.transform.translate(value=translation, use_proportional_edit=bool(proportional),
+                                        proportional_size=proportional.get("radius", 1) if proportional else 0)
 
-            # Handle different coordinate spaces
-            space = item.get("space", "world")
+        # Apply rotation
+        if rotation:
+            bpy.ops.transform.rotate(value=rotation[0], orient_axis='X', use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
+            bpy.ops.transform.rotate(value=rotation[1], orient_axis='Y', use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
+            bpy.ops.transform.rotate(value=rotation[2], orient_axis='Z', use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
 
-            # Set absolute transforms
-            if "position" in item and item["position"] is not None:
-                if space == "world":
-                    obj.location = item["position"]
-                elif space == "local" or space == "parent":
-                    obj.location = item["position"]
-
-            if "rotation" in item and item["rotation"] is not None:
-                if space == "world":
-                    obj.rotation_euler = item["rotation"]
-                elif space == "local" or space == "parent":
-                    obj.rotation_euler = item["rotation"]
-
-            if "scale" in item and item["scale"] is not None:
-                obj.scale = item["scale"]
-
-            # Apply offsets
-            if "positionOffset" in item and item["positionOffset"] is not None:
-                for i in range(min(len(obj.location), len(item["positionOffset"]))):
-                    obj.location[i] += item["positionOffset"][i]
-
-            if "rotationOffset" in item and item["rotationOffset"] is not None:
-                for i in range(
-                    min(len(obj.rotation_euler), len(item["rotationOffset"]))
-                ):
-                    obj.rotation_euler[i] += item["rotationOffset"][i]
-
-            if "scaleOffset" in item and item["scaleOffset"] is not None:
-                for i in range(min(len(obj.scale), len(item["scaleOffset"]))):
-                    obj.scale[i] += item["scaleOffset"][i]
+        # Apply scaling
+        if scale:
+            bpy.ops.transform.resize(value=scale, use_proportional_edit=bool(proportional),
+                                     proportional_size=proportional.get("radius", 1) if proportional else 0)
 
         return {"success": True}
 
@@ -403,7 +273,53 @@ def batchTransform(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def batchSetParent(
+def delete(type: Optional[Literal["vertex", "edge", "face", "only_faces", "only_edges_and_faces"]] = "face") -> Dict[str, Any]:
+    """
+    Deletes the current selection. Additional optional type can be provided to filter the deletion
+
+    Args:
+    type (Optional[Literal["vertex", "edge", "face", "only_faces", "only_edges_and_faces"]]): Type of elements to delete. Only relevant for geometry domain, when a mesh is being edited. Can be 'vertex', 'edge', 'face', 'only_faces' or 'only_edges_and_faces'
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "delete"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        if bpy.context.object.mode == 'EDIT':
+            # Map the type to Blender's delete operation
+            type_map = {
+                "vertex": "VERT",
+                "edge": "EDGE",
+                "face": "FACE",
+                "only_faces": "ONLY_FACE",
+                "only_edges_and_faces": "EDGE_FACE",
+            }
+
+            if type not in type_map:
+                raise ValueError(f"Invalid type: {type}")
+
+            bpy.ops.ed.undo_push(message="Delete Operation")
+
+            # Perform the delete operation
+            bpy.ops.mesh.delete(type=type_map[type])
+
+            return {"success": True}
+        elif bpy.context.object.mode == 'OBJECT':
+            bpy.ops.ed.undo_push(message="Delete Operation")
+
+            # Use the object delete operator
+            bpy.ops.object.delete()
+            return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def setParentObjects(
     items: List[Dict[str, Any]], maintainWorldTransform: Optional[bool] = None
 ) -> Dict[str, Any]:
     """
@@ -416,7 +332,7 @@ def batchSetParent(
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "batchSetParent"  # Define tool name for logging
+    tool_name = "setParentObjects"  # Define tool name for logging
     params = {
         "items": items,
         "maintainWorldTransform": maintainWorldTransform,
@@ -551,15 +467,18 @@ def duplicate(
 
 
 def select(
-    ids: List[str],
+    ids:  Optional[List[str]] = None,
+    predicate: Optional[str] = None,
     mode: Optional[Literal["replace", "add", "remove", "toggle"]] = None,
-    domain: Optional[str] = None,
+    domain: Optional[Literal["object", "geometry", "material"]] = None,
+    subtype: Optional[Literal["vertex, edge", "face"]] = None,
 ) -> Dict[str, Any]:
     """
     Select one or more objects
 
     Args:
-    ids (List[str]): Object identifiers to select
+    ids (List[str]): Optional object identifiers to select
+    predicate (str): Optional predicate to filter objects
     mode (Literal["replace", "add", "remove", "toggle"]): Selection mode operation
     domain (str): Optional domain to restrict selection (e.g., 'mesh', 'animation')
 
@@ -570,24 +489,105 @@ def select(
     tool_name = "select"  # Define tool name for logging
     params = {
         "ids": ids,
+        "predicate": predicate,
         "mode": mode,
         "domain": domain,
+        "subtype": subtype,
     }  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
-        # Validation already done
-
         # Implement actual blender API calls
         selection_mode = mode if mode is not None else "replace"
+
+        if domain == "geometry":
+            import bmesh
+
+            # Validate enum values for type
+            if subtype not in ['vertex', 'edge', 'face']:
+                raise ValueError(
+                    f"Parameter 'subtype' must be one of ['vertex', 'edge', 'face'], got {subtype}")
+
+            # Ensure we are in edit mode
+            if bpy.context.object.mode != 'EDIT':
+                raise RuntimeError(
+                    "You must be in edit mode to select geometry.")
+
+            # Get the active mesh
+            obj = bpy.context.object
+            mesh = bmesh.from_edit_mesh(obj.data)
+
+            if subtype == "vertex":
+                bpy.ops.mesh.select_mode(type='VERT')
+            elif subtype == "edge":
+                bpy.ops.mesh.select_mode(type='EDGE')
+            elif subtype == "face":
+                bpy.ops.mesh.select_mode(type='FACE')
+
+            toggle = False
+            if selection_mode == "replace":
+                # Deselect all first
+                bpy.ops.mesh.select_all(action='DESELECT')
+                select = True
+            elif selection_mode == "add":
+                select = True
+            elif selection_mode == "remove":
+                select = False
+            elif selection_mode == "toggle":
+                toggle = True
+                select = True
+            else:
+                raise ValueError(f"Invalid selection mode: {selection_mode}")
+
+            if ids is None and predicate is not None:
+                # Use the predicate to filter vertices, edges, or faces
+                predicate_fn = eval(predicate)
+                for elem in mesh.verts if subtype == "vertex" else mesh.edges if subtype == "edge" else mesh.faces:
+                    if predicate_fn(elem):
+                        elem.select_set(select and (
+                            not toggle or not elem.select_get()))
+
+            elif ids is not None:
+                for id in ids:
+                    index = int(id)
+                    if subtype == "vertex":
+                        mesh.verts[index].select_set(select and (
+                            not toggle or not mesh.verts[index].select_get()))
+                    elif subtype == "edge":
+                        mesh.edges[index].select_set(select and (
+                            not toggle or not mesh.edges[index].select_get()))
+                    elif subtype == "face":
+                        mesh.faces[index].select_set(select and (
+                            not toggle or not mesh.faces[index].select_get()))
+            else:
+                raise ValueError(
+                    "Either 'ids' or 'predicate' must be provided.")
+            # Update the mesh to reflect changes
+            bmesh.update_edit_mesh(obj.data)
+
+            return {"success": True}
+
+        # domain material or object
+
+        if bpy.context.object.mode != 'OBJECT':
+            raise RuntimeError(
+                "You must be in object mode to select objects or materials.")
 
         # Handle replace mode by clearing current selection
         if selection_mode == "replace":
             bpy.ops.object.select_all(action="DESELECT")
 
         # Process each object
-        for obj_id in ids:
-            obj = bpy.data.objects.get(obj_id)
+        if ids is None and predicate is not None:
+            predicate_fn = eval(predicate)
+            objects = [obj for obj in bpy.data.objects if predicate_fn(obj)]
+        elif ids is not None:
+            objects = [bpy.data.objects.get(obj_id) for obj_id in ids]
+        else:
+            raise ValueError(
+                "Either 'ids' or 'predicate' must be provided.")
+
+        for obj in objects:
             if not obj:
                 continue
 
