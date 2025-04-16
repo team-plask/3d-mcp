@@ -61,7 +61,7 @@ function getPluginForTool(toolName: string): PluginConfig {
   return PLUGINS[pluginName!]!;
 }
 
-/**
+/** 
  * Request function to send a POST request to a plug-in
  * @param params Request parameters
  * @returns Response data

@@ -335,16 +335,14 @@ def getCameraView(
                 break
 
         if not main_3d_view:
-            largest_area = max(temp_screen.areas,
-                               key=lambda a: a.width * a.height)
+            largest_area = max(temp_screen.areas, key=lambda a: a.width * a.height)
             largest_area.type = "VIEW_3D"
             main_3d_view = largest_area
 
     def calculate_scene_bounds() -> Tuple[mathutils.Vector, mathutils.Vector]:
         """Calculate bounds of all visible objects for auto-fit."""
         min_co = mathutils.Vector((float("inf"), float("inf"), float("inf")))
-        max_co = mathutils.Vector(
-            (float("-inf"), float("-inf"), float("-inf")))
+        max_co = mathutils.Vector((float("-inf"), float("-inf"), float("-inf")))
 
         has_objects = False
 
@@ -482,8 +480,7 @@ def getCameraView(
             view_configs = {
                 "TOP": {
                     "perspective": "ORTHO",
-                    # Quaternion for top view
-                    "rotation": (1.0, 0.0, 0.0, 0.0),
+                    "rotation": (1.0, 0.0, 0.0, 0.0),  # Quaternion for top view
                     "dimension_func": lambda d: max(d.x, d.y),
                     "filename": f"{base_filepath}_top.png",
                 },
@@ -500,15 +497,13 @@ def getCameraView(
                 },
                 "RIGHT": {
                     "perspective": "ORTHO",
-                    # Quaternion for right view
-                    "rotation": (0.5, 0.5, 0.5, 0.5),
+                    "rotation": (0.5, 0.5, 0.5, 0.5),  # Quaternion for right view
                     "dimension_func": lambda d: max(d.y, d.z),
                     "filename": f"{base_filepath}_right.png",
                 },
                 "PERSP": {
                     "perspective": "PERSP",
-                    # Default perspective
-                    "rotation": (0.8205, 0.4306, 0.1714, 0.3312),
+                    "rotation": (0.8205, 0.4306, 0.1714, 0.3312),  # Default perspective
                     "dimension_func": lambda d: max(d.x, d.y, d.z),
                     "filename": f"{base_filepath}_persp.png",
                 },
@@ -580,8 +575,7 @@ def getCameraView(
                             region_3d.view_location = (0.0, 0.0, 0.0)
 
                         # Force redraw and wait for UI update
-                        bpy.ops.wm.redraw_timer(
-                            type="DRAW_WIN_SWAP", iterations=1)
+                        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
                         bpy.context.view_layer.update()
                         time.sleep(0.3)
 
@@ -591,8 +585,7 @@ def getCameraView(
                         )
                         print(f"Taking {view_name} view screenshot...")
 
-                        context_override = {
-                            "window": original_window, "area": area}
+                        context_override = {"window": original_window, "area": area}
 
                         try:
                             with bpy.context.temp_override(**context_override):
@@ -645,8 +638,7 @@ def getCameraView(
             try:
                 for area in bpy.context.screen.areas:
                     if area.type == "VIEW_3D":
-                        context_override = {
-                            "window": original_window, "area": area}
+                        context_override = {"window": original_window, "area": area}
                         try:
                             with bpy.context.temp_override(**context_override):
                                 bpy.ops.screen.screen_full_area()
