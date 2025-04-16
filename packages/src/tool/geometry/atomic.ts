@@ -208,21 +208,21 @@ const geometryAtomicTools = {
   },
   addNode: {
     description:
-      "Adds a new node to the current edited geometry. Use 'getNodeTypes' and 'getNodeDefinition' to get the available node types and their definitions.",
+      "Adds a new node to the current edited geometry. Use 'getNodeTypes' to get the available node types.",
     parameters: z.object({
-      type: z.enum(["mesh_cube", "mesh_cylinder", "mesh_sphere", "output"]),
+      type: z.string().describe("Node type"),
     }),
     returns: _OperationResponse.extend({
-      nodeId: z.string().describe("Node identifier"),
+      nodeId: z.string().describe("Created node identifier"),
     }),
   },
   setNodeProperty: {
     description:
-      "Sets a property of a node. For the available properties, use 'getNodeDefinition'.",
+      "Sets an input default value of a node. For the available inputs and their type, use 'getNodeInputsOutputs'. Note that vectors are written Vector(x, y, z)",
     parameters: z.object({
       nodeId: z.string().describe("Node identifier"),
       property: z.string().describe("Property name"),
-      value: z.any().describe("Property value"),
+      value: z.string().describe("Property value"),
     }),
     returns: _OperationResponse,
   },
@@ -234,14 +234,30 @@ const geometryAtomicTools = {
       nodeTypes: z.array(z.string()),
     }),
   },
-  getNodeDefinition: {
+  getNodeInputsOutputs: {
     description:
-      "Get detailed information about a specific node type including its inputs and outputs",
+      "Retrieves all input and output socket names for a node, and checks if input sockets can accept a default_value.",
     parameters: z.object({
-      nodeType: z.string().describe("The node type to get information about"),
+      nodeId: z
+        .string()
+        .describe(
+          "The node id to get information about, must exist in the node graph"
+        ),
     }),
     returns: _OperationResponse.extend({
-      nodeDefinition: z.string().describe("Node definition"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
     }),
   },
   connectNodes: {

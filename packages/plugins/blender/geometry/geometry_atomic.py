@@ -59,7 +59,7 @@ def setNodeProperty(nodeId: str, property: str, value: Optional[Any] = None) -> 
         # Set the default value of the input
 
         try:
-            input_socket.default_value = Vector(eval(value))
+            input_socket.default_value = eval(value)
         except Exception as e:
             raise ValueError(
                 f"Failed to set property '{property}' on node '{nodeId}': {str(e)}")
@@ -70,6 +70,76 @@ def setNodeProperty(nodeId: str, property: str, value: Optional[Any] = None) -> 
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
+
+
+def getNodeInputsOutputs(nodeId: str) -> Dict[str, Any]:
+    """
+    Retrieves all input and output socket names for a node, and checks if input sockets can accept a default_value.
+
+    Args:
+    nodeId (str): The node id to get information about, must exist in the node graph
+
+    Returns:
+    success (bool): Operation success status
+    inputs (List[Dict[str, Any]]): List of input sockets with their names and default_value support
+    outputs (List[str]): List of output socket names
+    """
+    tool_name = "getNodeSockets"  # Define tool name for logging
+    params = {"nodeId": nodeId}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Get the active object and its node tree
+        obj = bpy.context.active_object
+        if not obj or obj.type != 'MESH':
+            raise ValueError(
+                "Use startEditGeometry before using this function.")
+
+        # Find the geometry nodes modifier
+        geo_modifier = next(
+            (mod for mod in obj.modifiers if mod.type == 'NODES'), None)
+        if not geo_modifier:
+            raise ValueError(
+                "No Geometry Nodes modifier found on the active object.")
+
+        # Get the node tree
+        node_tree = geo_modifier.node_group
+        if not node_tree:
+            raise ValueError(
+                "No node group found in the Geometry Nodes modifier.")
+
+        # Find the node by its ID
+        node = node_tree.nodes.get(nodeId)
+        if not node:
+            raise ValueError(
+                f"Node with ID '{nodeId}' not found in the node tree.")
+
+        # Retrieve input sockets
+        inputs = []
+        for input_socket in node.inputs:
+            inputs.append({
+                "name": input_socket.name,
+                "type": input_socket.bl_label,
+                "can_accept_default_value": hasattr(input_socket, "default_value")
+            })
+
+        # Retrieve output sockets
+        outputs = []
+        for output_socket in node.outputs:
+            outputs.append({
+                "name": output_socket.name,
+                "type": output_socket.bl_label
+            })
+
+        return {
+            "success": True,
+            "inputs": inputs,
+            "outputs": outputs,
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
 
 
 def addNode(type: Literal["mesh_cube", "mesh_cylinder", "mesh_sphere", "output"]) -> Dict[str, Any]:
@@ -110,21 +180,14 @@ def addNode(type: Literal["mesh_cube", "mesh_cylinder", "mesh_sphere", "output"]
             raise ValueError(
                 "No node group found in the Geometry Nodes modifier.")
 
-        # Add the node
-        map_types = {
-            "mesh_cube": "GeometryNodeMeshCube",
-            "mesh_sphere": "GeometryNodeMeshSphere",
-            "mesh_cylinder": "GeometryNodeMeshCylinder",
-            "output": "NodeGroupOutput",
-        }
-        new_node = node_tree.nodes.new(type=map_types[type])
-
+        new_node = node_tree.nodes.new(type=type)
         # If the node is a "NodeGroupOutput", create an input socket
-        if type == "output":
+        if type == "NodeGroupOutput":
             if "Mesh" not in new_node.inputs:
                 node_tree.interface.new_socket(
                     name="Mesh", in_out='OUTPUT', socket_type='NodeSocketGeometry')
 
+        node_tree.nodes.update()
         return {
             "success": True,
             "nodeId": new_node.name
@@ -280,146 +343,146 @@ def endEditGeometry() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def getNodeDefinition(nodeType: str) -> Dict[str, Any]:
-    """
-    Get detailed information about a specific node type including its inputs and outputs
+# def getNodeDefinition(nodeType: str) -> Dict[str, Any]:
+#     """
+#     Get detailed information about a specific node type including its inputs and outputs
 
-    Args:
-    nodeType (str): The node type to get information about
+#     Args:
+#     nodeType (str): The node type to get information about
 
-    Returns:
-    success (bool): Operation success status
-    nodeDefinition (Dict[str, Any] with keys {"type": str, "description": str, "inputs": List[Dict[str, Any] with keys {"name": str, "type": Literal["int", "float", "vec2", "vec3", "vec4", "bool", "string", "geometry", "material"], "description": str}], "outputs": List[Dict[str, Any] with keys {"name": str, "type": Literal["int", "float", "vec2", "vec3", "vec4", "bool", "string", "geometry", "material"], "description": str}], "properties": Dict[str, Any]}): The nodeDefinition return value
-    """
-    tool_name = "getNodeDefinition"  # Define tool name for logging
-    params = {"nodeType": nodeType}  # Create params dict for logging
-    print(f"Executing {tool_name} in Blender with params: {params}")
+#     Returns:
+#     success (bool): Operation success status
+#     nodeDefinition (Dict[str, Any] with keys {"type": str, "description": str, "inputs": List[Dict[str, Any] with keys {"name": str, "type": Literal["int", "float", "vec2", "vec3", "vec4", "bool", "string", "geometry", "material"], "description": str}], "outputs": List[Dict[str, Any] with keys {"name": str, "type": Literal["int", "float", "vec2", "vec3", "vec4", "bool", "string", "geometry", "material"], "description": str}], "properties": Dict[str, Any]}): The nodeDefinition return value
+#     """
+#     tool_name = "getNodeDefinition"  # Define tool name for logging
+#     params = {"nodeType": nodeType}  # Create params dict for logging
+#     print(f"Executing {tool_name} in Blender with params: {params}")
 
-# Node catalog as a Python dictionary
-    NODE_CATALOG = {
-        "mesh_cube": {
-            "type": "mesh_cube",
-            "description": "Creates a cube mesh geometry",
-            "inputs": [],
-            "outputs": [
-                {
-                    "name": "Mesh",
-                    "type": "geometry",
-                    "description": "The output cube geometry",
-                },
-            ],
-            "properties": {
-                "Size": {
-                    "type": "vec3",
-                    "default": "(1, 1, 1)",
-                    "description": "Width, height, depth of the cube, format (X, Y, Z)",
-                },
-                "Vertices X": {
-                    "type": "int",
-                    "default": "2",
-                    "description": "Number of vertices along X axis",
-                },
-                "Vertices Y": {
-                    "type": "int",
-                    "default": "2",
-                    "description": "Number of vertices along Y axis",
-                },
-                "Vertices Z": {
-                    "type": "int",
-                    "default": "2",
-                    "description": "Number of vertices along Z axis",
-                },
-            },
-        },
-        "mesh_cylinder": {
-            "type": "mesh_cylinder",
-            "description": "Creates a cylinder mesh geometry",
-            "inputs": [],
-            "outputs": [
-                {
-                    "name": "Mesh",
-                    "type": "geometry",
-                    "description": "The output cylinder geometry",
-                },
-            ],
-            "properties": {
-                "vertices": {
-                    "type": "int",
-                    "default": "32",
-                    "description": "Number of vertices around the circumference",
-                },
-                "radius": {
-                    "type": "float",
-                    "default": "1",
-                    "description": "Radius of the cylinder",
-                },
-                "depth": {
-                    "type": "float",
-                    "default": "2",
-                    "description": "Depth of the cylinder",
-                },
-            },
-        },
-        "mesh_sphere": {
-            "type": "mesh_sphere",
-            "description": "Creates a sphere mesh geometry",
-            "inputs": [],
-            "outputs": [
-                {
-                    "name": "Mesh",
-                    "type": "geometry",
-                    "description": "The output sphere geometry",
-                },
-            ],
-            "properties": {
-                "radius": {
-                    "type": "float",
-                    "default": "1",
-                    "description": "Radius of the sphere",
-                },
-                "rings": {
-                    "type": "int",
-                    "default": "16",
-                    "description": "Number of horizontal divisions",
-                },
-                "segments": {
-                    "type": "int",
-                    "default": "32",
-                    "description": "Number of vertical divisions",
-                },
-            },
-        },
-        "output": {
-            "type": "output",
-            "description": "Final output node for the geometry",
-            "inputs": [
-                {
-                    "name": "Mesh",
-                    "type": "geometry",
-                    "description": "Input geometry to output",
-                },
-            ],
-            "outputs": [],
-            "properties": {},
-        },
-    }
+# # Node catalog as a Python dictionary
+#     NODE_CATALOG = {
+#         "mesh_cube": {
+#             "type": "mesh_cube",
+#             "description": "Creates a cube mesh geometry",
+#             "inputs": [],
+#             "outputs": [
+#                 {
+#                     "name": "Mesh",
+#                     "type": "geometry",
+#                     "description": "The output cube geometry",
+#                 },
+#             ],
+#             "properties": {
+#                 "Size": {
+#                     "type": "vec3",
+#                     "default": "(1, 1, 1)",
+#                     "description": "Width, height, depth of the cube, format (X, Y, Z)",
+#                 },
+#                 "Vertices X": {
+#                     "type": "int",
+#                     "default": "2",
+#                     "description": "Number of vertices along X axis",
+#                 },
+#                 "Vertices Y": {
+#                     "type": "int",
+#                     "default": "2",
+#                     "description": "Number of vertices along Y axis",
+#                 },
+#                 "Vertices Z": {
+#                     "type": "int",
+#                     "default": "2",
+#                     "description": "Number of vertices along Z axis",
+#                 },
+#             },
+#         },
+#         "mesh_cylinder": {
+#             "type": "mesh_cylinder",
+#             "description": "Creates a cylinder mesh geometry",
+#             "inputs": [],
+#             "outputs": [
+#                 {
+#                     "name": "Mesh",
+#                     "type": "geometry",
+#                     "description": "The output cylinder geometry",
+#                 },
+#             ],
+#             "properties": {
+#                 "vertices": {
+#                     "type": "int",
+#                     "default": "32",
+#                     "description": "Number of vertices around the circumference",
+#                 },
+#                 "radius": {
+#                     "type": "float",
+#                     "default": "1",
+#                     "description": "Radius of the cylinder",
+#                 },
+#                 "depth": {
+#                     "type": "float",
+#                     "default": "2",
+#                     "description": "Depth of the cylinder",
+#                 },
+#             },
+#         },
+#         "mesh_sphere": {
+#             "type": "mesh_sphere",
+#             "description": "Creates a sphere mesh geometry",
+#             "inputs": [],
+#             "outputs": [
+#                 {
+#                     "name": "Mesh",
+#                     "type": "geometry",
+#                     "description": "The output sphere geometry",
+#                 },
+#             ],
+#             "properties": {
+#                 "radius": {
+#                     "type": "float",
+#                     "default": "1",
+#                     "description": "Radius of the sphere",
+#                 },
+#                 "rings": {
+#                     "type": "int",
+#                     "default": "16",
+#                     "description": "Number of horizontal divisions",
+#                 },
+#                 "segments": {
+#                     "type": "int",
+#                     "default": "32",
+#                     "description": "Number of vertical divisions",
+#                 },
+#             },
+#         },
+#         "output": {
+#             "type": "output",
+#             "description": "Final output node for the geometry",
+#             "inputs": [
+#                 {
+#                     "name": "Mesh",
+#                     "type": "geometry",
+#                     "description": "Input geometry to output",
+#                 },
+#             ],
+#             "outputs": [],
+#             "properties": {},
+#         },
+#     }
 
-    try:
-        # Validate the nodeType
-        if nodeType not in NODE_CATALOG:
-            raise ValueError(f"Node type '{nodeType}' is not recognized.")
+#     try:
+#         # Validate the nodeType
+#         if nodeType not in NODE_CATALOG:
+#             raise ValueError(f"Node type '{nodeType}' is not recognized.")
 
-        # Retrieve the node definition
-        node_definition = NODE_CATALOG[nodeType]
+#         # Retrieve the node definition
+#         node_definition = NODE_CATALOG[nodeType]
 
-        return {
-            "success": True,
-            "nodeDefinition": node_definition,
-        }
+#         return {
+#             "success": True,
+#             "nodeDefinition": node_definition,
+#         }
 
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
+#     except Exception as e:
+#         print(f"Error in {tool_name}: {str(e)}")
+#         return {"success": False, "error": str(e)}
 
 
 def getNodeTypes() -> Dict[str, Any]:
@@ -440,7 +503,7 @@ def getNodeTypes() -> Dict[str, Any]:
     try:
         return {
             "success": True,
-            "nodeTypes": ["mesh_cube", "mesh_sphere", "mesh_cylinder", "output"]
+            "nodeTypes": ['GeometryNodeMeshCube', 'GeometryNodeDistributePointsInVolume', 'GeometryNodeDistributePointsOnFaces', 'GeometryNodePoints', 'GeometryNodePointsToCurves', 'GeometryNodePointsToVertices', 'GeometryNodePointsToVolume', 'GeometryNodeSetPointRadius', 'GeometryNodeSetShadeSmooth', 'GeometryNodeSampleNearestSurface', 'GeometryNodeSampleUVSurface', 'GeometryNodeInputMeshEdgeAngle', 'GeometryNodeInputMeshEdgeNeighbors', 'GeometryNodeInputMeshEdgeVertices', 'GeometryNodeEdgesToFaceGroups', 'GeometryNodeInputMeshFaceArea', 'GeometryNodeMeshFaceSetBoundaries', 'GeometryNodeInputMeshFaceNeighbors', 'GeometryNodeInputMeshFaceIsPlanar', 'GeometryNodeInputShadeSmooth', 'GeometryNodeInputEdgeSmooth', 'GeometryNodeInputMeshIsland', 'GeometryNodeInputShortestEdgePaths', 'GeometryNodeInputMeshVertexNeighbors', 'GeometryNodeMeshCone', 'GeometryNodeMeshCylinder', 'GeometryNodeMeshGrid', 'GeometryNodeMeshIcoSphere', 'GeometryNodeMeshCircle', 'GeometryNodeMeshLine', 'GeometryNodeMeshUVSphere', 'GeometryNodeGeometryToInstance', 'GeometryNodeJoinGeometry', 'GeometryNodeSetGeometryName', 'GeometryNodeSetID', 'GeometryNodeSetPosition', 'GeometryNodeDualMesh', 'GeometryNodeEdgePathsToCurves', 'GeometryNodeEdgePathsToSelection', 'GeometryNodeExtrudeMesh', 'GeometryNodeFlipFaces', 'GeometryNodeMeshBoolean', 'GeometryNodeMeshToCurve', 'GeometryNodeMeshToPoints', 'GeometryNodeMeshToVolume', 'GeometryNodeScaleElements', 'GeometryNodeSplitEdges', 'GeometryNodeSubdivideMesh', 'GeometryNodeSubdivisionSurface', 'GeometryNodeTriangulate', 'GeometryNodeIndexSwitch', 'GeometryNodeMenuSwitch', 'GeometryNodeSwitch', 'GeometryNodeViewer', 'GeometryNodeWarning', 'GeometryNodeInstanceOnPoints', 'GeometryNodeInstancesToPoints', 'GeometryNodeRealizeInstances', 'GeometryNodeRotateInstances', 'GeometryNodeScaleInstances', 'GeometryNodeTranslateInstances', 'GeometryNodeSetInstanceTransform', 'GeometryNodeInstanceTransform', 'GeometryNodeInputInstanceRotation', 'GeometryNodeInputInstanceScale']
         }
 
     except Exception as e:
