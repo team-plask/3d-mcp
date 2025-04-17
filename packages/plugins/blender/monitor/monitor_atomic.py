@@ -11,21 +11,21 @@ import traceback
 import subprocess
 import sys
 
-try:
-    from PIL import Image
-except:
-    import sysconfig
-    import platform
+# try:
+#     from PIL import Image
+# except:
+#     import sysconfig
+#     import platform
 
-    python_exe = sys.executable  # This works on macOS/Linux/Windows
+#     python_exe = sys.executable  # This works on macOS/Linux/Windows
 
-    try:
-        subprocess.call([python_exe, "-m", "ensurepip"])
-        subprocess.call(
-            [python_exe, "-m", "pip", "install", "--upgrade", "pip"])
-        subprocess.call([python_exe, "-m", "pip", "install", "pillow"])
-    except Exception as install_error:
-        print(f"Failed to install Pillow: {install_error}")
+#     try:
+#         subprocess.call([python_exe, "-m", "ensurepip"])
+#         subprocess.call(
+#             [python_exe, "-m", "pip", "install", "--upgrade", "pip"])
+#         subprocess.call([python_exe, "-m", "pip", "install", "pillow"])
+#     except Exception as install_error:
+#         print(f"Failed to install Pillow: {install_error}")
 
 
 def getSceneGraph() -> Dict[str, Any]:

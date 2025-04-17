@@ -560,3 +560,103 @@ TSharedPtr<FJsonObject> UMCPCoreTools::transformObjects(const TSharedPtr<FJsonOb
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for core atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "CoreTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPCoreTools::UMCPCoreTools()
+{
+    RegisterTools();
+}
+
+void UMCPCoreTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("delete", FMCPToolDelegate::CreateUObject(this, &UMCPCoreTools::delete));
+    FMCPProtocolHandler::Get().RegisterTool("transform", FMCPToolDelegate::CreateUObject(this, &UMCPCoreTools::transform));
+}
+
+TSharedPtr<FJsonObject> UMCPCoreTools::delete(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing delete in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        // Extract type (FString)
+        FString type;
+        if (Params->TryGetStringField("type", type)) {
+            // Validate enum value for type
+            static const TArray<FString> ValidtypeValues = {TEXT("vertex"), TEXT("edge"), TEXT("face"), TEXT("only_faces"), TEXT("only_edges_and_faces")};
+            if (!ValidtypeValues.Contains(type)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid type value: %s"), *type);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid type value");
+                return Response;
+            }
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for delete
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in delete: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPCoreTools::transform(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing transform in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {
+        // Extract complex parameter translation 
+        const TSharedPtr<FJsonValue>* translationValue = nullptr;
+        if (Params->TryGetField("translation", translationValue)) {
+        }
+
+        // Extract complex parameter rotation 
+        const TSharedPtr<FJsonValue>* rotationValue = nullptr;
+        if (Params->TryGetField("rotation", rotationValue)) {
+        }
+
+        // Extract complex parameter scale 
+        const TSharedPtr<FJsonValue>* scaleValue = nullptr;
+        if (Params->TryGetField("scale", scaleValue)) {
+        }
+
+        // Extract complex parameter proportional 
+        const TSharedPtr<FJsonValue>* proportionalValue = nullptr;
+        if (Params->TryGetField("proportional", proportionalValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for transform
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in transform: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

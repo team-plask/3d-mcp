@@ -6,6 +6,76 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
+def delete(type: Optional[Literal["vertex", "edge", "face", "only_faces", "only_edges_and_faces"]] = None) -> Dict[str, Any]:
+
+    """
+    Deletes the current selection. Additional optional type can be provided to filter the deletion
+    
+    Args:
+    type (Literal["vertex", "edge", "face", "only_faces", "only_edges_and_faces"]): Type of elements to delete. Only relevant for geometry domain, when a mesh is being edited. Can be 'vertex', 'edge', 'face', 'only_faces' or 'only_edges_and_faces'
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "delete"  # Define tool name for logging
+    params = {"type": type}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+
+        # Validate enum values for type
+        if type is not None and type not in ['vertex','edge','face','only_faces','only_edges_and_faces']:
+            raise ValueError(f"Parameter 'type' must be one of ['vertex','edge','face','only_faces','only_edges_and_faces'], got {type}")
+      
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+def transform(translation: Optional[List[float]] = None, rotation: Optional[List[float]] = None, scale: Optional[List[float]] = None, proportional: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    """
+    Apply transformations (translate, rotate, scale) to selected elements
+    
+    Args:
+    translation (List[float]): Translation vector
+    rotation (List[float]): Rotation vector (Euler angles). Order is XYZ
+    scale (List[float]): Scaling vector
+    proportional (Dict[str, Any] with keys {"radius": float}): Proportional edition options. If not provided, proportional editing is disabled.
+        
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "transform"  # Define tool name for logging
+    params = {"translation": translation, "rotation": rotation, "scale": scale, "proportional": proportional}  # Create params dict for logging
+    print(f"Executing {tool_name} in Maya with params: {params}")
+    
+    try:
+        # No parameters to validate
+        
+        # TODO: Implement actual maya API calls
+        # This is a placeholder implementation
+        
+        return {
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+ # === NEWLY GENERATED ===
+
+
+
 def setParentObjects(items: List[Dict[str, Any]], maintainWorldTransform: Optional[bool] = None) -> Dict[str, Any]:
 
     """
@@ -456,4 +526,6 @@ def select(ids: List[str], mode: Optional[Literal["replace", "add", "remove", "t
 
 
  # === NEWLY GENERATED ===
+
+
 
