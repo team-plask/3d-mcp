@@ -216,6 +216,198 @@ const geometryAtomicTools = {
       nodeId: z.string().describe("Created node identifier"),
     }),
   },
+  addNodeMeshCube: {
+    description: "Adds a new mesh cube node to the current edited geometry.",
+    parameters: z.object({
+      Size: z.array(z.number()).length(3).default([1, 1, 1]).optional(),
+      Vertices_X: z.number().int().default(2).optional(),
+      Vertices_Y: z.number().int().default(2).optional(),
+      Vertices_Z: z.number().int().default(2).optional(),
+    }),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodeMeshCylinder: {
+    description:
+      "Adds a new mesh cylinder node to the current edited geometry.",
+    parameters: z.object({
+      Vertices: z.number().int().default(32).optional(),
+      Radius: z.number().default(1).optional(),
+      Depth: z.number().default(2).optional(),
+      Side_Segments: z.number().int().default(1).optional(),
+      Fill_Segments: z.number().int().default(1).optional(),
+    }),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodeMeshUVSphere: {
+    description: "Adds a new mesh sphere node to the current edited geometry.",
+    parameters: z.object({
+      Radius: z.number().default(1).optional(),
+      Rings: z.number().int().default(16).optional(),
+      Segments: z.number().int().default(32).optional(),
+    }),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodeMeshCone: {
+    description: "Adds a new mesh cone node to the current edited geometry.",
+    parameters: z.object({
+      Vertices: z.number().int().default(32).optional(),
+      Radius_Top: z.number().default(0).optional(),
+      Radius_Bottom: z.number().default(1).optional(),
+      Depth: z.number().default(2).optional(),
+      Side_Segments: z.number().int().default(1).optional(),
+      Fill_Segments: z.number().int().default(1).optional(),
+    }),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodeSetPosition: {
+    description: "Adds a new set position node to the current edited geometry.",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodePositionInput: {
+    description:
+      "Adds a new position input node to the current edited geometry.",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodeMath: {
+    description: "Adds a new math node to the current edited geometry.",
+    parameters: z.object({
+      operation: z
+        .enum(["Arctan2", "Multiply", "Add", "Sine"])
+        .describe("Math operation"),
+    }),
+  },
+  addNodeSeparateXYZ: {
+    description: "Adds a new separate XYZ node to the current edited geometry.",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
+  addNodeCombineXYZ: {
+    description: "Adds a new combine XYZ node to the current edited geometry.",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      nodeId: z.string().describe("Created node identifier"),
+      inputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+          can_accept_default_value: z.boolean(),
+        })
+        .describe("Node inputs"),
+      outputs: z
+        .object({
+          name: z.string(),
+          type: z.string(),
+        })
+        .describe("Node outputs"),
+    }),
+  },
   setNodeProperty: {
     description:
       "Sets an input default value of a node. For the available inputs and their type, use 'getNodeInputsOutputs'. Note that vectors are written Vector(x, y, z)",

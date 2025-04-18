@@ -5,6 +5,388 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
+def addNodeMeshCube(Size: Optional[List[float]] = None, Vertices_X: Optional[int] = None, Vertices_Y: Optional[int] = None, Vertices_Z: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Adds a new mesh cube node to the current edited geometry.
+
+    Args:
+    Size (List[float]): The Size parameter
+    Vertices_X (int): The Vertices_X parameter
+    Vertices_Y (int): The Vertices_Y parameter
+    Vertices_Z (int): The Vertices_Z parameter
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeMeshCube"  # Define tool name for logging
+    params = {"Size": Size, "Vertices_X": Vertices_X, "Vertices_Y": Vertices_Y,
+              "Vertices_Z": Vertices_Z}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        node_result = addNodeType("GeometryNodeMeshCube", {
+            "Size": Size,
+            "Vertices_X": Vertices_X,
+            "Vertices_Y": Vertices_Y,
+            "Vertices_Z": Vertices_Z
+        })
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
+def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    # Get the active object and its node tree
+    obj = bpy.context.active_object
+    if not obj or obj.type != 'MESH':
+        raise ValueError(
+            "Use startEditGeometry before using this function.")
+
+    if not obj.modifiers:
+        raise ValueError(
+            "Invalid object. Use startEditGeometry before using this function")
+
+    # Find the geometry nodes modifier
+    geo_modifier = next(
+        (mod for mod in obj.modifiers if mod.type == 'NODES'), None)
+    if not geo_modifier:
+        raise ValueError(
+            "Invalid object. Use startEditGeometry before using this function")
+
+    # Get the node tree
+    node_tree = geo_modifier.node_group
+    if not node_tree:
+        raise ValueError(
+            "No node group found in the Geometry Nodes modifier.")
+    # No parameters to validate
+    new_node = node_tree.nodes.new(type=type)
+    node_tree.nodes.update()
+    result = getNodeInputsOutputs(new_node.name)
+    inputs, outputs = result["inputs"], result["outputs"]
+
+    # Set properties
+    if params is not None:
+        for key, value in params.items():
+            propName = key.replace("_", " ")
+            input_socket = next(
+                (inp for inp in new_node.inputs if inp.name == propName), None)
+            if not input_socket:
+                raise ValueError(
+                    f"Input named '{property}' not found on node '{new_node.name}'.")
+            try:
+                if isinstance(value, list):
+                    value = tuple(value)
+                input_socket.default_value = value
+            except Exception as e:
+                raise ValueError(
+                    f"Failed to set property '{property}' on node '{new_node.name}': {str(e)}")
+    return {"nodeId": new_node.name, "inputs": inputs, "outputs": outputs, "node": new_node, "success": True}
+
+
+def addNodeCombineXYZ() -> Dict[str, Any]:
+    """
+    Adds a new combine XYZ node to the current edited geometry.
+
+    Args:
+    No parameters
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeCombineXYZ"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        node_result = addNodeType("ShaderNodeCombineXYZ")
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodeMath(operation: Literal["Arctan2", "Multiply", "Add", "Sine"]) -> Dict[str, Any]:
+    """
+    Adds a new math node to the current edited geometry.
+
+    Args:
+    operation (Literal["Arctan2", "Multiply", "Add", "Sine"]): Math operation
+
+    Returns:
+    Dict[str, bool]: Operation response with success status
+    """
+    tool_name = "addNodeMath"  # Define tool name for logging
+    params = {"operation": operation}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+
+        # Validate enum values for operation
+        if operation is not None and operation not in ['Arctan2', 'Multiply', 'Add', 'Sine']:
+            raise ValueError(
+                f"Parameter 'operation' must be one of ['Arctan2','Multiply','Add','Sine'], got {operation}")
+
+        node_result = addNodeType("ShaderNodeMath")
+        node_result["node"].operation = operation.upper()
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodeMeshCone(Vertices: Optional[int] = None, Radius_Top: Optional[float] = None, Radius_Bottom: Optional[float] = None, Depth: Optional[float] = None, Side_Segments: Optional[int] = None, Fill_Segments: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Adds a new mesh cone node to the current edited geometry.
+
+    Args:
+    Vertices (int): The Vertices parameter
+    Radius_Top (float): The Radius_Top parameter
+    Radius_Bottom (float): The Radius_Bottom parameter
+    Depth (float): The Depth parameter
+    Side_Segments (int): The Side_Segments parameter
+    Fill_Segments (int): The Fill_Segments parameter
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeMeshCone"  # Define tool name for logging
+    params = {"Vertices": Vertices, "Radius_Top": Radius_Top, "Radius_Bottom": Radius_Bottom, "Depth": Depth,
+              # Create params dict for logging
+              "Side_Segments": Side_Segments, "Fill_Segments": Fill_Segments}
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        node_result = addNodeType("GeometryNodeMeshCone", {
+                                  "Vertices": Vertices, "Radius_Top": Radius_Top, "Radius_Bottom": Radius_Bottom, "Depth": Depth, })
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodeMeshCylinder(Vertices: Optional[int] = None, Radius: Optional[float] = None, Depth: Optional[float] = None, Side_Segments: Optional[int] = None, Fill_Segments: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Adds a new mesh cylinder node to the current edited geometry.
+
+    Args:
+    Vertices (int): The Vertices parameter
+    Radius (float): The Radius parameter
+    Depth (float): The Depth parameter
+    Side_Segments (int): The Side_Segments parameter
+    Fill_Segments (int): The Fill_Segments parameter
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeMeshCylinder"  # Define tool name for logging
+    params = {"Vertices": Vertices, "Radius": Radius, "Depth": Depth, "Side_Segments": Side_Segments,
+              "Fill_Segments": Fill_Segments}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        node_result = addNodeType("GeometryNodeMeshCylinder", {
+                                  "Vertices": Vertices, "Radius": Radius, "Depth": Depth, "Side_Segments": Side_Segments, "Fill_Segments": Fill_Segments})
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodeMeshUVSphere(Radius: Optional[float] = None, Rings: Optional[int] = None, Segments: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Adds a new mesh sphere node to the current edited geometry.
+
+    Args:
+    Radius (float): The Radius parameter
+    Rings (int): The Rings parameter
+    Segments (int): The Segments parameter
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeMeshUVSphere"  # Define tool name for logging
+    # Create params dict for logging
+    params = {"Radius": Radius, "Rings": Rings, "Segments": Segments}
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        node_result = addNodeType("GeometryNodeMeshUVSphere", {
+            "Radius": Radius, "Rings": Rings, "Segments": Segments})
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodePositionInput() -> Dict[str, Any]:
+    """
+    Adds a new position input node to the current edited geometry.
+
+    Args:
+    No parameters
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodePositionInput"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        node_result = addNodeType("GeometryNodeInputPosition")
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodeSeparateXYZ() -> Dict[str, Any]:
+    """
+    Adds a new separate XYZ node to the current edited geometry.
+
+    Args:
+    No parameters
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeSeparateXYZ"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        node_result = addNodeType("ShaderNodeSeparateXYZ")
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def addNodeSetPosition() -> Dict[str, Any]:
+    """
+    Adds a new set position node to the current edited geometry.
+
+    Args:
+    No parameters
+
+    Returns:
+    success (bool): Operation success status
+    nodeId (str): Created node identifier
+    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
+    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
+    """
+    tool_name = "addNodeSetPosition"  # Define tool name for logging
+    params = {}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # No parameters to validate
+
+        node_result = addNodeType("GeometryNodeSetPosition")
+
+        return {
+            "success": True,
+            "nodeId": node_result["nodeId"],
+            "inputs": node_result["inputs"],
+            "outputs": node_result["outputs"]
+        }
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
 def setNodeProperty(nodeId: str, property: str, value: Optional[Any] = None) -> Dict[str, Any]:
     """
     Sets a property of a node. For the available properties, use 'getNodeDefinition'.
@@ -309,6 +691,12 @@ def createGeometry(id: str) -> Dict[str, Any]:
             name=f"{id}_NodeGroup", type='GeometryNodeTree')
         geo_modifier.node_group = node_group
 
+        new_node = node_group.nodes.new(type="NodeGroupOutput")
+        # Create an input socket
+        if "Mesh" not in new_node.inputs:
+            node_group.interface.new_socket(
+                name="Mesh", in_out='OUTPUT', socket_type='NodeSocketGeometry')
+
         return {
             "success": True,
         }
@@ -553,3 +941,5 @@ def startEditGeometry(id: str) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
+
+ # Function template for adding a node
