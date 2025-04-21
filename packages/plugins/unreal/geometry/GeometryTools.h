@@ -137,3 +137,35 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> setNodeProperty(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for geometry atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "GeometryTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the geometry tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPGeometryTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPGeometryTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Retrieves all input and output socket names for a node, and checks if input sockets can accept a default_value.
+     * * @param nodeId - The node id to get information about, must exist in the node graph (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> getNodeInputsOutputs(const TSharedPtr<FJsonObject>& Params);
+};

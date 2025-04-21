@@ -3757,3 +3757,122 @@ TSharedPtr<FJsonObject> UMCPModelTools::getGeometryse(const TSharedPtr<FJsonObje
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for model atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "ModelTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPModelTools::UMCPModelTools()
+{
+    RegisterTools();
+}
+
+void UMCPModelTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("applyModifier", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::applyModifier));
+    FMCPProtocolHandler::Get().RegisterTool("setProportionalEditing", FMCPToolDelegate::CreateUObject(this, &UMCPModelTools::setProportionalEditing));
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::applyModifier(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing applyModifier in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter id
+        if (!Params->HasField("id")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter id is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter id is missing");
+            return Response;
+        }
+        // Extract id (FString)
+        FString id;
+        if (Params->TryGetStringField("id", id)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for applyModifier
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in applyModifier: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPModelTools::setProportionalEditing(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setProportionalEditing in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter enabled
+        if (!Params->HasField("enabled")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter enabled is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter enabled is missing");
+            return Response;
+        }
+        // Extract enabled (bool)  
+        bool enabled = false;
+        if (Params->TryGetBoolField("enabled", enabled)) {
+        }
+        // Check required parameter falloff
+        if (!Params->HasField("falloff")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter falloff is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter falloff is missing");
+            return Response;
+        }
+        // Extract falloff (FString)
+        FString falloff;
+        if (Params->TryGetStringField("falloff", falloff)) {
+            // Validate enum value for falloff
+            static const TArray<FString> ValidfalloffValues = {TEXT("constant"), TEXT("linear"), TEXT("sharp"), TEXT("root"), TEXT("smooth"), TEXT("sphere"), TEXT("random")};
+            if (!ValidfalloffValues.Contains(falloff)) {
+                UE_LOG(LogMCPPlugin, Error, TEXT("Invalid falloff value: %s"), *falloff);
+                Response->SetBoolField("success", false);
+                Response->SetStringField("error", "Invalid falloff value");
+                return Response;
+            }
+        }
+        // Check required parameter radius
+        if (!Params->HasField("radius")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter radius is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter radius is missing");
+            return Response;
+        }
+        // Extract radius (double)
+        double radius = 0;
+        if (Params->TryGetNumberField("radius", radius)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setProportionalEditing
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setProportionalEditing: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

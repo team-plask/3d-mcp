@@ -422,6 +422,32 @@ const modelAtomicTools = {
     }),
     returns: _OperationResponse,
   },
+  applyModifier: {
+    description: "Apply a modifier to the current edited mesh",
+    parameters: z.object({
+      id: z.string().describe("Modifier identifier"),
+    }),
+    returns: _OperationResponse,
+  },
+  setProportionalEditing: {
+    description: "Set proportional editing mode",
+    parameters: z.object({
+      enabled: z.boolean().describe("Enable or disable proportional editing"),
+      falloff: z
+        .enum([
+          "constant",
+          "linear",
+          "sharp",
+          "root",
+          "smooth",
+          "sphere",
+          "random",
+        ])
+        .describe("Falloff type"),
+      radius: z.number().describe("Proportional editing radius"),
+    }),
+    returns: _OperationResponse,
+  },
 } as const;
 
 export type ModelingTool = keyof typeof modelAtomicTools;
