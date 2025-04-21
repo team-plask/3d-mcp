@@ -188,7 +188,10 @@ const NODES = z.discriminatedUnion("type", [
 const geometryAtomicTools = {
   createGeometry: {
     description:
-      "Creates a new geometry object. Starting point for every geometry creation.",
+      "Creates a new geometry object. Starting point for every geometry creation. \
+      The geometry is built using a node graph. \
+      The node graph output is already added in the node graph, and its id is 'Group Output'. \
+      Its input port 'Mesh' is the output of the geometry.",
     parameters: z.object({
       id: z.string().describe("Object identifier. Must be unique."),
     }),
@@ -367,6 +370,7 @@ const geometryAtomicTools = {
         .enum(["Arctan2", "Multiply", "Add", "Sine"])
         .describe("Math operation"),
     }),
+    returns: _OperationResponse,
   },
   addNodeSeparateXYZ: {
     description: "Adds a new separate XYZ node to the current edited geometry.",
