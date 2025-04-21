@@ -209,16 +209,16 @@ const geometryAtomicTools = {
     parameters: z.object({}),
     returns: _OperationResponse,
   },
-  addNode: {
-    description:
-      "Adds a new node to the current edited geometry. Use 'getNodeTypes' to get the available node types.",
-    parameters: z.object({
-      type: z.string().describe("Node type"),
-    }),
-    returns: _OperationResponse.extend({
-      nodeId: z.string().describe("Created node identifier"),
-    }),
-  },
+  // addNode: {
+  //   description:
+  //     "Adds a new node to the current edited geometry. Use 'getNodeTypes' to get the available node types.",
+  //   parameters: z.object({
+  //     type: z.string().describe("Node type"),
+  //   }),
+  //   returns: _OperationResponse.extend({
+  //     nodeId: z.string().describe("Created node identifier"),
+  //   }),
+  // },
   addNodeMeshCube: {
     description: "Adds a new mesh cube node to the current edited geometry.",
     parameters: z.object({

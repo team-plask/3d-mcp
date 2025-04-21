@@ -75,6 +75,14 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
     # No parameters to validate
     new_node = node_tree.nodes.new(type=type)
     node_tree.nodes.update()
+    if hasattr(bpy.ops.node, "na_batch_arrange"):
+        # Ensure the Node Editor is active
+        for area in bpy.context.screen.areas:
+            if area.type == 'NODE_EDITOR':
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        with bpy.context.temp_override(area=area, region=region):
+                            bpy.ops.node.na_batch_arrange()
     result = getNodeInputsOutputs(new_node.name)
     inputs, outputs = result["inputs"], result["outputs"]
 
@@ -643,6 +651,15 @@ def connectNodes(fromNode: str, fromPort: str, toNode: str, toPort: str) -> Dict
 
         # Create the link
         node_tree.links.new(source_socket, target_socket)
+
+        if hasattr(bpy.ops.node, "na_batch_arrange"):
+            # Ensure the Node Editor is active
+            for area in bpy.context.screen.areas:
+                if area.type == 'NODE_EDITOR':
+                    for region in area.regions:
+                        if region.type == 'WINDOW':
+                            with bpy.context.temp_override(area=area, region=region):
+                                bpy.ops.node.na_batch_arrange()
 
         return {
             "success": True
