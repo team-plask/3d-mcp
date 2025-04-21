@@ -412,12 +412,14 @@ const geometryAtomicTools = {
         .describe("Node outputs"),
     }),
   },
-  setNodeProperty: {
+  setNodePropertyByIndex: {
     description:
       "Sets an input default value of a node. For the available inputs and their type, use 'getNodeInputsOutputs'. Note that vectors are written Vector(x, y, z)",
     parameters: z.object({
       nodeId: z.string().describe("Node identifier"),
-      property: z.string().describe("Property name"),
+      propertyIndex: z
+        .number()
+        .describe("Index of the property in the list of inputs"),
       value: z.string().describe("Property value"),
     }),
     returns: _OperationResponse,

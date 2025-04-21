@@ -387,20 +387,20 @@ def addNodeSetPosition() -> Dict[str, Any]:
  # === NEWLY GENERATED ===
 
 
-def setNodeProperty(nodeId: str, property: str, value: Optional[Any] = None) -> Dict[str, Any]:
+def setNodePropertyByIndex(nodeId: str, propertyIndex: int, value: Optional[Any] = None) -> Dict[str, Any]:
     """
     Sets a property of a node. For the available properties, use 'getNodeDefinition'.
 
     Args:
     nodeId (str): Node identifier
-    property (str): Property name
+    propertyIndex (str): Property index
     value (Any): Property value
 
     Returns:
     success (bool): Operation success status
     """
-    tool_name = "setNodeProperty"  # Define tool name for logging
-    params = {"nodeId": nodeId, "property": property,
+    tool_name = "setNodePropertyByIndex"  # Define tool name for logging
+    params = {"nodeId": nodeId, "property": propertyIndex,
               "value": value}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
@@ -432,11 +432,12 @@ def setNodeProperty(nodeId: str, property: str, value: Optional[Any] = None) -> 
                 f"Node with ID '{nodeId}' not found in the node tree.")
 
         # Find the input named 'property' and set its default value
-        input_socket = next(
-            (inp for inp in node.inputs if inp.name == property), None)
+        # input_socket = next(
+        #     (inp for inp in node.inputs if inp.name == property), None)
+        input_socket = node.inputs[propertyIndex]
         if not input_socket:
             raise ValueError(
-                f"Input named '{property}' not found on node '{nodeId}'.")
+                f"Input'{propertyIndex}' not found on node '{nodeId}'.")
 
         # Set the default value of the input
 
