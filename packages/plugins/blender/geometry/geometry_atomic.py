@@ -5,7 +5,7 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
-def addNodeMeshCube(Size: Optional[List[float]] = None, Vertices_X: Optional[int] = None, Vertices_Y: Optional[int] = None, Vertices_Z: Optional[int] = None) -> Dict[str, Any]:
+def addNodeMeshCube(Size: Optional[List[float]] = [1, 1, 1], Vertices_X: Optional[int] = 2, Vertices_Y: Optional[int] = 2, Vertices_Z: Optional[int] = 2) -> Dict[str, Any]:
     """
     Adds a new mesh cube node to the current edited geometry.
 
@@ -96,9 +96,10 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
                 raise ValueError(
                     f"Input named '{property}' not found on node '{new_node.name}'.")
             try:
-                if isinstance(value, list):
-                    value = tuple(value)
-                input_socket.default_value = value
+                if value is not None:
+                    if isinstance(value, list):
+                        value = tuple(value)
+                    input_socket.default_value = value
             except Exception as e:
                 raise ValueError(
                     f"Failed to set property '{property}' on node '{new_node.name}': {str(e)}")
@@ -135,12 +136,12 @@ def addNodeCombineXYZ() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def addNodeMath(operation: Literal["Arctan2", "Multiply", "Add", "Sine"]) -> Dict[str, Any]:
+def addNodeMath(operation: Literal['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREES']) -> Dict[str, Any]:
     """
     Adds a new math node to the current edited geometry.
 
     Args:
-    operation (Literal["Arctan2", "Multiply", "Add", "Sine"]): Math operation
+    operation (Literal['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREES']): Math operation
 
     Returns:
     Dict[str, bool]: Operation response with success status
@@ -152,12 +153,12 @@ def addNodeMath(operation: Literal["Arctan2", "Multiply", "Add", "Sine"]) -> Dic
     try:
 
         # Validate enum values for operation
-        if operation is not None and operation not in ['Arctan2', 'Multiply', 'Add', 'Sine']:
+        if operation is not None and operation not in ['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREES']:
             raise ValueError(
-                f"Parameter 'operation' must be one of ['Arctan2','Multiply','Add','Sine'], got {operation}")
+                f"Parameter 'operation' must be one of ['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREES'], got {operation}")
 
         node_result = addNodeType("ShaderNodeMath")
-        node_result["node"].operation = operation.upper()
+        node_result["node"].operation = operation
 
         return {
             "success": True,
