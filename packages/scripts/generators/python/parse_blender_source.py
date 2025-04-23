@@ -278,9 +278,28 @@ def find_files_with_enum(base_path, enum_name):
             if file.endswith('.cc'):
                 filepath = os.path.join(root, file)
                 with open(filepath, 'r', encoding='utf-8') as f:
-                    if re.search(rf'geo_node_type_base\([^,]*,\s*{enum_name}\s*,', f.read()):
+                    if re.search(rf'(?:fn_node_type_base|geo_node_type_base|sh_fn_node_type_base)\([^,]*,\s*{enum_name}\s*,', f.read()):
                         matching_files.append(filepath)
     return matching_files
+
+
+def extract_add_input_calls(function_string):
+    """
+    Extract all add_input calls from a function string and generate a dictionary
+    with the type of input, name of the input, and optional description.
+    """
+    add_input_pattern = re.compile(
+        r'\w+\.add_input<([^>]+)>\("([^"]+)"\)(?:.*?\.description\("([^"]+)"\))?'
+    )
+    inputs = []
+    for match in add_input_pattern.finditer(function_string):
+        input_type, input_name, description = match.groups()
+        inputs.append({
+            "type": input_type,
+            "name": input_name,
+            "description": description or ""
+        })
+    return inputs
 
 
 def extract_node_declare(filepath):
@@ -288,7 +307,7 @@ def extract_node_declare(filepath):
     with open(filepath, 'r', encoding='utf-8') as file:
         content = file.read()
         match = re.search(
-            r'static void node_declare\(.*?\)\s*{.*?}', content, re.DOTALL)
+            r'static void \w+_declare\(.*?\)\s*{.*?}', content, re.DOTALL)
         if match:
             return match.group(0)
     return None
@@ -318,13 +337,14 @@ def main():
         for filepath in matching_files:
             print(f"  Found in file: {filepath}")
             node_declare_code = extract_node_declare(filepath)
+            inputs = extract_add_input_calls(node_declare_code)
             if node_declare_code:
                 print(f"  node_declare function:\n{node_declare_code}\n")
                 result[enum_name] = {
                     "category": category,
                     "enum_name": enum_name,
                     "struct_name": struct_name,
-                    "node_declare_code": node_declare_code
+                    "inputs": inputs,
                 }
     write_to_file(result)
     print(f"Results written to output.json")

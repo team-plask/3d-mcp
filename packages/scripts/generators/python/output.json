@@ -1,1100 +1,3840 @@
 {
+    "SH_NODE_VALUE": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_VALUE",
+        "struct_name": "Value",
+        "inputs": []
+    },
+    "SH_NODE_VALTORGB": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_VALTORGB",
+        "struct_name": "ValToRGB",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Fac",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_CURVE_VEC": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_CURVE_VEC",
+        "struct_name": "VectorCurve",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Fac",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_CURVE_RGB": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_CURVE_RGB",
+        "struct_name": "RGBCurve",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Fac",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_MAP_RANGE": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_MAP_RANGE",
+        "struct_name": "MapRange",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Value",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "From Min",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "From Max",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "To Min",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "To Max",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Steps",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_CLAMP": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_CLAMP",
+        "struct_name": "Clamp",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Value",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Min",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Max",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_MATH": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_MATH",
+        "struct_name": "Math",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Value",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_VECTOR_MATH": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_VECTOR_MATH",
+        "struct_name": "VectorMath",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Scale",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_BLACKBODY": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_BLACKBODY",
+        "struct_name": "Blackbody",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Temperature",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_GRADIENT": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_GRADIENT",
+        "struct_name": "TexGradient",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_NOISE": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_NOISE",
+        "struct_name": "TexNoise",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "W",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_MAGIC": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_MAGIC",
+        "struct_name": "TexMagic",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Scale",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Distortion",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_WAVE": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_WAVE",
+        "struct_name": "TexWave",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Scale",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Distortion",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Detail",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Detail Scale",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Detail Roughness",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Phase Offset",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_VORONOI": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_VORONOI",
+        "struct_name": "TexVoronoi",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "W",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_CHECKER": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_CHECKER",
+        "struct_name": "TexChecker",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Color",
+                "name": "Color1",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_BRICK": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_BRICK",
+        "struct_name": "TexBrick",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Color",
+                "name": "Color1",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_VECTOR_ROTATE": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_VECTOR_ROTATE",
+        "struct_name": "VectorRotate",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Center",
+                "description": "Point to rotate around"
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Axis",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_SEPXYZ": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_SEPXYZ",
+        "struct_name": "SeparateXYZ",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_COMBXYZ": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_COMBXYZ",
+        "struct_name": "CombineXYZ",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_TEX_WHITE_NOISE": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_TEX_WHITE_NOISE",
+        "struct_name": "TexWhiteNoise",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "W",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_CURVE_FLOAT": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_CURVE_FLOAT",
+        "struct_name": "FloatCurve",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Fac",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "SH_NODE_MIX": {
+        "category": "ShaderNode",
+        "enum_name": "SH_NODE_MIX",
+        "struct_name": "Mix",
+        "inputs": []
+    },
+    "FN_NODE_ALIGN_EULER_TO_VECTOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ALIGN_EULER_TO_VECTOR",
+        "struct_name": "AlignEulerToVector",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Rotation",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Factor",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_ALIGN_ROTATION_TO_VECTOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ALIGN_ROTATION_TO_VECTOR",
+        "struct_name": "AlignRotationToVector",
+        "inputs": [
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Factor",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_AXES_TO_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_AXES_TO_ROTATION",
+        "struct_name": "AxesToRotation",
+        "inputs": []
+    },
+    "FN_NODE_AXIS_ANGLE_TO_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_AXIS_ANGLE_TO_ROTATION",
+        "struct_name": "AxisAngleToRotation",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Axis",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_BOOLEAN_MATH": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_BOOLEAN_MATH",
+        "struct_name": "BooleanMath",
+        "inputs": []
+    },
+    "FN_NODE_COMBINE_COLOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_COMBINE_COLOR",
+        "struct_name": "CombineColor",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Red",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Green",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Blue",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Alpha",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_COMBINE_MATRIX": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_COMBINE_MATRIX",
+        "struct_name": "CombineMatrix",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Column 1 Row 1",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 1 Row 2",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 1 Row 3",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 1 Row 4",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 2 Row 1",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 2 Row 2",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 2 Row 3",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 2 Row 4",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 3 Row 1",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 3 Row 2",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 3 Row 3",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 3 Row 4",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 4 Row 1",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 4 Row 2",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 4 Row 3",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Column 4 Row 4",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_QUATERNION_TO_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_QUATERNION_TO_ROTATION",
+        "struct_name": "QuaternionToRotation",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "W",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "X",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Y",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Z",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_COMBINE_TRANSFORM": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_COMBINE_TRANSFORM",
+        "struct_name": "CombineTransform",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Translation",
+                "description": ""
+            },
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Scale",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_COMPARE": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_COMPARE",
+        "struct_name": "Compare",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "A",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "B",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "C",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Angle",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Epsilon",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_EULER_TO_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_EULER_TO_ROTATION",
+        "struct_name": "EulerToRotation",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Euler",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_FLOAT_TO_INT": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_FLOAT_TO_INT",
+        "struct_name": "FloatToInt",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Float",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_INPUT_BOOL": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_BOOL",
+        "struct_name": "InputBool",
+        "inputs": []
+    },
+    "FN_NODE_INPUT_COLOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_COLOR",
+        "struct_name": "InputColor",
+        "inputs": []
+    },
+    "FN_NODE_INPUT_INT": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_INT",
+        "struct_name": "InputInt",
+        "inputs": []
+    },
+    "FN_NODE_INPUT_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_ROTATION",
+        "struct_name": "InputRotation",
+        "inputs": []
+    },
+    "FN_NODE_INPUT_SPECIAL_CHARACTERS": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_SPECIAL_CHARACTERS",
+        "struct_name": "InputSpecialCharacters",
+        "inputs": []
+    },
+    "FN_NODE_INPUT_STRING": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_STRING",
+        "struct_name": "InputString",
+        "inputs": []
+    },
+    "FN_NODE_INPUT_VECTOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INPUT_VECTOR",
+        "struct_name": "InputVector",
+        "inputs": []
+    },
+    "FN_NODE_INVERT_MATRIX": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INVERT_MATRIX",
+        "struct_name": "InvertMatrix",
+        "inputs": [
+            {
+                "type": "decl::Matrix",
+                "name": "Matrix",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_INVERT_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_INVERT_ROTATION",
+        "struct_name": "InvertRotation",
+        "inputs": [
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_MATRIX_MULTIPLY": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_MATRIX_MULTIPLY",
+        "struct_name": "MatrixMultiply",
+        "inputs": [
+            {
+                "type": "decl::Matrix",
+                "name": "Matrix",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_PROJECT_POINT": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_PROJECT_POINT",
+        "struct_name": "ProjectPoint",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Matrix",
+                "name": "Transform",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_RANDOM_VALUE": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_RANDOM_VALUE",
+        "struct_name": "RandomValue",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Min",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Max",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_REPLACE_STRING": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_REPLACE_STRING",
+        "struct_name": "ReplaceString",
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "String",
+                "description": ""
+            },
+            {
+                "type": "decl::String",
+                "name": "Find",
+                "description": "The string to find in the input string"
+            },
+            {
+                "type": "decl::String",
+                "name": "Replace",
+                "description": "The string to replace each match with"
+            }
+        ]
+    },
+    "FN_NODE_ROTATE_EULER": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ROTATE_EULER",
+        "struct_name": "RotateEuler",
+        "inputs": []
+    },
+    "FN_NODE_ROTATE_ROTATION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ROTATE_ROTATION",
+        "struct_name": "RotateRotation",
+        "inputs": [
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            },
+            {
+                "type": "decl::Rotation",
+                "name": "Rotate By",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_ROTATE_VECTOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ROTATE_VECTOR",
+        "struct_name": "RotateVector",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_ROTATION_TO_AXIS_ANGLE": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ROTATION_TO_AXIS_ANGLE",
+        "struct_name": "RotationToAxisAngle",
+        "inputs": [
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_ROTATION_TO_EULER": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ROTATION_TO_EULER",
+        "struct_name": "RotationToEuler",
+        "inputs": [
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_SEPARATE_COLOR": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_SEPARATE_COLOR",
+        "struct_name": "SeparateColor",
+        "inputs": [
+            {
+                "type": "decl::Color",
+                "name": "Color",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_SEPARATE_MATRIX": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_SEPARATE_MATRIX",
+        "struct_name": "SeparateMatrix",
+        "inputs": [
+            {
+                "type": "decl::Matrix",
+                "name": "Matrix",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_ROTATION_TO_QUATERNION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_ROTATION_TO_QUATERNION",
+        "struct_name": "RotationToQuaternion",
+        "inputs": [
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_SEPARATE_TRANSFORM": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_SEPARATE_TRANSFORM",
+        "struct_name": "SeparateTransform",
+        "inputs": [
+            {
+                "type": "decl::Matrix",
+                "name": "Transform",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_SLICE_STRING": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_SLICE_STRING",
+        "struct_name": "SliceString",
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "String",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Position",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Length",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_STRING_LENGTH": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_STRING_LENGTH",
+        "struct_name": "StringLength",
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "String",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_TRANSFORM_DIRECTION": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_TRANSFORM_DIRECTION",
+        "struct_name": "TransformDirection",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Direction",
+                "description": ""
+            },
+            {
+                "type": "decl::Matrix",
+                "name": "Transform",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_TRANSFORM_POINT": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_TRANSFORM_POINT",
+        "struct_name": "TransformPoint",
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Matrix",
+                "name": "Transform",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_TRANSPOSE_MATRIX": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_TRANSPOSE_MATRIX",
+        "struct_name": "TransposeMatrix",
+        "inputs": [
+            {
+                "type": "decl::Matrix",
+                "name": "Matrix",
+                "description": ""
+            }
+        ]
+    },
+    "FN_NODE_VALUE_TO_STRING": {
+        "category": "FunctionNode",
+        "enum_name": "FN_NODE_VALUE_TO_STRING",
+        "struct_name": "ValueToString",
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Value",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Decimals",
+                "description": ""
+            }
+        ]
+    },
     "GEO_NODE_ACCUMULATE_FIELD": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_ACCUMULATE_FIELD",
         "struct_name": "AccumulateField",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node_storage(*node).data_type);\n    BaseSocketDeclarationBuilder *value_declaration = nullptr;\n    switch (data_type) {\n      case CD_PROP_FLOAT3:\n        value_declaration = &b.add_input<decl::Vector>(\"Value\").default_value({1.0f, 1.0f, 1.0f}"
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Value",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_ATTRIBUTE_DOMAIN_SIZE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_ATTRIBUTE_DOMAIN_SIZE",
         "struct_name": "AttributeDomainSize",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_output<decl::Int>(\"Point Count\").make_available([](bNode &node) {\n    node.custom1 = int16_t(GeometryComponent::Type::Mesh);\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_ATTRIBUTE_STATISTIC": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_ATTRIBUTE_STATISTIC",
         "struct_name": "AttributeStatistic",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all().hide_value();\n\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node->custom1);\n    b.add_input(data_type, \"Attribute\").hide_value().field_on_all();\n\n    b.add_output(data_type, N_(\"Mean\"));\n    b.add_output(data_type, N_(\"Median\"));\n    b.add_output(data_type, N_(\"Sum\"));\n    b.add_output(data_type, N_(\"Min\"));\n    b.add_output(data_type, N_(\"Max\"));\n    b.add_output(data_type, N_(\"Range\"));\n    b.add_output(data_type, N_(\"Standard Deviation\"));\n    b.add_output(data_type, N_(\"Variance\"));\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_BAKE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_BAKE",
         "struct_name": "Bake",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.use_custom_socket_order();\n  b.allow_any_socket_order();\n\n  const bNodeTree *ntree = b.tree_or_null();\n  const bNode *node = b.node_or_null();\n  if (!node) {\n    return;\n  }"
+        "inputs": []
     },
     "GEO_NODE_BLUR_ATTRIBUTE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_BLUR_ATTRIBUTE",
         "struct_name": "BlurAttribute",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node->custom1);\n    b.add_input(data_type, \"Value\").supports_field().hide_value().is_default_link_socket();\n  }"
+        "inputs": []
     },
     "GEO_NODE_BOUNDING_BOX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_BOUNDING_BOX",
         "struct_name": "BoundBox",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_output<decl::Geometry>(\"Bounding Box\");\n  b.add_output<decl::Vector>(\"Min\");\n  b.add_output<decl::Vector>(\"Max\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CAPTURE_ATTRIBUTE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CAPTURE_ATTRIBUTE",
         "struct_name": "CaptureAttribute",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNodeTree *tree = b.tree_or_null();\n  const bNode *node = b.node_or_null();\n  b.use_custom_socket_order();\n  b.allow_any_socket_order();\n\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all().align_with_previous();\n  if (node != nullptr) {\n    const NodeGeometryAttributeCapture &storage = node_storage(*node);\n    for (const NodeGeometryAttributeCaptureItem &item :\n         Span(storage.capture_items, storage.capture_items_num))\n    {\n      const eCustomDataType data_type = eCustomDataType(item.data_type);\n      const std::string input_identifier =\n          CaptureAttributeItemsAccessor::input_socket_identifier_for_item(item);\n      const std::string output_identifier =\n          CaptureAttributeItemsAccessor::output_socket_identifier_for_item(item);\n      b.add_input(data_type, item.name, input_identifier)\n          .field_on_all()\n          .socket_name_ptr(&tree->id, CaptureAttributeItemsAccessor::item_srna, &item, \"name\");\n      b.add_output(data_type, item.name, output_identifier).field_on_all().align_with_previous();\n    }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_COLLECTION_INFO": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_COLLECTION_INFO",
         "struct_name": "CollectionInfo",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Collection>(\"Collection\").hide_label();\n  b.add_input<decl::Bool>(\"Separate Children\")\n      .description(\n          \"Output each child of the collection as a separate instance, sorted alphabetically\");\n  b.add_input<decl::Bool>(\"Reset Children\")\n      .description(\n          \"Reset the transforms of every child instance in the output. Only used when Separate \"\n          \"Children is enabled\");\n  b.add_output<decl::Geometry>(\"Instances\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Collection",
+                "name": "Collection",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Separate Children",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Reset Children",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CONVEX_HULL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CONVEX_HULL",
         "struct_name": "ConvexHull",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_output<decl::Geometry>(\"Convex Hull\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_ENDPOINT_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_ENDPOINT_SELECTION",
         "struct_name": "CurveEndpointSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Start Size\")\n      .min(0)\n      .default_value(1)\n      .supports_field()\n      .description(\"The amount of points to select from the start of each spline\");\n  b.add_input<decl::Int>(\"End Size\")\n      .min(0)\n      .default_value(1)\n      .supports_field()\n      .description(\"The amount of points to select from the end of each spline\");\n  b.add_output<decl::Bool>(\"Selection\")\n      .field_source_reference_all()\n      .description(\"The selection from the start and end of the splines based on the input sizes\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Start Size",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "End Size",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_HANDLE_TYPE_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_HANDLE_TYPE_SELECTION",
         "struct_name": "CurveHandleTypeSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Bool>(\"Selection\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_CURVE_LENGTH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_LENGTH",
         "struct_name": "CurveLength",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_ARC": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_ARC",
         "struct_name": "CurveArc",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  auto enable_points = [](bNode &node) {\n    node_storage(node).mode = GEO_NODE_CURVE_PRIMITIVE_ARC_TYPE_POINTS;\n  }"
+        "inputs": []
     },
     "GEO_NODE_CURVE_PRIMITIVE_BEZIER_SEGMENT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_BEZIER_SEGMENT",
         "struct_name": "CurvePrimitiveBezierSegment",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Resolution\")\n      .default_value(16)\n      .min(1)\n      .max(256)\n      .subtype(PROP_UNSIGNED)\n      .description(\"The number of evaluated points on the curve\");\n  b.add_input<decl::Vector>(\"Start\")\n      .default_value({-1.0f, 0.0f, 0.0f}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Resolution",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Start",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_CIRCLE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_CIRCLE",
         "struct_name": "CurvePrimitiveCircle",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  auto endable_points = [](bNode &node) {\n    node_storage(node).mode = GEO_NODE_CURVE_PRIMITIVE_CIRCLE_TYPE_POINTS;\n  }"
+        "inputs": []
     },
     "GEO_NODE_CURVE_PRIMITIVE_LINE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_LINE",
         "struct_name": "CurvePrimitiveLine",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  auto enable_direction = [](bNode &node) {\n    node_storage(node).mode = GEO_NODE_CURVE_PRIMITIVE_LINE_MODE_DIRECTION;\n  }"
+        "inputs": []
     },
     "GEO_NODE_CURVE_PRIMITIVE_QUADRATIC_BEZIER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_QUADRATIC_BEZIER",
         "struct_name": "CurveQuadraticBezier",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Resolution\")\n      .default_value(16)\n      .min(3)\n      .max(256)\n      .subtype(PROP_UNSIGNED)\n      .description(\"The number of edges on the curve\");\n  b.add_input<decl::Vector>(\"Start\")\n      .default_value({-1.0f, 0.0f, 0.0f}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Resolution",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Start",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_QUADRILATERAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_QUADRILATERAL",
         "struct_name": "CurvePrimitiveQuadrilateral",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Width\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The X axis size of the shape\");\n  b.add_input<decl::Float>(\"Height\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The Y axis size of the shape\");\n  b.add_input<decl::Float>(\"Bottom Width\")\n      .default_value(4.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The X axis size of the shape\");\n  b.add_input<decl::Float>(\"Top Width\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The X axis size of the shape\");\n  b.add_input<decl::Float>(\"Offset\")\n      .default_value(1.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\n          \"For Parallelogram, the relative X difference between the top and bottom edges. For \"\n          \"Trapezoid, the amount to move the top edge in the positive X axis\");\n  b.add_input<decl::Float>(\"Bottom Height\")\n      .default_value(3.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The distance between the bottom point and the X axis\");\n  b.add_input<decl::Float>(\"Top Height\")\n      .default_value(1.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The distance between the top point and the X axis\");\n  b.add_input<decl::Vector>(\"Point 1\")\n      .default_value({-1.0f, -1.0f, 0.0f}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Width",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Height",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Bottom Width",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Top Width",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Offset",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Bottom Height",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Top Height",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Point 1",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_SPIRAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_SPIRAL",
         "struct_name": "CurveSpiral",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Resolution\")\n      .default_value(32)\n      .min(1)\n      .max(1024)\n      .subtype(PROP_UNSIGNED)\n      .description(\"Number of points in one rotation of the spiral\");\n  b.add_input<decl::Float>(\"Rotations\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .description(\"Number of times the spiral makes a full rotation\")\n      .translation_context(BLT_I18NCONTEXT_ID_NODETREE);\n  b.add_input<decl::Float>(\"Start Radius\")\n      .default_value(1.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Horizontal Distance from the Z axis at the start of the spiral\");\n  b.add_input<decl::Float>(\"End Radius\")\n      .default_value(2.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Horizontal Distance from the Z axis at the end of the spiral\");\n  b.add_input<decl::Float>(\"Height\")\n      .default_value(2.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The height perpendicular to the base of the spiral\");\n  b.add_input<decl::Bool>(\"Reverse\").description(\n      \"Switch the direction from clockwise to counterclockwise\");\n  b.add_output<decl::Geometry>(\"Curve\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Resolution",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Rotations",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Start Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "End Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Height",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Reverse",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_STAR": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_PRIMITIVE_STAR",
         "struct_name": "CurveStar",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Points\")\n      .default_value(8)\n      .min(3)\n      .max(256)\n      .subtype(PROP_UNSIGNED)\n      .description(\"Number of points on each of the circles\");\n  b.add_input<decl::Float>(\"Inner Radius\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Radius of the inner circle; can be larger than outer radius\");\n  b.add_input<decl::Float>(\"Outer Radius\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Radius of the outer circle; can be smaller than inner radius\");\n  b.add_input<decl::Float>(\"Twist\")\n      .subtype(PROP_ANGLE)\n      .description(\"The counterclockwise rotation of the inner set of points\");\n  b.add_output<decl::Geometry>(\"Curve\");\n  b.add_output<decl::Bool>(\"Outer Points\")\n      .field_on_all()\n      .description(\"An attribute field with a selection of the outer points\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Points",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Inner Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Outer Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Twist",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_SET_HANDLE_TYPE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_SET_HANDLE_TYPE",
         "struct_name": "CurveSetHandles",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(GeometryComponent::Type::Curve);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Curve\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_SPLINE_PARAMETER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_SPLINE_PARAMETER",
         "struct_name": "SplineParameter",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Factor\").field_source().description(\n      \"For points, the portion of the spline's total length at the control point. For \"\n      \"Splines, the factor of that spline within the entire curve\");\n  b.add_output<decl::Float>(\"Length\").field_source().description(\n      \"For points, the distance along the control point's spline, For splines, the \"\n      \"distance along the entire curve\");\n  b.add_output<decl::Int>(\"Index\").field_source().description(\n      \"Each control point's index on its spline\");\n}"
+        "inputs": []
     },
     "GEO_NODE_CURVE_SPLINE_TYPE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_SPLINE_TYPE",
         "struct_name": "CurveSplineType",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(GeometryComponent::Type::Curve);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Curve\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_TO_MESH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_TO_MESH",
         "struct_name": "CurveToMesh",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_TO_POINTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_TO_POINTS",
         "struct_name": "CurveToPoints",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_TOPOLOGY_CURVE_OF_POINT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_TOPOLOGY_CURVE_OF_POINT",
         "struct_name": "CurveOfPoint",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Point Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The control point to retrieve data from\");\n  b.add_output<decl::Int>(\"Curve Index\")\n      .field_source_reference_all()\n      .description(\"The curve the control point is part of\");\n  b.add_output<decl::Int>(\"Index in Curve\")\n      .field_source_reference_all()\n      .description(\"How far along the control point is along its curve\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Point Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_CURVE_TOPOLOGY_POINTS_OF_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_CURVE_TOPOLOGY_POINTS_OF_CURVE",
         "struct_name": "PointsOfCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Curve Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The curve to retrieve data from. Defaults to the curve from the context\");\n  b.add_input<decl::Float>(\"Weights\").supports_field().hide_value().description(\n      \"Values used to sort the curve's points. Uses indices by default\");\n  b.add_input<decl::Int>(\"Sort Index\")\n      .min(0)\n      .supports_field()\n      .description(\"Which of the sorted points to output\");\n  b.add_output<decl::Int>(\"Point Index\")\n      .field_source_reference_all()\n      .description(\"A point of the curve, chosen by the sort index\");\n  b.add_output<decl::Int>(\"Total\").field_source().reference_pass({0}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Curve Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Weights",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Sort Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_DEFORM_CURVES_ON_SURFACE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DEFORM_CURVES_ON_SURFACE",
         "struct_name": "DeformCurvesOnSurface",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curves\").supported_type(GeometryComponent::Type::Curve);\n  b.add_output<decl::Geometry>(\"Curves\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curves",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_DELETE_GEOMETRY": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DELETE_GEOMETRY",
         "struct_name": "DeleteGeometry",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\")\n      .default_value(true)\n      .hide_value()\n      .field_on_all()\n      .description(\"The parts of the geometry to be deleted\");\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_DISTRIBUTE_POINTS_IN_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DISTRIBUTE_POINTS_IN_GRID",
         "struct_name": "DistributePointsInGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Grid\").hide_value();\n  b.add_input<decl::Float>(\"Density\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .max(100000.0f)\n      .subtype(PROP_NONE)\n      .description(\n          \"When combined with each voxel's value, determines the number of points to sample per \"\n          \"unit volume\");\n  b.add_input<decl::Int>(\"Seed\").min(-10000).max(10000).description(\n      \"Seed used by the random number generator to generate random points\");\n  b.add_input<decl::Vector>(\"Spacing\")\n      .default_value({0.3, 0.3, 0.3}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Grid",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Density",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Seed",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Spacing",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_DISTRIBUTE_POINTS_IN_VOLUME": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DISTRIBUTE_POINTS_IN_VOLUME",
         "struct_name": "DistributePointsInVolume",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Volume\")\n      .supported_type(GeometryComponent::Type::Volume)\n      .translation_context(BLT_I18NCONTEXT_ID_ID);\n  b.add_input<decl::Float>(\"Density\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .max(100000.0f)\n      .subtype(PROP_NONE)\n      .description(\"Number of points to sample per unit volume\");\n  b.add_input<decl::Int>(\"Seed\").min(-10000).max(10000).description(\n      \"Seed used by the random number generator to generate random points\");\n  b.add_input<decl::Vector>(\"Spacing\")\n      .default_value({0.3, 0.3, 0.3}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Volume",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Density",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Seed",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Spacing",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_DISTRIBUTE_POINTS_ON_FACES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DISTRIBUTE_POINTS_ON_FACES",
         "struct_name": "DistributePointsOnFaces",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  auto enable_random = [](bNode &node) {\n    node.custom1 = GEO_NODE_POINT_DISTRIBUTE_POINTS_ON_FACES_RANDOM;\n  }"
+        "inputs": []
     },
     "GEO_NODE_DUAL_MESH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DUAL_MESH",
         "struct_name": "DualMesh",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Keep Boundaries\")\n      .default_value(false)\n      .description(\n          \"Keep non-manifold boundaries of the input mesh in place by avoiding the dual \"\n          \"transformation there\");\n  b.add_output<decl::Geometry>(\"Dual Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Keep Boundaries",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_DUPLICATE_ELEMENTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_DUPLICATE_ELEMENTS",
         "struct_name": "DuplicateElements",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Int>(\"Amount\").min(0).default_value(1).field_on_all().description(\n      \"The number of duplicates to create for each element\");\n\n  b.add_output<decl::Geometry>(\"Geometry\")\n      .propagate_all()\n      .description(\"The duplicated geometry, not including the original geometry\");\n  b.add_output<decl::Int>(\"Duplicate Index\")\n      .field_on_all()\n      .description(\"The indices of the duplicates for each element\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Amount",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_EDGE_PATHS_TO_CURVES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_EDGE_PATHS_TO_CURVES",
         "struct_name": "EdgePathsToCurves",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Start Vertices\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Int>(\"Next Vertex Index\").default_value(-1).hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Curves\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Start Vertices",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Next Vertex Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_EDGE_PATHS_TO_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_EDGE_PATHS_TO_SELECTION",
         "struct_name": "EdgePathsToSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Bool>(\"Start Vertices\").default_value(true).hide_value().supports_field();\n  b.add_input<decl::Int>(\"Next Vertex Index\").default_value(-1).hide_value().supports_field();\n  b.add_output<decl::Bool>(\"Selection\").field_source_reference_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Bool",
+                "name": "Start Vertices",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Next Vertex Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_EDGES_TO_FACE_GROUPS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_EDGES_TO_FACE_GROUPS",
         "struct_name": "EdgesToFaceGroups",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Bool>(\"Boundary Edges\")\n      .default_value(true)\n      .hide_value()\n      .supports_field()\n      .description(\"Edges used to split faces into separate groups\");\n  b.add_output<decl::Int>(\"Face Group ID\")\n      .dependent_field()\n      .description(\"Index of the face group inside each boundary edge region\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Bool",
+                "name": "Boundary Edges",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_EVALUATE_AT_INDEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_EVALUATE_AT_INDEX",
         "struct_name": "FieldAtIndex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Int>(\"Index\").min(0).supports_field();\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node->custom2);\n    b.add_input(data_type, \"Value\").hide_value().supports_field();\n\n    b.add_output(data_type, \"Value\").field_source_reference_all();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_EVALUATE_ON_DOMAIN": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_EVALUATE_ON_DOMAIN",
         "struct_name": "FieldOnDomain",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node->custom2);\n    b.add_input(data_type, \"Value\").supports_field();\n\n    b.add_output(data_type, \"Value\").field_source_reference_all();\n  }"
+        "inputs": []
     },
     "GEO_NODE_EXTRUDE_MESH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_EXTRUDE_MESH",
         "struct_name": "ExtrudeMesh",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all().hide_value();\n  b.add_input<decl::Vector>(\"Offset\")\n      .subtype(PROP_TRANSLATION)\n      .implicit_field_on_all(implicit_field_inputs::normal)\n      .hide_value();\n  b.add_input<decl::Float>(\"Offset Scale\").default_value(1.0f).field_on_all();\n  b.add_input<decl::Bool>(\"Individual\").default_value(true).make_available([](bNode &node) {\n    node_storage(node).mode = GEO_NODE_EXTRUDE_MESH_FACES;\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Offset",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Offset Scale",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Individual",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_FILL_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_FILL_CURVE",
         "struct_name": "FillCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_FILLET_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_FILLET_CURVE",
         "struct_name": "FilletCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_FLIP_FACES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_FLIP_FACES",
         "struct_name": "FlipFaces",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_GEOMETRY_TO_INSTANCE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_GEOMETRY_TO_INSTANCE",
         "struct_name": "GeometryToInstance",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\").multi_input();\n  b.add_output<decl::Geometry>(\"Instances\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_GET_NAMED_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_GET_NAMED_GRID",
         "struct_name": "GetNamedGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Volume\");\n  b.add_input<decl::String>(\"Name\");\n  b.add_input<decl::Bool>(\"Remove\").default_value(true).translation_context(\n      BLT_I18NCONTEXT_OPERATOR_DEFAULT);\n\n  b.add_output<decl::Geometry>(\"Volume\");\n\n  const bNode *node = b.node_or_null();\n  if (!node) {\n\n    return;\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Volume",
+                "description": ""
+            },
+            {
+                "type": "decl::String",
+                "name": "Name",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Remove",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_GRID_TO_MESH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_GRID_TO_MESH",
         "struct_name": "GridToMesh",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Grid\").hide_value();\n  b.add_input<decl::Float>(\"Threshold\")\n      .default_value(0.1f)\n      .description(\"Values larger than the threshold are inside the generated mesh\");\n  b.add_input<decl::Float>(\"Adaptivity\").min(0.0f).max(1.0f).subtype(PROP_FACTOR);\n  b.add_output<decl::Geometry>(\"Mesh\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Grid",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Threshold",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Adaptivity",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_IMAGE_INFO": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_IMAGE_INFO",
         "struct_name": "ImageInfo",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Image>(\"Image\").hide_label();\n  b.add_input<decl::Int>(\"Frame\").min(0).description(\n      \"Which frame to use for videos. Note that different frames in videos can \"\n      \"have different resolutions\");\n\n  b.add_output<decl::Int>(\"Width\");\n  b.add_output<decl::Int>(\"Height\");\n  b.add_output<decl::Bool>(\"Has Alpha\").description(\"Whether the image has an alpha channel\");\n\n  b.add_output<decl::Int>(\"Frame Count\")\n      .description(\"The number of animation frames. If a single image, then 1\");\n  b.add_output<decl::Float>(\"FPS\").description(\n      \"Animation playback speed in frames per second. If a single image, then 0\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Image",
+                "name": "Image",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Frame",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_IMAGE_TEXTURE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_IMAGE_TEXTURE",
         "struct_name": "ImageTexture",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Image>(\"Image\").hide_label();\n  b.add_input<decl::Vector>(\"Vector\")\n      .implicit_field(implicit_field_inputs::position)\n      .description(\"Texture coordinates from 0 to 1\");\n  b.add_input<decl::Int>(\"Frame\").min(0).max(MAXFRAMEF);\n  b.add_output<decl::Color>(\"Color\").no_muted_links().dependent_field().reference_pass_all();\n  b.add_output<decl::Float>(\"Alpha\").no_muted_links().dependent_field().reference_pass_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Image",
+                "name": "Image",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Vector",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Frame",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_IMAGE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_IMAGE",
         "struct_name": "InputImage",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Image>(\"Image\");\n}"
+        "inputs": []
     },
     "GEO_NODE_IMPORT_STL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_IMPORT_STL",
         "struct_name": "ImportSTL",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::String>(\"Path\").default_value(\"\").description(\"Path to a STL file\");\n\n  b.add_output<decl::Geometry>(\"Mesh\");\n}"
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "Path",
+                "description": "Path to a STL file"
+            }
+        ]
     },
     "GEO_NODE_INDEX_OF_NEAREST": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INDEX_OF_NEAREST",
         "struct_name": "IndexOfNearest",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Vector>(\"Position\").implicit_field(implicit_field_inputs::position);\n  b.add_input<decl::Int>(\"Group ID\").supports_field().hide_value();\n\n  b.add_output<decl::Int>(\"Index\").field_source().description(\"Index of nearest element\");\n  b.add_output<decl::Bool>(\"Has Neighbor\").field_source();\n}"
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Position",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Group ID",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INDEX_SWITCH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INDEX_SWITCH",
         "struct_name": "IndexSwitch",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n  if (!node) {\n    return;\n  }"
+        "inputs": []
     },
     "GEO_NODE_INPUT_ACTIVE_CAMERA": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_ACTIVE_CAMERA",
         "struct_name": "InputActiveCamera",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Object>(\"Active Camera\")\n      .description(\"The camera used for rendering the scene\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_CURVE_HANDLES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_CURVE_HANDLES",
         "struct_name": "InputCurveHandlePositions",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Bool>(\"Relative\")\n      .default_value(false)\n      .supports_field()\n      .description(\n          \"Output the handle positions relative to the corresponding control point \"\n          \"instead of in the local space of the geometry\");\n  b.add_output<decl::Vector>(\"Left\").field_source_reference_all();\n  b.add_output<decl::Vector>(\"Right\").field_source_reference_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Bool",
+                "name": "Relative",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INPUT_CURVE_TILT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_CURVE_TILT",
         "struct_name": "InputCurveTilt",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Tilt\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_EDGE_SMOOTH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_EDGE_SMOOTH",
         "struct_name": "InputEdgeSmooth",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Bool>(\"Smooth\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_FACE_SMOOTH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_FACE_SMOOTH",
         "struct_name": "InputShadeSmooth",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Bool>(\"Smooth\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_ID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_ID",
         "struct_name": "InputID",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"ID\").field_source().description(\n      \"The values from the \\\"id\\\" attribute on points, or the index if that attribute does not \"\n      \"exist\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_INDEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_INDEX",
         "struct_name": "InputIndex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Index\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_INSTANCE_ROTATION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_INSTANCE_ROTATION",
         "struct_name": "InputInstanceRotation",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Rotation>(\"Rotation\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_INSTANCE_SCALE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_INSTANCE_SCALE",
         "struct_name": "InputInstanceScale",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Vector>(\"Scale\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MATERIAL_INDEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MATERIAL_INDEX",
         "struct_name": "InputMaterialIndex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Material Index\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_INSTANCE_TRANSFORM": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_INSTANCE_TRANSFORM",
         "struct_name": "InstanceTransform",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Matrix>(\"Transform\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MATERIAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MATERIAL",
         "struct_name": "InputMaterial",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Material>(\"Material\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_EDGE_ANGLE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_EDGE_ANGLE",
         "struct_name": "InputMeshEdgeAngle",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Unsigned Angle\")\n      .field_source()\n      .description(\n          \"The shortest angle in radians between two faces where they meet at an edge. Flat edges \"\n          \"and Non-manifold edges have an angle of zero. Computing this value is faster than the \"\n          \"signed angle\");\n  b.add_output<decl::Float>(\"Signed Angle\")\n      .field_source()\n      .description(\n          \"The signed angle in radians between two faces where they meet at an edge. Flat edges \"\n          \"and Non-manifold edges have an angle of zero. Concave angles are positive and convex \"\n          \"angles are negative. Computing this value is slower than the unsigned angle\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_EDGE_NEIGHBORS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_EDGE_NEIGHBORS",
         "struct_name": "InputMeshEdgeNeighbors",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Face Count\")\n      .field_source()\n      .description(\"The number of faces that use each edge as one of their sides\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_EDGE_VERTICES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_EDGE_VERTICES",
         "struct_name": "InputMeshEdgeVertices",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Vertex Index 1\")\n      .field_source()\n      .description(\"The index of the first vertex in the edge\");\n  b.add_output<decl::Int>(\"Vertex Index 2\")\n      .field_source()\n      .description(\"The index of the second vertex in the edge\");\n  b.add_output<decl::Vector>(\"Position 1\")\n      .field_source()\n      .description(\"The position of the first vertex in the edge\");\n  b.add_output<decl::Vector>(\"Position 2\")\n      .field_source()\n      .description(\"The position of the second vertex in the edge\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_FACE_AREA": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_FACE_AREA",
         "struct_name": "InputMeshFaceArea",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Area\")\n      .translation_context(BLT_I18NCONTEXT_AMOUNT)\n      .field_source()\n      .description(\"The surface area of each of the mesh's faces\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_FACE_IS_PLANAR": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_FACE_IS_PLANAR",
         "struct_name": "InputMeshFaceIsPlanar",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Threshold\")\n      .default_value(0.01f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .supports_field()\n      .description(\n          \"The distance a point can be from the surface before the face is no longer \"\n          \"considered planar\");\n  b.add_output<decl::Bool>(\"Planar\")\n      .translation_context(BLT_I18NCONTEXT_ID_NODETREE)\n      .field_source();\n}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Threshold",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INPUT_MESH_FACE_NEIGHBORS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_FACE_NEIGHBORS",
         "struct_name": "InputMeshFaceNeighbors",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Vertex Count\")\n      .field_source()\n      .description(\"Number of edges or points in the face\");\n  b.add_output<decl::Int>(\"Face Count\")\n      .field_source()\n      .description(\"Number of faces which share an edge with the face\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_ISLAND": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_ISLAND",
         "struct_name": "InputMeshIsland",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Island Index\")\n      .field_source()\n      .description(\n          \"The index of the each vertex's island. Indices are based on the \"\n          \"lowest vertex index contained in each island\");\n  b.add_output<decl::Int>(\"Island Count\")\n      .field_source()\n      .description(\"The total number of mesh islands\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_MESH_VERTEX_NEIGHBORS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_MESH_VERTEX_NEIGHBORS",
         "struct_name": "InputMeshVertexNeighbors",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Vertex Count\")\n      .field_source()\n      .description(\n          \"The number of vertices connected to this vertex with an edge, \"\n          \"equal to the number of connected edges\");\n  b.add_output<decl::Int>(\"Face Count\")\n      .field_source()\n      .description(\"Number of faces that contain the vertex\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_NAMED_ATTRIBUTE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_NAMED_ATTRIBUTE",
         "struct_name": "InputNamedAttribute",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::String>(\"Name\").is_attribute_name();\n\n  if (node != nullptr) {\n    const NodeGeometryInputNamedAttribute &storage = node_storage(*node);\n    const eCustomDataType data_type = eCustomDataType(storage.data_type);\n    b.add_output(data_type, \"Attribute\").field_source();\n  }"
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "Name",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INPUT_NAMED_LAYER_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_NAMED_LAYER_SELECTION",
         "struct_name": "InputNamedLayerSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::String>(\"Name\");\n  b.add_output<decl::Bool>(\"Selection\").field_source_reference_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "Name",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INPUT_NORMAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_NORMAL",
         "struct_name": "InputNormal",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Vector>(\"Normal\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_POSITION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_POSITION",
         "struct_name": "InputPosition",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Vector>(\"Position\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_RADIUS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_RADIUS",
         "struct_name": "InputRadius",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Radius\").default_value(1.0f).min(0.0f).field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_SCENE_TIME": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_SCENE_TIME",
         "struct_name": "InputSceneTime",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Seconds\");\n  b.add_output<decl::Float>(\"Frame\");\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_SHORTEST_EDGE_PATHS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_SHORTEST_EDGE_PATHS",
         "struct_name": "InputShortestEdgePaths",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Bool>(\"End Vertex\").default_value(false).hide_value().supports_field();\n  b.add_input<decl::Float>(\"Edge Cost\").default_value(1.0f).hide_value().supports_field();\n  b.add_output<decl::Int>(\"Next Vertex Index\").field_source().reference_pass_all();\n  b.add_output<decl::Float>(\"Total Cost\").field_source().reference_pass_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Bool",
+                "name": "End Vertex",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Edge Cost",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INPUT_SPLINE_CYCLIC": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_SPLINE_CYCLIC",
         "struct_name": "InputSplineCyclic",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Bool>(\"Cyclic\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_SPLINE_LENGTH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_SPLINE_LENGTH",
         "struct_name": "SplineLength",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Float>(\"Length\").field_source();\n  b.add_output<decl::Int>(\"Point Count\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_SPLINE_RESOLUTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_SPLINE_RESOLUTION",
         "struct_name": "InputSplineResolution",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Resolution\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INPUT_TANGENT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INPUT_TANGENT",
         "struct_name": "InputTangent",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Vector>(\"Tangent\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_INSTANCE_ON_POINTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INSTANCE_ON_POINTS",
         "struct_name": "InstanceOnPoints",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Points\").description(\"Points to instance on\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on({0}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Points",
+                "description": "Points to instance on"
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INSTANCES_TO_POINTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INSTANCES_TO_POINTS",
         "struct_name": "InstancesToPoints",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Instances\").only_instances();\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Vector>(\"Position\").implicit_field_on_all(implicit_field_inputs::position);\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(0.05f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .field_on_all();\n  b.add_output<decl::Geometry>(\"Points\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Instances",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Position",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_INTERPOLATE_CURVES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_INTERPOLATE_CURVES",
         "struct_name": "InterpolateCurves",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Guide Curves\")\n      .description(\"Base curves that new curves are interpolated between\");\n  b.add_input<decl::Vector>(\"Guide Up\")\n      .field_on({0}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Guide Curves",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Guide Up",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_IS_VIEWPORT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_IS_VIEWPORT",
         "struct_name": "IsViewport",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Bool>(\"Is Viewport\");\n}"
+        "inputs": []
     },
     "GEO_NODE_JOIN_GEOMETRY": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_JOIN_GEOMETRY",
         "struct_name": "JoinGeometry",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\").multi_input();\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MATERIAL_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MATERIAL_SELECTION",
         "struct_name": "MaterialSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Material>(\"Material\").hide_label(true);\n  b.add_output<decl::Bool>(\"Selection\").field_source();\n}"
+        "inputs": [
+            {
+                "type": "decl::Material",
+                "name": "Material",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MENU_SWITCH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MENU_SWITCH",
         "struct_name": "MenuSwitch",
-        "node_declare_code": "static void node_declare(blender::nodes::NodeDeclarationBuilder &b)\n{\n  const bNodeTree *ntree = b.tree_or_null();\n  const bNode *node = b.node_or_null();\n  if (node == nullptr) {\n    return;\n  }"
+        "inputs": []
     },
     "GEO_NODE_MERGE_BY_DISTANCE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MERGE_BY_DISTANCE",
         "struct_name": "MergeByDistance",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::PointCloud, GeometryComponent::Type::Mesh}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_BOOLEAN": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_BOOLEAN",
         "struct_name": "MeshBoolean",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh 1\").only_realized_data().supported_type(\n      GeometryComponent::Type::Mesh);\n  b.add_input<decl::Geometry>(\"Mesh 2\")\n      .supported_type(GeometryComponent::Type::Mesh)\n      .multi_input();\n  b.add_input<decl::Bool>(\"Self Intersection\");\n  b.add_input<decl::Bool>(\"Hole Tolerant\");\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n  b.add_output<decl::Bool>(\"Intersecting Edges\").field_on_all().make_available([](bNode &node) {\n    node.custom2 = int16_t(geometry::boolean::Solver::MeshArr);\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh 1",
+                "description": ""
+            },
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh 2",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Self Intersection",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Hole Tolerant",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_FACE_GROUP_BOUNDARIES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_FACE_GROUP_BOUNDARIES",
         "struct_name": "MeshFaceSetBoundaries",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Face Group ID\", \"Face Set\")\n      .default_value(0)\n      .hide_value()\n      .supports_field()\n      .description(\n          \"An identifier for the group of each face. All contiguous faces with the \"\n          \"same value are in the same region\");\n  b.add_output<decl::Bool>(\"Boundary Edges\")\n      .field_source_reference_all()\n      .description(\"The edges that lie on the boundaries between the different face groups\");\n}"
+        "inputs": []
     },
     "GEO_NODE_MESH_PRIMITIVE_CIRCLE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_CIRCLE",
         "struct_name": "MeshCircle",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Vertices\")\n      .default_value(32)\n      .min(3)\n      .description(\"Number of vertices on the circle\");\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Distance of the vertices from the origin\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Vertices",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_CONE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_CONE",
         "struct_name": "MeshCone",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Vertices\")\n      .default_value(32)\n      .min(3)\n      .max(512)\n      .description(\"Number of points on the circle at the top and bottom\");\n  b.add_input<decl::Int>(\"Side Segments\")\n      .default_value(1)\n      .min(1)\n      .max(512)\n      .description(\"The number of edges running vertically along the side of the cone\");\n  b.add_input<decl::Int>(\"Fill Segments\")\n      .default_value(1)\n      .min(1)\n      .max(512)\n      .description(\"Number of concentric rings used to fill the round face\");\n  b.add_input<decl::Float>(\"Radius Top\")\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Radius of the top circle of the cone\");\n  b.add_input<decl::Float>(\"Radius Bottom\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Radius of the bottom circle of the cone\");\n  b.add_input<decl::Float>(\"Depth\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Height of the generated cone\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n  b.add_output<decl::Bool>(\"Top\").field_on_all().translation_context(BLT_I18NCONTEXT_ID_NODETREE);\n  b.add_output<decl::Bool>(\"Bottom\").field_on_all().translation_context(\n      BLT_I18NCONTEXT_ID_NODETREE);\n  b.add_output<decl::Bool>(\"Side\").field_on_all();\n  b.add_output<decl::Vector>(\"UV Map\").field_on_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Vertices",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Side Segments",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Fill Segments",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius Top",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius Bottom",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Depth",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_CUBE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_CUBE",
         "struct_name": "MeshCube",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Vector>(\"Size\")\n      .default_value(float3(1))\n      .min(0.0f)\n      .subtype(PROP_TRANSLATION)\n      .description(\"Side length along each axis\");\n  b.add_input<decl::Int>(\"Vertices X\")\n      .default_value(2)\n      .min(2)\n      .max(1000)\n      .description(\"Number of vertices for the X side of the shape\");\n  b.add_input<decl::Int>(\"Vertices Y\")\n      .default_value(2)\n      .min(2)\n      .max(1000)\n      .description(\"Number of vertices for the Y side of the shape\");\n  b.add_input<decl::Int>(\"Vertices Z\")\n      .default_value(2)\n      .min(2)\n      .max(1000)\n      .description(\"Number of vertices for the Z side of the shape\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n  b.add_output<decl::Vector>(\"UV Map\").field_on_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "Size",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Vertices X",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Vertices Y",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Vertices Z",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_CYLINDER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_CYLINDER",
         "struct_name": "MeshCylinder",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Vertices\")\n      .default_value(32)\n      .min(3)\n      .max(512)\n      .description(\"The number of vertices on the top and bottom circles\");\n  b.add_input<decl::Int>(\"Side Segments\")\n      .default_value(1)\n      .min(1)\n      .max(512)\n      .description(\"The number of rectangular segments along each side\");\n  b.add_input<decl::Int>(\"Fill Segments\")\n      .default_value(1)\n      .min(1)\n      .max(512)\n      .description(\"The number of concentric rings used to fill the round faces\");\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The radius of the cylinder\");\n  b.add_input<decl::Float>(\"Depth\")\n      .default_value(2.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"The height of the cylinder\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n  b.add_output<decl::Bool>(\"Top\").field_on_all().translation_context(BLT_I18NCONTEXT_ID_NODETREE);\n  b.add_output<decl::Bool>(\"Side\").field_on_all();\n  b.add_output<decl::Bool>(\"Bottom\").field_on_all().translation_context(\n      BLT_I18NCONTEXT_ID_NODETREE);\n  b.add_output<decl::Vector>(\"UV Map\").field_on_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Vertices",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Side Segments",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Fill Segments",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Depth",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_GRID",
         "struct_name": "MeshGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Size X\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Side length of the plane in the X direction\");\n  b.add_input<decl::Float>(\"Size Y\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Side length of the plane in the Y direction\");\n  b.add_input<decl::Int>(\"Vertices X\")\n      .default_value(3)\n      .min(2)\n      .max(1000)\n      .description(\"Number of vertices in the X direction\");\n  b.add_input<decl::Int>(\"Vertices Y\")\n      .default_value(3)\n      .min(2)\n      .max(1000)\n      .description(\"Number of vertices in the Y direction\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n  b.add_output<decl::Vector>(\"UV Map\").field_on_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Size X",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Size Y",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Vertices X",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Vertices Y",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_ICO_SPHERE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_ICO_SPHERE",
         "struct_name": "MeshIcoSphere",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Distance from the generated points to the origin\");\n  b.add_input<decl::Int>(\"Subdivisions\")\n      .default_value(1)\n      .min(1)\n      .max(7)\n      .description(\"Number of subdivisions on top of the basic icosahedron\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n  b.add_output<decl::Vector>(\"UV Map\").field_on_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Subdivisions",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_LINE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_LINE",
         "struct_name": "MeshLine",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Count\").default_value(10).min(1).max(10000).description(\n      \"Number of vertices on the line\");\n  b.add_input<decl::Float>(\"Resolution\")\n      .default_value(1.0f)\n      .min(0.1f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Length of each individual edge\");\n  b.add_input<decl::Vector>(\"Start Location\")\n      .subtype(PROP_TRANSLATION)\n      .description(\"Position of the first vertex\");\n  b.add_input<decl::Vector>(\"Offset\")\n      .default_value({0.0f, 0.0f, 1.0f}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Count",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Resolution",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Start Location",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Offset",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_PRIMITIVE_UV_SPHERE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_PRIMITIVE_UV_SPHERE",
         "struct_name": "MeshUVSphere",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Segments\")\n      .default_value(32)\n      .min(3)\n      .max(1024)\n      .description(\"Horizontal resolution of the sphere\");\n  b.add_input<decl::Int>(\"Rings\").default_value(16).min(2).max(1024).description(\n      \"The number of horizontal rings\");\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(1.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .description(\"Distance from the generated points to the origin\");\n  b.add_output<decl::Geometry>(\"Mesh\");\n  b.add_output<decl::Vector>(\"UV Map\").field_on_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Segments",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Rings",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TO_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TO_CURVE",
         "struct_name": "MeshToCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Curve\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TO_DENSITY_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TO_DENSITY_GRID",
         "struct_name": "MeshToDensityGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Float>(\"Density\").default_value(1.0f).min(0.01f).max(FLT_MAX);\n  b.add_input<decl::Float>(\"Voxel Size\")\n      .default_value(0.3f)\n      .min(0.01f)\n      .max(FLT_MAX)\n      .subtype(PROP_DISTANCE);\n  b.add_input<decl::Float>(\"Gradient Width\")\n      .default_value(0.2f)\n      .min(0.0001f)\n      .max(FLT_MAX)\n      .subtype(PROP_DISTANCE)\n      .description(\"Width of the gradient inside of the mesh\");\n  b.add_output<decl::Float>(\"Density Grid\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Density",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Size",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Gradient Width",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TO_POINTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TO_POINTS",
         "struct_name": "MeshToPoints",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all().hide_value();\n  b.add_input<decl::Vector>(\"Position\").implicit_field_on_all(implicit_field_inputs::position);\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(0.05f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .field_on_all();\n  b.add_output<decl::Geometry>(\"Points\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Position",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TO_SDF_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TO_SDF_GRID",
         "struct_name": "MeshToSDFGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Float>(\"Voxel Size\")\n      .default_value(0.3f)\n      .min(0.01f)\n      .max(FLT_MAX)\n      .subtype(PROP_DISTANCE);\n  b.add_input<decl::Int>(\"Band Width\")\n      .default_value(3)\n      .min(1)\n      .max(100)\n      .description(\"Width of the active voxel surface, in voxels\");\n  b.add_output<decl::Float>(\"SDF Grid\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Size",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Band Width",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TO_VOLUME": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TO_VOLUME",
         "struct_name": "MeshToVolume",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Float>(\"Density\").default_value(1.0f).min(0.01f).max(FLT_MAX);\n  b.add_input<decl::Float>(\"Voxel Size\")\n      .default_value(0.3f)\n      .min(0.01f)\n      .max(FLT_MAX)\n      .subtype(PROP_DISTANCE);\n  b.add_input<decl::Float>(\"Voxel Amount\").default_value(64.0f).min(0.0f).max(FLT_MAX);\n  b.add_input<decl::Float>(\"Interior Band Width\")\n      .default_value(0.2f)\n      .min(0.0001f)\n      .max(FLT_MAX)\n      .subtype(PROP_DISTANCE)\n      .description(\"Width of the gradient inside of the mesh\");\n  b.add_output<decl::Geometry>(\"Volume\").translation_context(BLT_I18NCONTEXT_ID_ID);\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Density",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Size",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Amount",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Interior Band Width",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_EDGE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_EDGE",
         "struct_name": "CornersOfEdge",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Edge Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The edge to retrieve data from. Defaults to the edge from the context\");\n  b.add_input<decl::Float>(\"Weights\").supports_field().hide_value().description(\n      \"Values that sort the corners attached to the edge\");\n  b.add_input<decl::Int>(\"Sort Index\")\n      .min(0)\n      .supports_field()\n      .description(\"Which of the sorted corners to output\");\n  b.add_output<decl::Int>(\"Corner Index\")\n      .field_source_reference_all()\n      .description(\n          \"A corner of the input edge in its face's winding order, chosen by the sort index\");\n  b.add_output<decl::Int>(\"Total\").field_source().reference_pass({0}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Edge Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Weights",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Sort Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_FACE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_FACE",
         "struct_name": "CornersOfFace",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Face Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The face to retrieve data from. Defaults to the face from the context\");\n  b.add_input<decl::Float>(\"Weights\").supports_field().hide_value().description(\n      \"Values used to sort the face's corners. Uses indices by default\");\n  b.add_input<decl::Int>(\"Sort Index\")\n      .min(0)\n      .supports_field()\n      .description(\"Which of the sorted corners to output\");\n  b.add_output<decl::Int>(\"Corner Index\")\n      .field_source_reference_all()\n      .description(\"A corner of the face, chosen by the sort index\");\n  b.add_output<decl::Int>(\"Total\").field_source().reference_pass({0}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Face Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Weights",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Sort Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_VERTEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_VERTEX",
         "struct_name": "CornersOfVertex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Vertex Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The vertex to retrieve data from. Defaults to the vertex from the context\");\n  b.add_input<decl::Float>(\"Weights\").supports_field().hide_value().description(\n      \"Values used to sort corners attached to the vertex. Uses indices by default\");\n  b.add_input<decl::Int>(\"Sort Index\")\n      .min(0)\n      .supports_field()\n      .description(\"Which of the sorted corners to output\");\n  b.add_output<decl::Int>(\"Corner Index\")\n      .field_source_reference_all()\n      .description(\"A corner connected to the face, chosen by the sort index\");\n  b.add_output<decl::Int>(\"Total\").field_source().reference_pass({0}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Vertex Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Weights",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Sort Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_EDGES_OF_CORNER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_EDGES_OF_CORNER",
         "struct_name": "EdgesOfCorner",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Corner Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The corner to retrieve data from. Defaults to the corner from the context\");\n  b.add_output<decl::Int>(\"Next Edge Index\")\n      .field_source_reference_all()\n      .description(\n          \"The edge after the corner in the face, in the direction of increasing indices\");\n  b.add_output<decl::Int>(\"Previous Edge Index\")\n      .field_source_reference_all()\n      .description(\n          \"The edge before the corner in the face, in the direction of decreasing indices\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Corner Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_EDGES_OF_VERTEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_EDGES_OF_VERTEX",
         "struct_name": "EdgesOfVertex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Vertex Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The vertex to retrieve data from. Defaults to the vertex from the context\");\n  b.add_input<decl::Float>(\"Weights\").supports_field().hide_value().description(\n      \"Values used to sort the edges connected to the vertex. Uses indices by default\");\n  b.add_input<decl::Int>(\"Sort Index\")\n      .min(0)\n      .supports_field()\n      .description(\"Which of the sorted edges to output\");\n  b.add_output<decl::Int>(\"Edge Index\")\n      .field_source_reference_all()\n      .description(\"An edge connected to the face, chosen by the sort index\");\n  b.add_output<decl::Int>(\"Total\").field_source().reference_pass({0}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Vertex Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Weights",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Sort Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_FACE_OF_CORNER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_FACE_OF_CORNER",
         "struct_name": "FaceOfCorner",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Corner Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The corner to retrieve data from. Defaults to the corner from the context\");\n  b.add_output<decl::Int>(\"Face Index\")\n      .field_source_reference_all()\n      .description(\"The index of the face the corner is a part of\");\n  b.add_output<decl::Int>(\"Index in Face\")\n      .field_source_reference_all()\n      .description(\"The index of the corner starting from the first corner in the face\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Corner Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_OFFSET_CORNER_IN_FACE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_OFFSET_CORNER_IN_FACE",
         "struct_name": "OffsetCornerInFace",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Corner Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The corner to retrieve data from. Defaults to the corner from the context\");\n  b.add_input<decl::Int>(\"Offset\").supports_field().description(\n      \"The number of corners to move around the face before finding the result, \"\n      \"circling around the start of the face if necessary\");\n  b.add_output<decl::Int>(\"Corner Index\")\n      .field_source_reference_all()\n      .description(\"The index of the offset corner\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Corner Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Offset",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_MESH_TOPOLOGY_VERTEX_OF_CORNER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_MESH_TOPOLOGY_VERTEX_OF_CORNER",
         "struct_name": "VertexOfCorner",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Corner Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The corner to retrieve data from. Defaults to the corner from the context\");\n  b.add_output<decl::Int>(\"Vertex Index\")\n      .field_source_reference_all()\n      .description(\"The vertex the corner is attached to\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Corner Index",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_OBJECT_INFO": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_OBJECT_INFO",
         "struct_name": "ObjectInfo",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Object>(\"Object\").hide_label();\n  b.add_input<decl::Bool>(\"As Instance\")\n      .description(\n          \"Output the entire object as single instance. \"\n          \"This allows instancing non-geometry object types\");\n  b.add_output<decl::Matrix>(\"Transform\")\n      .description(\n          \"Transformation matrix containing the location, rotation and scale of the object\");\n  b.add_output<decl::Vector>(\"Location\");\n  b.add_output<decl::Rotation>(\"Rotation\");\n  b.add_output<decl::Vector>(\"Scale\");\n  b.add_output<decl::Geometry>(\"Geometry\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Object",
+                "name": "Object",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "As Instance",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_OFFSET_POINT_IN_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_OFFSET_POINT_IN_CURVE",
         "struct_name": "OffsetPointInCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Point Index\")\n      .implicit_field(implicit_field_inputs::index)\n      .description(\"The index of the control point to evaluate. Defaults to the current index\");\n  b.add_input<decl::Int>(\"Offset\").supports_field().description(\n      \"The number of control points along the curve to traverse\");\n  b.add_output<decl::Bool>(\"Is Valid Offset\")\n      .field_source_reference_all()\n      .description(\n          \"Whether the input control point plus the offset is a valid index of the \"\n          \"original curve\");\n  b.add_output<decl::Int>(\"Point Index\")\n      .field_source_reference_all()\n      .description(\n          \"The index of the control point plus the offset within the entire \"\n          \"curves data-block\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Point Index",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Offset",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_POINTS_TO_CURVES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_POINTS_TO_CURVES",
         "struct_name": "PointsToCurves",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Points\")\n      .supported_type(GeometryComponent::Type::PointCloud)\n      .description(\"Points to generate curves from\");\n  b.add_input<decl::Int>(\"Curve Group ID\")\n      .field_on_all()\n      .hide_value()\n      .description(\n          \"A curve is created for every distinct group ID. All points with the same ID are put \"\n          \"into the same curve\");\n  b.add_input<decl::Float>(\"Weight\").field_on_all().hide_value().description(\n      \"Determines the order of points in each curve\");\n\n  b.add_output<decl::Geometry>(\"Curves\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Points",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Curve Group ID",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Weight",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_POINTS_TO_SDF_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_POINTS_TO_SDF_GRID",
         "struct_name": "PointsToSDFGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Points\");\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(0.5f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .field_on_all();\n  b.add_input<decl::Float>(\"Voxel Size\").default_value(0.3f).min(0.01f).subtype(PROP_DISTANCE);\n  b.add_output<decl::Float>(\"SDF Grid\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Points",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Size",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_POINTS_TO_VERTICES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_POINTS_TO_VERTICES",
         "struct_name": "PointsToVertices",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Points\").supported_type(GeometryComponent::Type::PointCloud);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all().hide_value();\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Points",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_POINTS_TO_VOLUME": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_POINTS_TO_VOLUME",
         "struct_name": "PointsToVolume",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Points\");\n  b.add_input<decl::Float>(\"Density\").default_value(1.0f).min(0.0f);\n  b.add_input<decl::Float>(\"Voxel Size\")\n      .default_value(0.3f)\n      .min(0.01f)\n      .subtype(PROP_DISTANCE)\n      .make_available([](bNode &node) {\n        node_storage(node).resolution_mode = GEO_NODE_POINTS_TO_VOLUME_RESOLUTION_MODE_SIZE;\n      }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Points",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Density",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Size",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_POINTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_POINTS",
         "struct_name": "Points",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Int>(\"Count\").default_value(1).min(0).description(\n      \"The number of points to create\");\n  b.add_input<decl::Vector>(\"Position\")\n      .default_value(float3(0.0f))\n      .supports_field()\n      .description(\"The positions of the new points\");\n  b.add_input<decl::Float>(\"Radius\")\n      .min(0.0f)\n      .default_value(0.1f)\n      .subtype(PROP_DISTANCE)\n      .supports_field()\n      .description(\"The radii of the new points\");\n  b.add_output<decl::Geometry>(\"Points\", \"Geometry\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Int",
+                "name": "Count",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Position",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_PROXIMITY": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_PROXIMITY",
         "struct_name": "Proximity",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\", \"Target\")\n      .only_realized_data()\n      .supported_type({GeometryComponent::Type::Mesh, GeometryComponent::Type::PointCloud}"
+        "inputs": []
     },
     "GEO_NODE_RAYCAST": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_RAYCAST",
         "struct_name": "Raycast",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Geometry>(\"Target Geometry\")\n      .only_realized_data()\n      .supported_type(GeometryComponent::Type::Mesh);\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node_storage(*node).data_type);\n    /* TODO: Field interfacing depends on the offset of the next declarations! */\n    b.add_input(data_type, \"Attribute\").hide_value().field_on_all();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Target Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_REALIZE_INSTANCES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_REALIZE_INSTANCES",
         "struct_name": "RealizeInstances",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\")\n      .default_value(true)\n      .hide_value()\n      .field_on_all()\n      .description(\"Which top-level instances to realize\");\n  b.add_input<decl::Bool>(\"Realize All\")\n      .default_value(true)\n      .field_on_all()\n      .description(\n          \"Realize all levels of nested instances for a top-level instances. Overrides the value \"\n          \"of the Depth input\");\n  b.add_input<decl::Int>(\"Depth\").default_value(0).min(0).field_on_all().description(\n      \"Number of levels of nested instances to realize for each top-level instance\");\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Realize All",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Depth",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_REMOVE_ATTRIBUTE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_REMOVE_ATTRIBUTE",
         "struct_name": "RemoveAttribute",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::String>(\"Name\").is_attribute_name();\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::String",
+                "name": "Name",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_REPLACE_MATERIAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_REPLACE_MATERIAL",
         "struct_name": "ReplaceMaterial",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Mesh, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_RESAMPLE_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_RESAMPLE_CURVE",
         "struct_name": "ResampleCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_REVERSE_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_REVERSE_CURVE",
         "struct_name": "ReverseCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_ROTATE_INSTANCES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_ROTATE_INSTANCES",
         "struct_name": "RotateInstances",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Instances\").only_instances();\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Rotation>(\"Rotation\").field_on_all();\n  b.add_input<decl::Vector>(\"Pivot Point\").subtype(PROP_TRANSLATION).field_on_all();\n  b.add_input<decl::Bool>(\"Local Space\").default_value(true).field_on_all();\n  b.add_output<decl::Geometry>(\"Instances\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Instances",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Pivot Point",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Local Space",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SAMPLE_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_CURVE",
         "struct_name": "SampleCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curves\").only_realized_data().supported_type(\n      GeometryComponent::Type::Curve);\n\n  if (const bNode *node = b.node_or_null()) {\n    const NodeGeometryCurveSample &storage = node_storage(*node);\n    b.add_input(eCustomDataType(storage.data_type), \"Value\").hide_value().field_on_all();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curves",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SAMPLE_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_GRID",
         "struct_name": "SampleGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n  if (!node) {\n    return;\n  }"
+        "inputs": []
     },
     "GEO_NODE_SAMPLE_GRID_INDEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_GRID_INDEX",
         "struct_name": "SampleGridIndex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n  if (!node) {\n    return;\n  }"
+        "inputs": []
     },
     "GEO_NODE_SAMPLE_INDEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_INDEX",
         "struct_name": "SampleIndex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Mesh,\n                       GeometryComponent::Type::PointCloud,\n                       GeometryComponent::Type::Curve,\n                       GeometryComponent::Type::Instance}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SAMPLE_NEAREST_SURFACE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_NEAREST_SURFACE",
         "struct_name": "SampleNearestSurface",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node->custom1);\n    b.add_input(data_type, \"Value\").hide_value().field_on_all();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SAMPLE_NEAREST": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_NEAREST",
         "struct_name": "SampleNearest",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Mesh, GeometryComponent::Type::PointCloud}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SAMPLE_UV_SURFACE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SAMPLE_UV_SURFACE",
         "struct_name": "SampleUVSurface",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node->custom1);\n    b.add_input(data_type, \"Value\").hide_value().field_on_all();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SCALE_ELEMENTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SCALE_ELEMENTS",
         "struct_name": "ScaleElements",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Float>(\"Scale\", \"Scale\").default_value(1.0f).min(0.0f).field_on_all();\n  b.add_input<decl::Vector>(\"Center\")\n      .subtype(PROP_TRANSLATION)\n      .implicit_field_on_all(implicit_field_inputs::position)\n      .description(\n          \"Origin of the scaling for each element. If multiple elements are connected, their \"\n          \"center is averaged\");\n  b.add_input<decl::Vector>(\"Axis\")\n      .default_value({1.0f, 0.0f, 0.0f}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Center",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Axis",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SCALE_INSTANCES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SCALE_INSTANCES",
         "struct_name": "ScaleInstances",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Instances\").only_instances();\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Vector>(\"Scale\").subtype(PROP_XYZ).default_value({1, 1, 1}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Instances",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Scale",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SDF_GRID_BOOLEAN": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SDF_GRID_BOOLEAN",
         "struct_name": "SDFGridBoolean",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Grid 1\").hide_value();\n  b.add_input<decl::Float>(\"Grid 2\").hide_value().multi_input().make_available(\n      [](bNode &node) { node.custom1 = int16_t(Operation::Difference); }"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Grid 1",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Grid 2",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SELF_OBJECT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SELF_OBJECT",
         "struct_name": "SelfObject",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Object>(\"Self Object\");\n}"
+        "inputs": []
     },
     "GEO_NODE_SEPARATE_COMPONENTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SEPARATE_COMPONENTS",
         "struct_name": "SeparateComponents",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n  b.add_output<decl::Geometry>(\"Curve\").propagate_all();\n  b.add_output<decl::Geometry>(\"Grease Pencil\").propagate_all();\n  b.add_output<decl::Geometry>(\"Point Cloud\").propagate_all();\n  b.add_output<decl::Geometry>(\"Volume\")\n      .translation_context(BLT_I18NCONTEXT_ID_ID)\n      .propagate_all();\n  b.add_output<decl::Geometry>(\"Instances\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SEPARATE_GEOMETRY": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SEPARATE_GEOMETRY",
         "struct_name": "SeparateGeometry",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\")\n      .default_value(true)\n      .hide_value()\n      .field_on_all()\n      .description(\"The parts of the geometry that go into the first output\");\n  b.add_output<decl::Geometry>(\"Selection\")\n      .propagate_all()\n      .description(\"The parts of the geometry in the selection\");\n  b.add_output<decl::Geometry>(\"Inverted\")\n      .propagate_all()\n      .description(\"The parts of the geometry not in the selection\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_CURVE_HANDLES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_CURVE_HANDLES",
         "struct_name": "SetCurveHandlePositions",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(GeometryComponent::Type::Curve);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Vector>(\"Position\")\n      .implicit_field_on_all([](const bNode &node, void *r_value) {\n        const StringRef side = node_storage(node).mode == GEO_NODE_CURVE_HANDLE_LEFT ?\n                                   \"handle_left\" :\n                                   \"handle_right\";\n        new (r_value) SocketValueVariant(bke::AttributeFieldInput::Create<float3>(side));\n      }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Position",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_CURVE_NORMAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_CURVE_NORMAL",
         "struct_name": "SetCurveNormal",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_CURVE_RADIUS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_CURVE_RADIUS",
         "struct_name": "SetCurveRadius",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_CURVE_TILT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_CURVE_TILT",
         "struct_name": "SetCurveTilt",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_ID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_ID",
         "struct_name": "SetID",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Int>(\"ID\").implicit_field_on_all(implicit_field_inputs::index);\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "ID",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_MATERIAL_INDEX": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_MATERIAL_INDEX",
         "struct_name": "SetMaterialIndex",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Mesh, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_MATERIAL": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_MATERIAL",
         "struct_name": "SetMaterial",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Mesh,\n                       GeometryComponent::Type::Volume,\n                       GeometryComponent::Type::PointCloud,\n                       GeometryComponent::Type::Curve,\n                       GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_POINT_RADIUS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_POINT_RADIUS",
         "struct_name": "SetPointRadius",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Points\").supported_type(GeometryComponent::Type::PointCloud);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Float>(\"Radius\")\n      .default_value(0.05f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .field_on_all();\n  b.add_output<decl::Geometry>(\"Points\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Points",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Radius",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_POSITION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_POSITION",
         "struct_name": "SetPosition",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Vector>(\"Position\").implicit_field_on_all(implicit_field_inputs::position);\n  b.add_input<decl::Vector>(\"Offset\").subtype(PROP_TRANSLATION).field_on_all();\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Position",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Offset",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_SHADE_SMOOTH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_SHADE_SMOOTH",
         "struct_name": "SetShadeSmooth",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Bool>(\"Shade Smooth\").default_value(true).field_on_all();\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Shade Smooth",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_SPLINE_CYCLIC": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_SPLINE_CYCLIC",
         "struct_name": "SetSplineCyclic",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_SPLINE_RESOLUTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_SPLINE_RESOLUTION",
         "struct_name": "SetSplineResolution",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SET_INSTANCE_TRANSFORM": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SET_INSTANCE_TRANSFORM",
         "struct_name": "SetInstanceTransform",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Instances\").only_instances();\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Matrix>(\"Transform\")\n      .field_on_all()\n      .implicit_field(implicit_field_inputs::instance_transform);\n  b.add_output<decl::Geometry>(\"Instances\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Instances",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Matrix",
+                "name": "Transform",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SORT_ELEMENTS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SORT_ELEMENTS",
         "struct_name": "SortElements",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all().hide_value();\n  b.add_input<decl::Int>(\"Group ID\").field_on_all().hide_value();\n  b.add_input<decl::Float>(\"Sort Weight\").field_on_all().hide_value();\n\n  b.add_output<decl::Geometry>(\"Geometry\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Group ID",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Sort Weight",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SPLIT_EDGES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SPLIT_EDGES",
         "struct_name": "SplitEdges",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SPLIT_TO_INSTANCES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SPLIT_TO_INSTANCES",
         "struct_name": "SplitToInstances",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\")\n      .supported_type({GeometryComponent::Type::Mesh,\n                       GeometryComponent::Type::PointCloud,\n                       GeometryComponent::Type::Curve,\n                       GeometryComponent::Type::Instance}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_STORE_NAMED_ATTRIBUTE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_STORE_NAMED_ATTRIBUTE",
         "struct_name": "StoreNamedAttribute",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::String>(\"Name\").is_attribute_name();\n\n  if (node != nullptr) {\n    const NodeGeometryStoreNamedAttribute &storage = node_storage(*node);\n    const eCustomDataType data_type = eCustomDataType(storage.data_type);\n    b.add_input(data_type, \"Value\").field_on_all();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::String",
+                "name": "Name",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_STORE_NAMED_GRID": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_STORE_NAMED_GRID",
         "struct_name": "StoreNamedGrid",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Volume\");\n  b.add_input<decl::String>(\"Name\");\n  b.add_output<decl::Geometry>(\"Volume\");\n\n  const bNode *node = b.node_or_null();\n  if (!node) {\n    return;\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Volume",
+                "description": ""
+            },
+            {
+                "type": "decl::String",
+                "name": "Name",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_STRING_JOIN": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_STRING_JOIN",
         "struct_name": "StringJoin",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::String>(\"Delimiter\");\n  b.add_input<decl::String>(\"Strings\").multi_input().hide_value();\n  b.add_output<decl::String>(\"String\");\n}"
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "Delimiter",
+                "description": ""
+            },
+            {
+                "type": "decl::String",
+                "name": "Strings",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_STRING_TO_CURVES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_STRING_TO_CURVES",
         "struct_name": "StringToCurves",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::String>(\"String\");\n  b.add_input<decl::Float>(\"Size\").default_value(1.0f).min(0.0f).subtype(PROP_DISTANCE);\n  b.add_input<decl::Float>(\"Character Spacing\").default_value(1.0f).min(0.0f);\n  b.add_input<decl::Float>(\"Word Spacing\").default_value(1.0f).min(0.0f);\n  b.add_input<decl::Float>(\"Line Spacing\").default_value(1.0f).min(0.0f);\n  b.add_input<decl::Float>(\"Text Box Width\").default_value(0.0f).min(0.0f).subtype(PROP_DISTANCE);\n  b.add_input<decl::Float>(\"Text Box Height\")\n      .default_value(0.0f)\n      .min(0.0f)\n      .subtype(PROP_DISTANCE)\n      .make_available([](bNode &node) {\n        node_storage(node).overflow = GEO_NODE_STRING_TO_CURVES_MODE_SCALE_TO_FIT;\n      }"
+        "inputs": [
+            {
+                "type": "decl::String",
+                "name": "String",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Size",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Character Spacing",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Word Spacing",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Line Spacing",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Text Box Width",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Text Box Height",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SUBDIVIDE_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SUBDIVIDE_CURVE",
         "struct_name": "SubdivideCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SUBDIVIDE_MESH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SUBDIVIDE_MESH",
         "struct_name": "SubdivideMesh",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Int>(\"Level\").default_value(1).min(0).max(6);\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Level",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SUBDIVISION_SURFACE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SUBDIVISION_SURFACE",
         "struct_name": "SubdivisionSurface",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Int>(\"Level\").default_value(1).min(0).max(6);\n  b.add_input<decl::Float>(\"Edge Crease\")\n      .default_value(0.0f)\n      .min(0.0f)\n      .max(1.0f)\n      .subtype(PROP_FACTOR)\n      .field_on_all();\n  b.add_input<decl::Float>(\"Vertex Crease\")\n      .default_value(0.0f)\n      .min(0.0f)\n      .max(1.0f)\n      .subtype(PROP_FACTOR)\n      .field_on_all();\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Level",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Edge Crease",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Vertex Crease",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_SWITCH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_SWITCH",
         "struct_name": "Switch",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  auto &switch_decl = b.add_input<decl::Bool>(\"Switch\");\n  const bNode *node = b.node_or_null();\n  if (!node) {\n    return;\n  }"
+        "inputs": [
+            {
+                "type": "decl::Bool",
+                "name": "Switch",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_TOOL_3D_CURSOR": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_3D_CURSOR",
         "struct_name": "Tool3DCursor",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Vector>(\"Location\")\n      .subtype(PROP_TRANSLATION)\n      .description(\n          \"The location of the scene's 3D cursor, in the local space of the modified object\");\n  b.add_output<decl::Rotation>(\"Rotation\")\n      .description(\n          \"The rotation of the scene's 3D cursor, in the local space of the modified object\");\n}"
+        "inputs": []
     },
     "GEO_NODE_TOOL_FACE_SET": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_FACE_SET",
         "struct_name": "ToolFaceSet",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Face Set\").field_source();\n  b.add_output<decl::Bool>(\"Exists\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_TOOL_MOUSE_POSITION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_MOUSE_POSITION",
         "struct_name": "ToolMousePosition",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Mouse X\").description(\n      \"The region-space mouse X location, in pixels, increasing from 0 at the left\");\n  b.add_output<decl::Int>(\"Mouse Y\").description(\n      \"The region-space mouse Y location, in pixels, increasing from 0 at the bottom\");\n  b.add_output<decl::Int>(\"Region Width\").description(\"The total X size of the region in pixels\");\n  b.add_output<decl::Int>(\"Region Height\").description(\"The total Y size of the region in pixels\");\n}"
+        "inputs": []
     },
     "GEO_NODE_TOOL_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_SELECTION",
         "struct_name": "ToolSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Bool>(\"Selection\").field_source();\n}"
+        "inputs": []
     },
     "GEO_NODE_TOOL_ACTIVE_ELEMENT": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_ACTIVE_ELEMENT",
         "struct_name": "ToolActiveElement",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Int>(\"Index\").description(\n      \"Index of the active element in the specified domain\");\n  b.add_output<decl::Bool>(\"Exists\").description(\n      \"True if an active element exists in the mesh, false otherwise\");\n}"
+        "inputs": []
     },
     "GEO_NODE_TOOL_SET_FACE_SET": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_SET_FACE_SET",
         "struct_name": "ToolSetFaceSet",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Int>(\"Face Set\").hide_value().field_on_all();\n  b.add_output<decl::Geometry>(\"Mesh\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Face Set",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_TOOL_SET_SELECTION": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_SET_SELECTION",
         "struct_name": "ToolSetSelection",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all();\n  b.add_output<decl::Geometry>(\"Geometry\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_TOOL_VIEWPORT_TRANSFORM": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TOOL_VIEWPORT_TRANSFORM",
         "struct_name": "ViewportTransform",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_output<decl::Matrix>(\"Projection\")\n      .description(\"The 3D viewport's perspective or orthographic projection matrix\");\n  b.add_output<decl::Matrix>(\"View\").description(\n      \"The view direction and location of the 3D viewport\");\n  b.add_output<decl::Bool>(\"Is Orthographic\")\n      .description(\"Whether the viewport is using orthographic projection\");\n}"
+        "inputs": []
     },
     "GEO_NODE_TRANSFORM_GEOMETRY": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TRANSFORM_GEOMETRY",
         "struct_name": "Transform",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Geometry\");\n  b.add_input<decl::Vector>(\"Translation\").subtype(PROP_TRANSLATION);\n  b.add_input<decl::Rotation>(\"Rotation\");\n  b.add_input<decl::Vector>(\"Scale\").default_value({1, 1, 1}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Translation",
+                "description": ""
+            },
+            {
+                "type": "decl::Rotation",
+                "name": "Rotation",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Scale",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_TRANSLATE_INSTANCES": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TRANSLATE_INSTANCES",
         "struct_name": "TranslateInstances",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Instances\").only_instances();\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).hide_value().field_on_all();\n  b.add_input<decl::Vector>(\"Translation\").subtype(PROP_TRANSLATION).field_on_all();\n  b.add_input<decl::Bool>(\"Local Space\").default_value(true).field_on_all();\n  b.add_output<decl::Geometry>(\"Instances\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Instances",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Translation",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Local Space",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_TRIANGULATE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TRIANGULATE",
         "struct_name": "Triangulate",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Mesh\").supported_type(GeometryComponent::Type::Mesh);\n  b.add_input<decl::Bool>(\"Selection\").default_value(true).field_on_all().hide_value();\n  b.add_input<decl::Int>(\"Minimum Vertices\").default_value(4).min(4).max(10000);\n  b.add_output<decl::Geometry>(\"Mesh\").propagate_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Mesh",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Minimum Vertices",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_TRIM_CURVE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_TRIM_CURVE",
         "struct_name": "TrimCurve",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Curve\").supported_type(\n      {GeometryComponent::Type::Curve, GeometryComponent::Type::GreasePencil}"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Curve",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_UV_PACK_ISLANDS": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_UV_PACK_ISLANDS",
         "struct_name": "UVPackIslands",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Vector>(\"UV\").hide_value().supports_field();\n  b.add_input<decl::Bool>(\"Selection\")\n      .default_value(true)\n      .hide_value()\n      .supports_field()\n      .description(\"Faces to consider when packing islands\");\n  b.add_input<decl::Float>(\"Margin\").default_value(0.001f).min(0.0f).max(1.0f).description(\n      \"Space between islands\");\n  b.add_input<decl::Bool>(\"Rotate\").default_value(true).description(\"Rotate islands for best fit\");\n  b.add_output<decl::Vector>(\"UV\").field_source_reference_all();\n}"
+        "inputs": [
+            {
+                "type": "decl::Vector",
+                "name": "UV",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Margin",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Rotate",
+                "description": "Rotate islands for best fit"
+            }
+        ]
     },
     "GEO_NODE_UV_UNWRAP": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_UV_UNWRAP",
         "struct_name": "UVUnwrap",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Bool>(\"Selection\")\n      .default_value(true)\n      .hide_value()\n      .supports_field()\n      .description(\"Faces to participate in the unwrap operation\");\n  b.add_input<decl::Bool>(\"Seam\").hide_value().supports_field().description(\n      \"Edges to mark where the mesh is \\\"cut\\\" for the purposes of unwrapping\");\n  b.add_input<decl::Float>(\"Margin\").default_value(0.001f).min(0.0f).max(1.0f).description(\n      \"Space between islands\");\n  b.add_input<decl::Bool>(\"Fill Holes\")\n      .default_value(true)\n      .description(\n          \"Virtually fill holes in mesh before unwrapping, to better avoid overlaps \"\n          \"and preserve symmetry\");\n  b.add_output<decl::Vector>(\"UV\").field_source_reference_all().description(\n      \"UV coordinates between 0 and 1 for each face corner in the selected faces\");\n}"
+        "inputs": [
+            {
+                "type": "decl::Bool",
+                "name": "Selection",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Seam",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Margin",
+                "description": ""
+            },
+            {
+                "type": "decl::Bool",
+                "name": "Fill Holes",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_VIEWER": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_VIEWER",
         "struct_name": "Viewer",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  const bNode *node = b.node_or_null();\n\n  b.add_input<decl::Geometry>(\"Geometry\");\n  if (node != nullptr) {\n    const eCustomDataType data_type = eCustomDataType(node_storage(*node).data_type);\n    b.add_input(data_type, \"Value\").field_on_all().hide_value();\n  }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Geometry",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_VOLUME_CUBE": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_VOLUME_CUBE",
         "struct_name": "VolumeCube",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Float>(\"Density\")\n      .default_value(1.0f)\n      .description(\"Volume density per voxel\")\n      .supports_field();\n  b.add_input<decl::Float>(\"Background\").description(\"Value for voxels outside of the cube\");\n\n  b.add_input<decl::Vector>(\"Min\")\n      .default_value(float3(-1.0f))\n      .description(\"Minimum boundary of volume\");\n  b.add_input<decl::Vector>(\"Max\")\n      .default_value(float3(1.0f))\n      .description(\"Maximum boundary of volume\");\n\n  b.add_input<decl::Int>(\"Resolution X\")\n      .default_value(32)\n      .min(2)\n      .description(\"Number of voxels in the X axis\");\n  b.add_input<decl::Int>(\"Resolution Y\")\n      .default_value(32)\n      .min(2)\n      .description(\"Number of voxels in the Y axis\");\n  b.add_input<decl::Int>(\"Resolution Z\")\n      .default_value(32)\n      .min(2)\n      .description(\"Number of voxels in the Z axis\");\n\n  b.add_output<decl::Geometry>(\"Volume\").translation_context(BLT_I18NCONTEXT_ID_ID);\n}"
+        "inputs": [
+            {
+                "type": "decl::Float",
+                "name": "Density",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Background",
+                "description": "Value for voxels outside of the cube"
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Min",
+                "description": ""
+            },
+            {
+                "type": "decl::Vector",
+                "name": "Max",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Resolution X",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Resolution Y",
+                "description": ""
+            },
+            {
+                "type": "decl::Int",
+                "name": "Resolution Z",
+                "description": ""
+            }
+        ]
     },
     "GEO_NODE_VOLUME_TO_MESH": {
         "category": "GeometryNode",
         "enum_name": "GEO_NODE_VOLUME_TO_MESH",
         "struct_name": "VolumeToMesh",
-        "node_declare_code": "static void node_declare(NodeDeclarationBuilder &b)\n{\n  b.add_input<decl::Geometry>(\"Volume\")\n      .supported_type(GeometryComponent::Type::Volume)\n      .translation_context(BLT_I18NCONTEXT_ID_ID);\n  b.add_input<decl::Float>(\"Voxel Size\")\n      .default_value(0.3f)\n      .min(0.01f)\n      .subtype(PROP_DISTANCE)\n      .make_available([](bNode &node) {\n        node_storage(node).resolution_mode = VOLUME_TO_MESH_RESOLUTION_MODE_VOXEL_SIZE;\n      }"
+        "inputs": [
+            {
+                "type": "decl::Geometry",
+                "name": "Volume",
+                "description": ""
+            },
+            {
+                "type": "decl::Float",
+                "name": "Voxel Size",
+                "description": ""
+            }
+        ]
     }
 }
