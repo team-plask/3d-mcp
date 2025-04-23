@@ -752,3 +752,114 @@ TSharedPtr<FJsonObject> UMCPGeometryTools::getNodeInputsOutputs(const TSharedPtr
     
     return Response;
 }
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for geometry atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#include "GeometryTools.h"
+#include "MCPProtocolHandler.h"
+#include "JsonUtilities.h"
+
+UMCPGeometryTools::UMCPGeometryTools()
+{
+    RegisterTools();
+}
+
+void UMCPGeometryTools::RegisterTools()
+{
+    FMCPProtocolHandler::Get().RegisterTool("addNodeBatch", FMCPToolDelegate::CreateUObject(this, &UMCPGeometryTools::addNodeBatch));
+    FMCPProtocolHandler::Get().RegisterTool("setNodePropertyByIndex", FMCPToolDelegate::CreateUObject(this, &UMCPGeometryTools::setNodePropertyByIndex));
+}
+
+TSharedPtr<FJsonObject> UMCPGeometryTools::addNodeBatch(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing addNodeBatch in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter nodes
+        if (!Params->HasField("nodes")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter nodes is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter nodes is missing");
+            return Response;
+        }
+        // Extract complex parameter nodes 
+        const TSharedPtr<FJsonValue>* nodesValue = nullptr;
+        if (Params->TryGetField("nodes", nodesValue)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for addNodeBatch
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        // TODO: Set complex nodeIds value
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in addNodeBatch: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}
+
+TSharedPtr<FJsonObject> UMCPGeometryTools::setNodePropertyByIndex(const TSharedPtr<FJsonObject>& Params)
+{
+    UE_LOG(LogMCPPlugin, Display, TEXT("Executing setNodePropertyByIndex in Unreal Engine"));
+    
+    TSharedPtr<FJsonObject> Response = MakeShared<FJsonObject>();
+    
+    try
+    {        // Check required parameter nodeId
+        if (!Params->HasField("nodeId")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter nodeId is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter nodeId is missing");
+            return Response;
+        }
+        // Extract nodeId (FString)
+        FString nodeId;
+        if (Params->TryGetStringField("nodeId", nodeId)) {
+        }
+        // Check required parameter propertyIndex
+        if (!Params->HasField("propertyIndex")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter propertyIndex is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter propertyIndex is missing");
+            return Response;
+        }
+        // Extract propertyIndex (double)
+        double propertyIndex = 0;
+        if (Params->TryGetNumberField("propertyIndex", propertyIndex)) {
+        }
+        // Check required parameter value
+        if (!Params->HasField("value")) {
+            UE_LOG(LogMCPPlugin, Error, TEXT("Required parameter value is missing"));
+            Response->SetBoolField("success", false);
+            Response->SetStringField("error", "Required parameter value is missing");
+            return Response;
+        }
+        // Extract value (FString)
+        FString value;
+        if (Params->TryGetStringField("value", value)) {
+        }
+        
+        // TODO: Implement actual Unreal Engine API calls for setNodePropertyByIndex
+        // This is a placeholder implementation
+        
+        Response->SetBoolField("success", true);
+        
+    }
+    catch (const std::exception& Exception)
+    {
+        UE_LOG(LogMCPPlugin, Error, TEXT("Error in setNodePropertyByIndex: %s"), *FString(Exception.what()));
+        Response->SetBoolField("success", false);
+        Response->SetStringField("error", Exception.what());
+    }
+    
+    return Response;
+}

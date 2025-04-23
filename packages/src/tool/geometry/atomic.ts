@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { _OperationResponse } from "../core";
 import { createExecutableTools } from "../core/request";
+import { blNodeType } from "../../../scripts/generators/python/geo-node-types.generated";
 
 // Define base port types
 const PORT_TYPE = z
@@ -509,6 +510,16 @@ const geometryAtomicTools = {
       toPort: z.string().describe("Port name"),
     }),
     returns: _OperationResponse,
+  },
+  addNodeBatch: {
+    description:
+      "Adds a batch of nodes to the current edited geometry. The nodes are added in the order they are provided.",
+    parameters: z.object({
+      nodes: blNodeType!,
+    }),
+    returns: _OperationResponse.extend({
+      nodeIds: z.array(z.string()).describe("Created node identifiers"),
+    }),
   },
 } as const;
 

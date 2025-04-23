@@ -255,3 +255,45 @@ public:
     UFUNCTION()
     TSharedPtr<FJsonObject> getNodeInputsOutputs(const TSharedPtr<FJsonObject>& Params);
 };
+
+// === NEWLY GENERATED ===
+// Generated Unreal Engine implementation for geometry atomic tools
+// This file is generated - DO NOT EDIT DIRECTLY
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MCPToolsBase.h"
+#include "GeometryTools.generated.h"
+
+/**
+ * Unreal Engine implementation of the geometry tools for MCP protocol
+ */
+UCLASS()
+class MCPPLUGIN_API UMCPGeometryTools : public UMCPToolsBase
+{
+    GENERATED_BODY()
+
+public:
+    UMCPGeometryTools();
+    
+    virtual void RegisterTools() override;
+
+    /**
+     * Adds a batch of nodes to the current edited geometry. The nodes are added in the order they are provided.
+     * * @param nodes - The nodes parameter (TSharedPtr<FJsonValue>)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> addNodeBatch(const TSharedPtr<FJsonObject>& Params);
+
+    /**
+     * Sets an input default value of a node. For the available inputs and their type, use 'getNodeInputsOutputs'. Note that vectors are written Vector(x, y, z)
+     * * @param nodeId - Node identifier (FString)
+     * @param propertyIndex - Index of the property in the list of inputs (double)
+     * @param value - Property value (FString)
+     * @return Response object with operation results
+     */
+    UFUNCTION()
+    TSharedPtr<FJsonObject> setNodePropertyByIndex(const TSharedPtr<FJsonObject>& Params);
+};
