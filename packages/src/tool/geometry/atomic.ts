@@ -195,7 +195,7 @@ const geometryAtomicTools = {
     returns: _OperationResponse,
   },
   startEditGeometry: {
-    description: "Starts editing the geometry of an object.",
+    description: "Starts editing the geometry of an object. Before use this tool, you should use 'createGeometry' to create a new geometry object.",
     parameters: z.object({
       id: z.string().describe("Object identifier"),
     }),
@@ -208,7 +208,7 @@ const geometryAtomicTools = {
   },
   addNode: {
     description:
-      "Adds a new node to the current edited geometry. Use 'getNodeTypes' to get the available node types.",
+      "Adds a new node to the current edited geometry. Before use this tool, you should use 'getNodeTypes' to get the available node types.",
     parameters: z.object({
       type: z.string().describe("Node type"),
     }),
@@ -268,6 +268,37 @@ const geometryAtomicTools = {
       toNode: z.string().describe("Node identifier"),
       toPort: z.string().describe("Port name"),
     }),
+    returns: _OperationResponse,
+  },
+  deleteNode: {
+    description: "Deletes a node from the current edited geometry.",
+    parameters: z.object({
+      nodeId: z.string().describe("Identifier of the node to delete"),
+    }),
+    returns: _OperationResponse,
+  },
+  getNodeGraph: {
+    description: "Retrieves the complete node graph of the geometry currently being edited.",
+    parameters: z.object({}),
+    returns: _OperationResponse.extend({
+      nodes: z.array(z.object({
+        id: z.string().describe("Node identifier"),
+        type: z.string().describe("Node type"),
+        name: z.string().describe("Node name"),
+        position: z.array(z.number()).length(2).describe("Node position in the editor"),
+        properties: z.record(z.any()).describe("Node properties"),
+      })).describe("All nodes in the graph"),
+      connections: z.array(z.object({
+        fromNode: z.string().describe("Source node identifier"),
+        fromPort: z.string().describe("Source port name"),
+        toNode: z.string().describe("Target node identifier"),
+        toPort: z.string().describe("Target port name"),
+      })).describe("All connections between nodes"),
+    }),
+  },
+  arrangeNodes: {
+    description: "Arranges nodes in the current geometry node editor for better readability based on connections.",
+    parameters: z.object({}),
     returns: _OperationResponse,
   },
 } as const;
