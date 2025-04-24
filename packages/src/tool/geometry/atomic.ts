@@ -501,25 +501,33 @@ const geometryAtomicTools = {
         .describe("Node outputs"),
     }),
   },
-  connectNodes: {
-    description: "Connects two nodes in the current edited geometry.",
-    parameters: z.object({
-      fromNode: z.string().describe("Node identifier"),
-      fromPort: z.string().describe("Port name"),
-      toNode: z.string().describe("Node identifier"),
-      toPort: z.string().describe("Port name"),
-    }),
-    returns: _OperationResponse,
-  },
-  addNodeBatch: {
+  addNodesBatch: {
     description:
-      "Adds a batch of nodes to the current edited geometry. The nodes are added in the order they are provided.",
+      'Adds a batch of nodes to the current edited geometry. The nodes are added in the order they are provided. \
+      the node format is {"type": <node_type>, "inputs": {<input_name>: <value>, ...}}',
     parameters: z.object({
-      nodes: blNodeType!,
+      nodes: z.array(blNodeType).describe("List of nodes to add"),
     }),
     returns: _OperationResponse.extend({
-      nodeIds: z.array(z.string()).describe("Created node identifiers"),
+      nodes: z.array(z.object({})).describe("Created nodes"),
     }),
+  },
+  connectNodesBatch: {
+    description:
+      "Connects a batch of nodes in the current edited geometry. The connections are made in the order they are provided.",
+    parameters: z.object({
+      nodes: z
+        .array(
+          z.object({
+            fromNode: z.string().describe("Node identifier"),
+            fromPort: z.string().describe("Port name"),
+            toNode: z.string().describe("Node identifier"),
+            toPort: z.string().describe("Port name"),
+          })
+        )
+        .describe("List of connections to make"),
+    }),
+    returns: _OperationResponse,
   },
 } as const;
 
