@@ -12,6 +12,13 @@ with open(json_file_path, "r", encoding="utf-8") as file:
 
 
 def generate_ts_code(json_data):
+    zod_type_map = {
+        "Int": "z.number().int()",
+        "Float": "z.number()",
+        "String": "z.string()",
+        "Bool": "z.boolean()",
+        "Vector": "z.array(z.number())",
+    }
     ts_code = """import { z } from "zod";\n\n"""
     ts_code += "// Auto-generated file. Do not edit manually.\n\n"
 
@@ -22,8 +29,9 @@ def generate_ts_code(json_data):
             input_name = input_item["name"]
             input_description = input_item["description"]
             input_type = input_item["type"].replace("decl::", "")
+            zod_type = zod_type_map.get(input_type, "z.unknown()")
             inputs_code.append(
-                f'    "{input_name}": z.string().optional().describe("{input_description}. Type : {input_type}")'
+                f'    "{input_name}": {zod_type}.optional().describe("{input_description}. Type : {input_type}")'
             )
         inputs_object = ",\n".join(inputs_code)
         all_types_code.append(
