@@ -286,17 +286,25 @@ def find_files_with_enum(base_path, enum_name):
 def extract_add_input_calls(function_string):
     """
     Extract all add_input calls from a function string and generate a dictionary
-    with the type of input, name of the input, and optional description.
+    with the type of input, name of the input, optional alias, default_value, and description.
     """
     add_input_pattern = re.compile(
-        r'\w+\.add_input<([^>]+)>\("([^"]+)"\)(?:.*?\.description\("([^"]+)"\))?'
+        # Match type, name, and optional second argument
+        r'\w+\.add_input<([^>]+)>\("([^"]+)"(?:,\s*"([^"]+)")?\)'
+        # Optionally match .default_value(...)
+        r'(?:\s*\.default_value\(([^)]+)\))?'
+        # Optionally match .description(...)
+        r'(?:\s*\.description\("([^"]+)"\))?',
+        re.DOTALL
     )
     inputs = []
     for match in add_input_pattern.finditer(function_string):
-        input_type, input_name, description = match.groups()
+        input_type, input_name, input_alias, default_value, description = match.groups()
         inputs.append({
             "type": input_type,
             "name": input_name,
+            "alias": input_alias or "",  # Use an empty string if alias is not present
+            "default_value": default_value or "",
             "description": description or ""
         })
     return inputs
@@ -339,13 +347,14 @@ def main():
             node_declare_code = extract_node_declare(filepath)
             inputs = extract_add_input_calls(node_declare_code)
             if node_declare_code:
-                print(f"  node_declare function:\n{node_declare_code}\n")
+                # print(f"  node_declare function:\n{node_declare_code}\n")
                 result[enum_name] = {
                     "category": category,
                     "enum_name": enum_name,
                     "struct_name": struct_name,
                     "inputs": inputs,
                 }
+                print(f"  Inputs extracted: {inputs}")
     write_to_file(result)
     print(f"Results written to output.json")
 
