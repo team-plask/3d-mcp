@@ -6,44 +6,6 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
-def getNodeInputsOutputs(nodeId: str) -> Dict[str, Any]:
-
-    """
-    Retrieves all input and output socket names for a node, and checks if input sockets can accept a default_value.
-    
-    Args:
-    nodeId (str): The node id to get information about, must exist in the node graph
-        
-    Returns:
-    success (bool): Operation success status
-    inputs (Dict[str, Any] with keys {"name": str, "type": str, "can_accept_default_value": bool}): Node inputs
-    outputs (Dict[str, Any] with keys {"name": str, "type": str}): Node outputs
-    """
-    tool_name = "getNodeInputsOutputs"  # Define tool name for logging
-    params = {"nodeId": nodeId}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True, # TODO: Implement  
-                "inputs": None  , # TODO: Implement  
-                "outputs": None  
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
- # === NEWLY GENERATED ===
-
-
-
 def setNodeProperty(nodeId: str, property: str, value: Optional[Any] = None) -> Dict[str, Any]:
 
     """
@@ -297,8 +259,6 @@ def createGeometry() -> Dict[str, Any]:
 
 
  # === NEWLY GENERATED ===
-
-
 
 
 
