@@ -5,6 +5,94 @@ import bpy
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
 
+def applyModifier(id: str) -> Dict[str, Any]:
+    """
+    Apply a modifier to the current edited mesh
+
+    Args:
+    id (str): Modifier identifier
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "applyModifier"  # Define tool name for logging
+    params = {"id": id}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+
+        # Get the active object
+        obj = bpy.context.object
+        if obj is None or obj.type != 'MESH':
+            raise RuntimeError("No active mesh object found.")
+
+        was_edit_mode = bpy.context.object.mode == 'EDIT'
+
+        if (was_edit_mode):
+            # Switch to object mode to apply the modifier
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Find the modifier by its name (id)
+        modifier = obj.modifiers.get(id)
+        if modifier is None:
+            raise ValueError(
+                f"Modifier with ID '{id}' not found on the active object.")
+
+        # Apply the modifier
+        bpy.ops.object.modifier_apply(modifier=id)
+
+        if was_edit_mode:
+            # Switch back to edit mode if it was previously in edit mode
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def setProportionalEditing(enabled: bool, falloff: Literal["constant", "linear", "sharp", "root", "smooth", "sphere", "random"], radius: float) -> Dict[str, Any]:
+    """
+    Set proportional editing mode
+
+    Args:
+    enabled (bool): Enable or disable proportional editing
+    falloff (Literal["constant", "linear", "sharp", "root", "smooth", "sphere", "random"]): Falloff type
+    radius (float): Proportional editing radius
+
+    Returns:
+    success (bool): Operation success status
+    """
+    tool_name = "setProportionalEditing"  # Define tool name for logging
+    params = {"enabled": enabled, "falloff": falloff,
+              "radius": radius}  # Create params dict for logging
+    print(f"Executing {tool_name} in Blender with params: {params}")
+
+    try:
+        # Enable or disable proportional editing
+        bpy.context.scene.tool_settings.use_proportional_edit = enabled
+
+        if enabled:
+            # Set the falloff type
+            if falloff not in ['constant', 'linear', 'sharp', 'root', 'smooth', 'sphere', 'random']:
+                raise ValueError(
+                    f"Parameter 'falloff' must be one of ['constant', 'linear', 'sharp', 'root', 'smooth', 'sphere', 'random'], got {falloff}"
+                )
+            bpy.context.scene.tool_settings.proportional_edit_falloff = falloff.upper()
+
+            # Set the proportional editing radius
+            bpy.context.scene.tool_settings.proportional_size = radius
+
+        return {"success": True}
+
+    except Exception as e:
+        print(f"Error in {tool_name}: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+ # === NEWLY GENERATED ===
+
+
 def setGeometry(geometryData: Dict[str, Any]) -> Dict[str, Any]:
     """
     Set geometry data for the current edited mesh
