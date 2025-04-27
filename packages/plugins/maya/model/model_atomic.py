@@ -6,75 +6,6 @@ import maya.mel as mel
 import json
 from typing import Dict, Any, Optional, List, Union, Tuple, Literal
 
-def applyModifier(id: str) -> Dict[str, Any]:
-
-    """
-    Apply a modifier to the current edited mesh
-    
-    Args:
-    id (str): Modifier identifier
-        
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "applyModifier"  # Define tool name for logging
-    params = {"id": id}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-        # No parameters to validate
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-def setProportionalEditing(enabled: bool, falloff: Literal["constant", "linear", "sharp", "root", "smooth", "sphere", "random"], radius: float) -> Dict[str, Any]:
-
-    """
-    Set proportional editing mode
-    
-    Args:
-    enabled (bool): Enable or disable proportional editing
-    falloff (Literal["constant", "linear", "sharp", "root", "smooth", "sphere", "random"]): Falloff type
-    radius (float): Proportional editing radius
-        
-    Returns:
-    success (bool): Operation success status
-    """
-    tool_name = "setProportionalEditing"  # Define tool name for logging
-    params = {"enabled": enabled, "falloff": falloff, "radius": radius}  # Create params dict for logging
-    print(f"Executing {tool_name} in Maya with params: {params}")
-    
-    try:
-
-        # Validate enum values for falloff
-        if falloff is not None and falloff not in ['constant','linear','sharp','root','smooth','sphere','random']:
-            raise ValueError(f"Parameter 'falloff' must be one of ['constant','linear','sharp','root','smooth','sphere','random'], got {falloff}")
-      
-        
-        # TODO: Implement actual maya API calls
-        # This is a placeholder implementation
-        
-        return {
-            "success": True
-        }
-        
-    except Exception as e:
-        print(f"Error in {tool_name}: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
- # === NEWLY GENERATED ===
-
-
-
 
 def setGeometryde(geometryData: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -2947,5 +2878,3 @@ def combineMeshes(meshIds: List[str], name: Optional[str] = None, preserveSubMes
         return {"success": False, "error": str(e)}
 
  # === NEWLY GENERATED ===
-
-
