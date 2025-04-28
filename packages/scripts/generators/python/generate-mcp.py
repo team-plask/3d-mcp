@@ -1,26 +1,4 @@
 import re
-import json
-
-
-def parse_zod_union(file_path):
-    with open(file_path, 'r') as file:
-        content = file.read()
-
-    # Extract all objects in the zod union
-    pattern = re.compile(
-        r'^z\.object\(\{.*?\btype: z\.literal\("([^"]+)"\).*?inputs: z\.object\((\{.*?\})\).*?outputs: z\.object\((\{.*?\})\).*?\}\)',
-        re.DOTALL | re.MULTILINE
-    )
-    matches = pattern.findall(content)
-
-    tools = []
-
-    for match in matches:
-        tool_name = match[0]
-        inputs = match[1]
-        outputs = match[2]
-
-        # Combine inputs and outputs
 
 
 def parse_zod_union(file_path):
@@ -59,17 +37,25 @@ def parse_zod_union(file_path):
 
 def generate_mcp_tools(tools, output_file):
     with open(output_file, 'w') as file:
+        file.write("// Auto-generated file. Do not edit manually.\n\n")
+        file.write("import { z } from 'zod';\n")
+        file.write(
+            "import { _OperationResponse } from '../core';\n")
+        file.write("\n")
+        file.write("export default {\n")
+        file.write("  // Auto-generated tools\n")
         for tool in tools:
             file.write(f"add{tool['toolName']}: {{\n")
             file.write(f"  description: '{tool['description']}',\n")
             file.write(f"  parameters: z.object({tool['parameters']}),\n")
             file.write(f"  returns: {tool['returns']},\n")
             file.write("},\n\n")
+        file.write("};\n\n")
 
 
 if __name__ == "__main__":
-    input_file = r"e:\3d-mcp\packages\scripts\generators\python\geo-node-types.generated.ts"
-    output_file = r"e:\3d-mcp\packages\scripts\generators\python\generated_mcp_tools.js.template"
+    input_file = r"./geo-node-types.generated.ts"
+    output_file = r"../../../src/tool/geometry/generated_mcp_tools.ts"
 
     tools = parse_zod_union(input_file)
     generate_mcp_tools(tools, output_file)

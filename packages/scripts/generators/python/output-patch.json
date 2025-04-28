@@ -7,7 +7,7 @@
     "outputs": [
       {
         "type": "decl::Float",
-        "name": "Value test",
+        "name": "Value",
         "alias": "",
         "default_value": "",
         "description": "",

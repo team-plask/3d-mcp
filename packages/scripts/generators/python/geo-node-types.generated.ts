@@ -9,7 +9,7 @@ z.object({
 
   }),
   outputs: z.object({
-    "Value test": z.number().optional().describe(". Type : Float")
+    "Value": z.number().optional().describe(". Type : Float")
 })
 }),
 z.object({

@@ -1,9 +1,6 @@
 import { join } from "path";
 import { type PluginConfig } from "../config/pluginsConfig";
-import {
-  getTypeForLanguage,
-  getDocstringType,
-} from "../utils/types";
+import { getTypeForLanguage, getDocstringType } from "../utils/types";
 import {
   existsSync,
   mkdirSync,
@@ -19,20 +16,16 @@ import {
 function generatePythonParamSignature(schema: any): string {
   if (!schema || !schema.properties) return "";
 
-  const requiredProps = new Set<string>(
-    schema.required || []
-  );
-  const parameters = Object.entries(schema.properties).map(
-    ([name, prop]) => {
-      const typeName = getTypeForLanguage(prop, "python");
-      if (requiredProps.has(name)) {
-        return `${name}: ${typeName}`;
-      } else {
-        // Set default to None for optional parameters
-        return `${name}: Optional[${typeName}] = None`;
-      }
+  const requiredProps = new Set<string>(schema.required || []);
+  const parameters = Object.entries(schema.properties).map(([name, prop]) => {
+    const typeName = getTypeForLanguage(prop, "python");
+    if (requiredProps.has(name)) {
+      return `${name}: ${typeName}`;
+    } else {
+      // Set default to None for optional parameters
+      return `${name}: Optional[${typeName}] = None`;
     }
-  );
+  });
 
   return parameters.join(", ");
 }
@@ -45,17 +38,11 @@ function generatePythonDocstring(tool: any): string {
 
   const paramDocs = [];
   if (parameters && parameters.properties) {
-    for (const [name, prop] of Object.entries(
-      parameters.properties
-    )) {
+    for (const [name, prop] of Object.entries(parameters.properties)) {
       // Use detailed docstring types with full information
       const typeName = getDocstringType(prop);
-      const paramDesc =
-        (prop as any).description ||
-        `The ${name} parameter`;
-      paramDocs.push(
-        `    ${name} (${typeName}): ${paramDesc}`
-      );
+      const paramDesc = (prop as any).description || `The ${name} parameter`;
+      paramDocs.push(`    ${name} (${typeName}): ${paramDesc}`);
     }
   }
 
@@ -68,15 +55,12 @@ function generatePythonDocstring(tool: any): string {
       .map(([name, prop]) => {
         // Use detailed docstring types for returns
         const typeName = getDocstringType(prop);
-        const desc =
-          (prop as any).description ||
-          `The ${name} return value`;
+        const desc = (prop as any).description || `The ${name} return value`;
         return `    ${name} (${typeName}): ${desc}`;
       })
       .join("\n");
   } else {
-    returnDocs =
-      "    Dict[str, bool]: Operation response with success status";
+    returnDocs = "    Dict[str, bool]: Operation response with success status";
   }
 
   return `
@@ -84,11 +68,7 @@ function generatePythonDocstring(tool: any): string {
     ${description}
     
     Args:
-${
-  paramDocs.length > 0
-    ? paramDocs.join("\n")
-    : "    No parameters"
-}
+${paramDocs.length > 0 ? paramDocs.join("\n") : "    No parameters"}
         
     Returns:
 ${returnDocs}
@@ -98,21 +78,15 @@ ${returnDocs}
 /**
  * Generate parameter validation code for Python with explicit parameters
  */
-function generatePythonParamValidation(
-  schema: any
-): string {
+function generatePythonParamValidation(schema: any): string {
   if (!schema || !schema.properties) return "";
 
   const validationBlocks = [];
 
   // Validate enum values where applicable
-  for (const [name, prop] of Object.entries(
-    schema.properties
-  )) {
+  for (const [name, prop] of Object.entries(schema.properties)) {
     if ((prop as any).enum) {
-      const validValues = JSON.stringify(
-        (prop as any).enum
-      ).replace(/"/g, "'");
+      const validValues = JSON.stringify((prop as any).enum).replace(/"/g, "'");
       validationBlocks.push(`
         # Validate enum values for ${name}
         if ${name} is not None and ${name} not in ${validValues}:
@@ -138,10 +112,8 @@ export function generatePythonImplementation(
       const returnJsonSchema = tool.returns;
       const toolName = tool.name;
       const docstring = generatePythonDocstring(tool);
-      const paramSignature =
-        generatePythonParamSignature(paramJsonSchema);
-      const paramValidation =
-        generatePythonParamValidation(paramJsonSchema);
+      const paramSignature = generatePythonParamSignature(paramJsonSchema);
+      const paramValidation = generatePythonParamValidation(paramJsonSchema);
 
       // Determine return structure
       const returnProps = returnJsonSchema
@@ -156,15 +128,11 @@ export function generatePythonImplementation(
         .join(", # TODO: Implement  \n                ");
 
       // Create dictionary of parameters for logging
-      const buildParamsDict = Object.keys(
-        paramJsonSchema?.properties || {}
-      )
+      const buildParamsDict = Object.keys(paramJsonSchema?.properties || {})
         .map((param) => `"${param}": ${param}`)
         .join(", ");
 
-      const paramsDict = buildParamsDict
-        ? `{${buildParamsDict}}`
-        : "{}";
+      const paramsDict = buildParamsDict ? `{${buildParamsDict}}` : "{}";
 
       return `def ${toolName}(${paramSignature}) -> Dict[str, Any]:
 ${docstring}
@@ -188,9 +156,7 @@ ${paramValidation || "        # No parameters to validate"}
     })
     .join("\n\n");
 
-  return `# Generated ${
-    plugin.name
-  } implementation for ${category} atomic tools
+  return `# Generated ${plugin.name} implementation for ${category} atomic tools
 # This file is generated - DO NOT EDIT DIRECTLY
 
 ${plugin.importStatements.join("\n")}
@@ -208,10 +174,7 @@ export function generatePythonServer(
   categories: string[]
 ): string {
   const imports = categories
-    .map(
-      (category) =>
-        `from .${category} import ${category}_atomic`
-    )
+    .map((category) => `from .${category} import ${category}_atomic`)
     .join("\n");
 
   const toolRegistrations = categories
@@ -339,6 +302,8 @@ def process_task_queue():
     try:
         if tool_name in tools:
             result = tools[tool_name](**params)
+        elif tool_name in node_tools:
+            result = node_add(tool_name, **params)
         else:
             result = {"success": False, "error": f"Unknown tool: {tool_name}"}
     except Exception as e:
