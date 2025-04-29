@@ -1,0 +1,19 @@
+{
+  "SH_NODE_VALUE": {
+    "category": "ShaderNode",
+    "enum_name": "SH_NODE_VALUE",
+    "struct_name": "Value",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "decl::Float",
+        "name": "Value",
+        "alias": "",
+        "default_value": "",
+        "description": "",
+        "configurable": true
+      }
+    ],
+    "potential_params": []
+  }
+}
