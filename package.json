@@ -20,6 +20,7 @@
   "dependencies": {
     "@types/archiver": "^6.0.3",
     "archiver": "^7.0.1",
+    "axios": "^1.9.0",
     "fastmcp": "^1.21.0",
     "ws": "^8.18.1",
     "zod": "^3.22.4"
