@@ -8,6 +8,8 @@ from .model import model_atomic
 from .geometry import geometry_atomic
 from .core import core_atomic
 from .animation import animation_atomic
+from .tools_dict import node_tools, node_add
+
 import queue
 import uuid
 import time
@@ -90,7 +92,7 @@ def process_task_queue():
     try:
         if tool_name in tools:
             result = tools[tool_name](**params)
-        elif tool_name in node_tools:
+        elif tool_name[3:] in node_tools:
             result = node_add(tool_name, **params)
         else:
             result = {"success": False, "error": f"Unknown tool: {tool_name}"}
