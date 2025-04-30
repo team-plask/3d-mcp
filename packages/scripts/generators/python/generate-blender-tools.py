@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # Input TypeScript file
     input_file = r"./geo-node-types.generated.ts"
     # Output Python file
-    output_file = r"../../../plugins/blender/tools_dict.py"
+    output_file = r"../../../plugins/blender/tools_dict_temp.py"
 
     # Parse tools and generate Python file
     tools = parse_tools(input_file)

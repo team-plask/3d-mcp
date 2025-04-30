@@ -799,9 +799,9 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
     # Set properties
     if params is not None:
         for key, value in params.items():
-            if value is None:
+            if value is None or value == []:
                 continue
-            propName = key
+            propName = key.replace("\\_", "_").replace("__", " ")
             if isinstance(value, list):
                 value = tuple(value)
             # Try first if the property is on the node

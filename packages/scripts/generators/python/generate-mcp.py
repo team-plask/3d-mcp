@@ -1,5 +1,21 @@
 import re
 
+tool_white_list = [
+    "GeometryNodeMeshCube",
+    "GeometryNodeMeshSphere",
+    "GeometryNodeMeshCylinder",
+    "GeometryNodeMeshCone",
+    "ShaderNodeVectorMath",
+    "ShaderNodeMath",
+    "ShaderNodeCombineXYZ",
+    "ShaderNodeSeparateXYZ",
+    "ShaderNodeVectorRotate",
+    "ShaderNodeValue",
+    "ShaderNodeMapRange",
+    "GeometryNodeInputPosition",
+    "GeometryNodeSetPosition",
+]
+
 
 def parse_zod_union(file_path):
     with open(file_path, 'r') as file:
@@ -25,6 +41,10 @@ def parse_zod_union(file_path):
         combined_parameters = f"{inputs[:-1]}, {outputs[1:]}" if stripped_inputs != "{}" and stripped_outputs != "{}" else (
             inputs if stripped_outputs == "{}" else outputs)
 
+        use_white_list = True
+        if use_white_list and tool_name not in tool_white_list:
+            print(f"Tool {tool_name} is not in the white list, skipping.")
+            continue
         tools.append({
             "toolName": tool_name,
             "description": f"Adds a {tool_name} node to the graph.",

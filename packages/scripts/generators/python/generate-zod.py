@@ -75,6 +75,8 @@ def generate_input_output_code(items, is_output=False):
         item_alias = item.get("alias")
         if item_alias:
             item_name = item_alias
+        # Spaces are invalid in MCP tools, replace spaces with "__" and "_" with "\_"
+        item_name = item_name.replace("_", "\\_").replace(" ", "__")
         item_type = item["type"].replace("decl::", "")
         zod_type = zod_type_map.get(item_type, "z.unknown()")
 

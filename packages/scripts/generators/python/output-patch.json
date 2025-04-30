@@ -15,5 +15,76 @@
       }
     ],
     "potential_params": []
+  },
+  "SH_NODE_VECTOR_MATH": {
+    "inputs": [
+      {
+        "type": "decl::Vector",
+        "name": "Vector",
+        "alias": "",
+        "default_value": "",
+        "description": ""
+      },
+      {
+        "type": "decl::Vector",
+        "name": "Vector",
+        "alias": "Vector_001",
+        "default_value": "",
+        "description": ""
+      },
+      {
+        "type": "decl::Vector",
+        "name": "Vector",
+        "alias": "Vector_002",
+        "default_value": "",
+        "description": ""
+      },
+      {
+        "type": "decl::Float",
+        "name": "Scale",
+        "alias": "",
+        "default_value": "1.0f",
+        "description": ""
+      },
+      {
+        "type": "decl::String",
+        "name": "operation",
+        "alias": "",
+        "default_value": "'ADD'",
+        "description": "The operation to perform on the vectors. Can be one of the following: ADD, SUBTRACT,MULTIPLY,DIVIDE,MULTIPLY_ADD,POWER,LOGARITHM,SQRT,INVERSE_SQRT,ABSOLUTE,EXPONENT,MINIMUM,MAXIMUM,LESS_THAN,GREATER_THAN,SIGN,COMPARE,SMOOTH_MIN,SMOOTH_MAX,ROUND,FLOOR,CEIL,TRUNC,FRACT,MODULO,FLOORED_MODULO,WRAP,SNAP,PINGPONG,SINE,COSINE,TANGENT,ARCSINE,ARCCOSINE,ARCTANGENT,ARCTAN2,SINH,COSH,TANH,RADIANS,DEGREES"
+      }
+    ]
+  },
+  "SH_NODE_MATH": {
+    "inputs": [
+      {
+        "type": "decl::Float",
+        "name": "Value",
+        "alias": "",
+        "default_value": "0.5f",
+        "description": ""
+      },
+      {
+        "type": "decl::Float",
+        "name": "Value",
+        "alias": "Value_001",
+        "default_value": "0.5f",
+        "description": ""
+      },
+      {
+        "type": "decl::Float",
+        "name": "Value",
+        "alias": "Value_002",
+        "default_value": "0.5f",
+        "description": ""
+      },
+      {
+        "type": "decl::String",
+        "name": "operation",
+        "alias": "",
+        "default_value": "'ADD'",
+        "description": "The operation to perform on the values. Can be one of the following: 'ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREES'"
+      }
+    ]
   }
 }
