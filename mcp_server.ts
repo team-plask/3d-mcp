@@ -137,6 +137,43 @@ mcpServer.addTool({
   },
 });
 
+// 'proposeMergePatch' MCP Tool 정의
+mcpServer.addTool({
+  name: "proposeMergePatch",
+  description: "Receives a JSON Merge Patch and forwards it to the Word Add-in to propose changes.",
+  parameters: z.object({
+    // JSON Merge Patch는 복잡한 객체일 수 있으므로, 여기서는 일단 'any' 타입으로 받거나
+    // z.record(z.any()) 또는 더 구체적인 스키마를 정의할 수 있습니다.
+    // 실제로는 JSON 문자열로 받아 Add-in에서 파싱하는 것이 더 안정적일 수 있습니다.
+    patch: z.record(z.any()).describe("The JSON Merge Patch object (RFC 7396)."),
+    // patchTarget: z.string().optional().describe("Optional identifier for the target content (e.g., 'paragraph:123', 'body'). Defaults to 'body'."), // 어떤 콘텐츠를 패치할지 식별자 추가 고려
+  }),
+  execute: async (params) => {
+    console.log(`Executing proposeMergePatch with patch:`, params.patch);
+    if (!taskpaneSocket) {
+      console.error("Taskpane is not connected. Cannot forward patch.");
+      return { error: "Taskpane not connected" };
+    }
+    try {
+      // 받은 patch 데이터를 그대로 Add-in으로 전송
+      taskpaneSocket.send(JSON.stringify({
+        tool: "proposeMergePatch", // Add-in이 식별할 명령 이름
+        params: {
+          patch: params.patch,
+          // patchTarget: params.patchTarget // 타겟 정보도 전달
+        }
+      }));
+      console.log("Patch forwarded to taskpane via WebSocket.");
+      // 서버는 전달만 하므로, 성공/실패 여부는 Add-in에서 판단 후 필요시 서버로 다시 알릴 수 있음
+      return { result: "Patch proposal forwarded to Word Add-in." };
+    } catch (error: any) {
+      console.error("Error forwarding patch via WebSocket:", error);
+      return { error: error.message || "Failed to forward patch via WebSocket." };
+    }
+  },
+});
+
+
 
 // MCP 서버 시작 (표준 입출력 사용 - WSS 서버와 독립적으로 실행됨)
 mcpServer.start({
