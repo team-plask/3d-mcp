@@ -23,7 +23,7 @@ def parse_zod_union(file_path):
 
     # Extract all objects in the zod union
     pattern = re.compile(
-        r'^z\.object\(\{.*?\btype: z\.literal\("([^"]+)"\).*?inputs: z\.object\((\{.*?\})\).*?outputs: z\.object\((\{.*?\})\).*?\}\)',
+        r'^z\.object\(\{.*?\btype: z\.literal\("([^"]+)"\).*?inputs: z\.object\((\{.*?\})\).*?outputs: z\.object\((\{.*?\})\).*?\}\)\.describe\("([^"]+)"\)',
         re.DOTALL | re.MULTILINE
     )
     matches = pattern.findall(content)
@@ -34,7 +34,8 @@ def parse_zod_union(file_path):
         tool_name = match[0]
         inputs = match[1]
         outputs = match[2]
-
+        description = match[3]
+        
         # Combine inputs and outputs
         stripped_inputs = inputs.replace("\n", "").replace(" ", "")
         stripped_outputs = outputs.replace("\n", "").replace(" ", "")
@@ -47,7 +48,7 @@ def parse_zod_union(file_path):
             continue
         tools.append({
             "toolName": tool_name,
-            "description": f"Adds a {tool_name} node to the graph.",
+            "description": f"Adds a {tool_name} node to the graph. {description}",
             "parameters": combined_parameters,
             "returns": "_OperationResponse.extend({ nodeId: z.string() })",
         })

@@ -256,17 +256,20 @@ NODE_LIST = [
 
 def parse_defnode_entries(filepath):
     """Parse DefNode entries from the NOD_static_types.h file."""
+    # defnode_pattern = re.compile(
+    #     r'DefNode\((\w+),\s*(\w+),\s*[^,]*,\s*"[^"]*",\s*(\w+),\s*[^,]*,\s*"([^"]*)"'
+    # )
     defnode_pattern = re.compile(
-        r'DefNode\((\w+),\s*(\w+),\s*[^,]*,\s*"[^"]*",\s*(\w+),'
+        r'DefNode\((\w+),\s*(\w+),\s*[^,]*,\s*"[^"]*",\s*(\w+),\s*[^,]*,\s*"((?:[^"\\]|\\.)*)"\)'
     )
     nodes = []
     with open(filepath, 'r', encoding='utf-8') as file:
         for line in file:
             match = defnode_pattern.search(line)
             if match:
-                category, enum_name, struct_name = match.groups()
+                category, enum_name, struct_name, description = match.groups()
                 if category + struct_name in NODE_LIST:
-                    nodes.append((category, enum_name, struct_name))
+                    nodes.append((category, enum_name, struct_name, description))
     return nodes
 
 
@@ -305,40 +308,68 @@ def extract_add_input_output_calls(function_string):
     with the type of input, name of the input, optional alias, default_value, and description.
     """
     add_input_pattern = re.compile(
-        # Match type, name, and optional second argument
-        r'\w+\.add_input<([^>]+)>\("([^"]+)"(?:,\s*"([^"]+)")?\)'
-        # Optionally match .default_value(...)
-        r'(?:\s*\.default_value\(([^)]+)\))?'
-        # Optionally match .description(...)
-        r'(?:\s*\.description\("([^"]+)"\))?',
+        r'\w+\.add_input<([^>]+)>\("([^"]+)"(?:,\s*"([^"]+)")?\)'  # Match the add_input call
+        r'(?:\s*\.\w+\([^)]*\))*;',                               # Match all chained calls until the semicolon
         re.DOTALL
     )
     add_output_pattern = re.compile(
-        # Match type, name, and optional second argument
-        r'\w+\.add_output<([^>]+)>\("([^"]+)"(?:,\s*"([^"]+)")?\)'
-        # Optionally match .default_value(...)
-        r'(?:\s*\.default_value\(([^)]+)\))?'
-        # Optionally match .description(...)
-        r'(?:\s*\.description\("([^"]+)"\))?',
-        re.DOTALL
+    r'\w+\.add_output<([^>]+)>\("([^"]+)"(?:,\s*"([^"]+)")?\)'  # Match the add_input call
+    r'(?:\s*\.\w+\([^)]*\))*;',                               # Match all chained calls until the semicolon
+    re.DOTALL
     )
+
     inputs = []
     for match in add_input_pattern.finditer(function_string):
-        input_type, input_name, input_alias, default_value, description = match.groups()
+        full_call = match.group(0)  # The entire add_input block
+        input_type = match.group(1)  # Type (e.g., decl::Float)
+        input_name = match.group(2)  # Name (e.g., "Fac")
+        input_alias = match.group(3) or ""  # Optional alias
+
+        # Extract all chained calls
+        chained_calls = re.findall(r'\.(\w+)\(([^)]*)\)', full_call)
+
+        # Filter for default_value and description
+        default_value = None
+        description = None
+        for call, args in chained_calls:
+            if call == "default_value":
+                default_value = args
+            elif call == "description":
+                description = args.strip('"')  # Remove quotes from description
+
+        # Append the result
         inputs.append({
             "type": input_type,
             "name": input_name,
-            "alias": input_alias or "",  # Use an empty string if alias is not present
+            "alias": input_alias,
             "default_value": default_value or "",
             "description": description or ""
         })
+        
     outputs = []
-    for match in add_output_pattern.finditer(function_string):
-        output_type, output_name, output_alias, default_value, description = match.groups()
+    for match in add_input_pattern.finditer(function_string):
+        full_call = match.group(0)  # The entire add_input block
+        input_type = match.group(1)  # Type (e.g., decl::Float)
+        input_name = match.group(2)  # Name (e.g., "Fac")
+        input_alias = match.group(3) or ""  # Optional alias
+
+        # Extract all chained calls
+        chained_calls = re.findall(r'\.(\w+)\(([^)]*)\)', full_call)
+
+        # Filter for default_value and description
+        default_value = None
+        description = None
+        for call, args in chained_calls:
+            if call == "default_value":
+                default_value = args
+            elif call == "description":
+                description = args.strip('"')  # Remove quotes from description
+
+        # Append the result
         outputs.append({
-            "type": output_type,
-            "name": output_name,
-            "alias": output_alias or "",  # Use an empty string if alias is not present
+            "type": input_type,
+            "name": input_name,
+            "alias": input_alias,
             "default_value": default_value or "",
             "description": description or ""
         })
@@ -372,16 +403,16 @@ def write_to_file(content):
 
 def main():
     # Path to the NOD_static_types.h file.
-    nod_static_types_path = r"e:\blender-source\source\blender\nodes\NOD_static_types.h"
+    nod_static_types_path = r"/Users/ben/git/blender/source/blender/nodes/NOD_static_types.h"
     # Base path to search for .cc files.
-    base_path = r"e:\blender-source"
+    base_path = r"/Users/ben/git/blender/source/blender"
 
     # Step 1: Parse DefNode entries.
     nodes = parse_defnode_entries(nod_static_types_path)
 
     # Step 2: Find matching files and extract node_declare functions.
     result = {}
-    for category, enum_name, struct_name in nodes:
+    for category, enum_name, struct_name, description in nodes:
         print(f"Processing Node: {category}, {enum_name}, {struct_name}")
         matching_files = find_files_with_enum(base_path, enum_name)
         for filepath in matching_files:
@@ -395,10 +426,13 @@ def main():
                     "category": category,
                     "enum_name": enum_name,
                     "struct_name": struct_name,
+                    "description": description,
                     "inputs": inputs,
                     "outputs": outputs,
                     "potential_params": potential_params,
                 }
+                print(f"Node name extracted: {enum_name}")
+                print(f"Node description extracted: {description}")
                 print(
                     f"  Inputs extracted: {inputs}, Outputs extracted: {outputs}")
                 print("  Potential parameters extracted:")

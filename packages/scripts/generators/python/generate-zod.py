@@ -71,7 +71,7 @@ def generate_input_output_code(items, is_output=False):
         if is_output and not item.get("configurable"):
             continue
         item_name = item["name"]
-        item_description = item["description"]
+        item_description = item["description"].replace('\"', '\'').replace('\\\\','\\').replace("\n", "")
         item_alias = item.get("alias")
         if item_alias:
             item_name = item_alias
@@ -111,7 +111,7 @@ def generate_ts_code(json_data):
   outputs: z.object({{
 {outputs_object}
 }})
-}})"""
+}}).describe("{value['description']}")"""
         )
 
     if len(all_types_code) > 1:

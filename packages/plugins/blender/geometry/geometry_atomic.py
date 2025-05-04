@@ -550,7 +550,7 @@ def getNodeInputsOutputs(nodeId: str) -> Dict[str, Any]:
         inputs = []
         for input_socket in node.inputs:
             inputs.append({
-                "name": input_socket.name,
+                "name": input_socket.identifier,
                 "type": input_socket.bl_label,
                 "can_accept_default_value": hasattr(input_socket, "default_value")
             })
@@ -559,7 +559,7 @@ def getNodeInputsOutputs(nodeId: str) -> Dict[str, Any]:
         outputs = []
         for output_socket in node.outputs:
             outputs.append({
-                "name": output_socket.name,
+                "name": output_socket.identifier,
                 "type": output_socket.bl_label
             })
 
