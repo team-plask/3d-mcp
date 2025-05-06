@@ -1,59 +1,51 @@
-// src/taskpane/index.ts
 import { snapshot, readById, searchKeyword, editParagraph } from './demo';
-import { WordWebSocketClient } from './ws-client';
+import { RpcWebSocket } from './ws-client';
 
-const $ = <T extends HTMLElement>(id:string)=>document.getElementById(id)! as T;
-let wsClient: WordWebSocketClient|null = null;
+const $ = <T extends HTMLElement>(id: string) =>
+  document.getElementById(id)! as T;
 
-function updateConnectionStatus(status: string, isError: boolean = false) {
-  const s = $('connectionStatus')!;
-  s.textContent = status;
-  s.className = isError ? 'error' : 'success';
-  $('mainContent') .style.display = isError ? 'none' : 'block';
-  $('reconnectPanel').style.display = isError ? 'block' : 'none';
-}
+let rpc: RpcWebSocket | null = null;
 
-function connectWebSocket() {
-    updateConnectionStatus('연결 중...', false);
-  
-    const secure = location.protocol==='https:';
-    const proto  = secure ? 'wss' : 'ws';
-    const port   = 8080;
-  
-    wsClient = new WordWebSocketClient(`${proto}://localhost:${port}/ws/word`);
-  
-    wsClient.onOpen  = () => updateConnectionStatus('연결됨', false);
-    wsClient.onError = e  => updateConnectionStatus(`연결 실패: ${e}`, true);
-    wsClient.onClose = () => updateConnectionStatus('연결 종료', true);
-  
-    // ← HERE: bind incoming messages to your UI logger
-    wsClient.onMessage = (msg) => {
-      console.log('→ UI got msg:', msg);
-      displayResult(msg);
-    };
-  
-    wsClient.connect();
-}
-
-function displayResult(obj: any) {
+function logResult(obj: any) {
   $('result').textContent = JSON.stringify(obj, null, 2);
 }
 
+function updateStatus(txt: string, error = false) {
+  const s = $('connectionStatus');
+  s.textContent = txt;
+  s.className   = error ? 'error' : 'success';
+  $('mainContent').style.display   = error ? 'none' : 'block';
+  $('reconnectPanel').style.display= error ? 'block' : 'none';
+}
+
+function connectWS() {
+  updateStatus('연결 중…');
+
+  const url = `wss://localhost:8080/ws`;      // 서버의 공통 엔드포인트
+  rpc = new RpcWebSocket(url, 'word');
+
+  rpc.onOpen    = () => updateStatus('연결됨');
+  rpc.onClose   = () => updateStatus('연결 종료', true);
+  rpc.onError   = () => updateStatus('연결 오류', true);
+
+  /*  add‑in ←→ 서버  모든 결과를 패널에 출력  */
+  rpc.onMessage = res => {
+    console.log('↙︎  WS response:', res);
+    logResult(res);
+  };
+
+  rpc.connect();
+}
+
+/* ------------------------------------------------------------------ */
 Office.onReady(() => {
-  // 버튼은 기존대로
-  $('snapshotBtn') .addEventListener('click', snapshot);
-  $('readBtn')     .addEventListener('click', readById);
-  $('searchBtn')   .addEventListener('click', searchKeyword);
-  $('editBtn')     .addEventListener('click', editParagraph);
+  $('snapshotBtn').addEventListener('click', snapshot);
+  $('readBtn')    .addEventListener('click', readById);
+  $('searchBtn')  .addEventListener('click', searchKeyword);
+  $('editBtn')    .addEventListener('click', editParagraph);
 
-  // WS 버튼과 리커넥트
-  $('wsButton')    .addEventListener('click', connectWebSocket);
-  $('reconnectBtn').addEventListener('click', connectWebSocket);
+  $('wsButton')   .addEventListener('click', connectWS);
+  $('reconnectBtn').addEventListener('click', connectWS);
 
-  // WS 연결된 후
-  connectWebSocket();
-
-  // WS 로 받은 메시지는 displayResult 로 찍어보기
-  // (WordWebSocketClient 내부에서 UI로 forward 하고 싶으면
-  //  onmessage 콜백 추가해서 처리하세요)
+  connectWS();      // 시작하자마자 연결
 });

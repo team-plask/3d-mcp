@@ -1,127 +1,96 @@
-// src/taskpane/ws-client.ts
-import {
-    readBlockById,
-    searchBlocks,
-    editBlockParagraph
-  } from './service';
-  
-  type WSIn =
-    | { type: 'init'; role: string }
-    | { type: 'readRequest';   id: string }
-    | { type: 'searchRequest'; keyword: string }
-    | { type: 'editRequest';   id: string; content: string };
-  
-  type WSOut =
-    | { type: 'initResponse';  success: boolean }
-    | { type: 'readResponse';  id: string;       payload: any }
-    | { type: 'searchResponse';keyword: string; hits: any[] }
-    | { type: 'editResponse';  id: string;       success: boolean; err?: string }
-    | { type: 'error';         err: string };
-  
-  export class WordWebSocketClient {
-    private ws: WebSocket | null = null;
-    constructor(private url: string) {}
-    public onMessage: ((msg: WSOut) => void) | null = null;
+import { v4 as uuid } from 'uuid';
+import * as svc from './service';
 
-    public onOpen: (() => void) | null = null;
-    public onError: ((error: any) => void) | null = null;
-    public onClose: (() => void) | null = null;
-  
-    public connect() {
-      this.ws = new WebSocket(this.url);
-  
-      this.ws.onopen = () => {
-        console.log('WS open');
-        this.onOpen?.();
-        this.ws!.send(JSON.stringify({ type: 'init', role: 'addin' }));
-      };
-  
-      this.ws.onmessage = async ev => {
-        let raw = ev.data as string;
-        let msg: WSIn;
-        console.log('WS message', raw);
-        try { msg = JSON.parse(raw); }
-        catch { 
-          this.send({ type:'error', err:'invalid JSON' });
-          return;
-        }
-  
-        // ← IMMEDIATELY inform any UI-listener
-        //    (we'll forward the typed object, WSOut, after we respond or before)
-        //    but for simplicity let's forward the raw untyped object:
-        const notify = (o: any) => this.onMessage?.(o);
-  
-        try {
-          switch (msg.type) {
-            case 'init':
-              this.send({ type:'initResponse', success: true });
-              notify({ type:'initResponse', success: true });
-              break;
-  
-            case 'readRequest': {
-              const blk = await readBlockById(msg.id);
-              const out: WSOut = { type:'readResponse', id: msg.id, payload: blk };
-              this.send(out);
-              notify(out);
-              break;
-            }
-  
-            case 'searchRequest': {
-              const hits = await searchBlocks(msg.keyword);
-              const out: WSOut = { type:'searchResponse', keyword: msg.keyword, hits };
-              this.send(out);
-              notify(out);
-              break;
-            }
-  
-            case 'editRequest': {
-              const ok = await editBlockParagraph(msg.id, msg.content);
-              const out: WSOut = {
-                type: 'editResponse',
-                id: msg.id,
-                success: ok,
-                ...(ok ? {} : { err: 'not found or not paragraph' })
-              };
-              this.send(out);
-              notify(out);
-              break;
-            }
-  
-            default:
-              const unknownMsg = msg as { type: string };
-              const e: WSOut = { type:'error', err:`unknown type ${unknownMsg.type}` };
-              this.send(e);
-              notify(e);
-          }
-        } catch (e: any) {
-          const errMsg: WSOut = { type:'error', err: e.message||String(e) };
-          this.send(errMsg);
-          notify(errMsg);
-        }
-      };
-  
-      this.ws.onerror = err => {
-        console.error('WS error', err);
-        this.onError?.(err);
-      };
-  
-      this.ws.onclose = () => {
-        console.log('WS closed');
-        this.onClose?.();
-      };
-    }
-  
-    private send(msg: WSOut) {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify(msg));
-      } else {
-        console.warn('WS not open; skipping send', msg);
+type Req = { kind:'req'; id:string; app:string; action:string; params:any };
+type Res = { kind:'res'; id:string; app:string; action:string; ok:boolean; data?:any; err?:string };
+
+export class RpcWebSocket {
+  private ws: WebSocket | null = null;
+  readonly id = uuid();                   // add‑in 고유 ID
+
+  constructor(private url: string, private app = 'word') {}
+
+  /* 외부에서 필요하면 콜백 갈아끼우세요 */
+  onOpen    = ()           => {};
+  onClose   = ()           => {};
+  onError   = (_:any)      => {};
+  onMessage = (_:Res)      => {};
+
+  /* ------------------------------------------------------------------ */
+  connect() {
+    this.ws = new WebSocket(this.url);
+
+    /* open → init & 테스트 search */
+    this.ws.onopen = () => {
+      this.onOpen();
+
+      /* 1️⃣ 서버에게 자기 소개 */
+      this.sendReq('init', {
+        name:         'Word JSON Add‑in',
+        version:      '0.1.0',
+        description:  'Task‑pane add‑in exposing read/search/edit RPC',
+        capabilities: ['read','search','edit'],
+        requires_ui:  true
+      });
+
+      /* 2️⃣ 테스트 검색 */
+      this.sendReq('search', { keyword:'소프트웨어' });
+    };
+
+    this.ws.onclose = ()  => this.onClose();
+    this.ws.onerror = err => this.onError(err);
+
+    /* 모든 ‑‑> 애드‑인 수신 */
+    this.ws.onmessage = async ev => {
+      let m: Req | Res;
+      try { m = JSON.parse(ev.data as string); } catch { return; }
+
+      /* ① 서버 → add‑in 응답 → UI 에 그대로 전달 */
+      if (m.kind === 'res') {
+        this.onMessage(m);
+        return;
       }
-    }
-  
-    public disconnect() {
-      this.ws?.close();
-      this.ws = null;
-    }
+
+      /* ② 서버 → add‑in 요청 처리 */
+      if (m.kind !== 'req') return;
+
+      try {
+        switch (m.action) {
+          case 'read': {
+            const blk = await svc.readBlockById(m.params.blockId);
+            this.sendRes('read',  true, blk);
+            break;
+          }
+          case 'search': {
+            const hits = await svc.searchBlocks(m.params.keyword);
+            this.sendRes('search', true, hits);
+            break;
+          }
+          case 'edit': {
+            const ok = await svc.editBlockParagraph(
+              m.params.blockId, m.params.content);
+            this.sendRes('edit', ok, undefined,
+                         ok ? undefined : 'not paragraph / not found');
+            break;
+          }
+          default:
+            this.sendRes(m.action, false, undefined, 'unknown action');
+        }
+      } catch (e:any) {
+        this.sendRes(m.action, false, undefined, e.message||String(e));
+      }
+    };
   }
-  
+
+  /* ------------------------------------------------------------------ */
+  sendReq(action:string, params:any={}) {
+    this.raw({ kind:'req', id:this.id, app:this.app, action, params });
+  }
+  private sendRes(action:string, ok:boolean, data?:any, err?:string) {
+    this.raw({ kind:'res', id:this.id, app:this.app, action, ok, data, err });
+  }
+  private raw(o:any) {
+    if (this.ws?.readyState === WebSocket.OPEN)
+      this.ws.send(JSON.stringify(o));
+  }
+}
