@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Word JSON Demo</title>
+
+    <!-- Office.js must load first -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <!-- 여기에 있던 스타일 태그를 제거 -->
+  </head>
+
+  <body class="ms-font-m">
+    <!-- 웹소켓 연결 상태 패널 -->
+    <div id="connectionPanel">
+      <div id="connectionStatus">연결 중...</div>
+    </div>
+
+    <!-- 연결 실패 시 표시할 재연결 패널 -->
+    <div id="reconnectPanel" style="display: none;">
+      <p>서버에 연결할 수 없습니다. 서버가 실행 중인지 확인하세요.</p>
+      <button id="reconnectBtn">재연결</button>
+    </div>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <div id="mainContent">
+      <!-- 0. Connection / snapshot -->
+      <button id="wsButton">Connect WebSocket</button>
+      <button id="snapshotBtn">↻ Export current document → JSON</button>
+      <hr />
+
+      <!-- 1. READ -->
+      <h3>Read (by ID)</h3>
+      <input id="readId"  placeholder="block id (e.g. para‑0)" />
+      <button id="readBtn">Read</button>
+
+      <!-- 2. SEARCH -->
+      <h3>Search (by keyword)</h3>
+      <input id="searchKw" placeholder="keyword (e.g. introduction)" />
+      <button id="searchBtn">Search</button>
+
+      <!-- 3. EDIT -->
+      <h3>Edit (text replace)</h3>
+      <input id="editId"  placeholder="block id"        style="width:140px" />
+      <input id="editTxt" placeholder="new paragraph text" style="width:300px" />
+      <button id="editBtn">Edit & Write‑back</button>
+
+      <hr />
+      <!-- Result panel -->
+      <pre id="result" style="border:1px solid #ccc; padding:.5em;"></pre>
+    </div>
+
+    <!-- webpack (or <script>) injects taskpane.js below -->
+    <!-- <script src="taskpane.js"></script> -->
+  </body>
+</html>
