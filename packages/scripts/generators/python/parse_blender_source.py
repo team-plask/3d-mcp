@@ -298,7 +298,7 @@ def extract_ui_item_r_calls(file_content):
     ui_item_r_calls = []
     for match in ui_item_r_pattern.finditer(file_content):
         third_param = match.group(1)  # Capture the third parameter
-        ui_item_r_calls.append(third_param)
+        ui_item_r_calls.append({ "name" : third_param, "enum_values" : [] })
     return ui_item_r_calls
 
 
@@ -419,7 +419,7 @@ def main():
             print(f"  Found in file: {filepath}")
             node_declare_code = extract_node_declare(filepath)
             inputs, outputs = extract_add_input_output_calls(node_declare_code)
-            potential_params = extract_ui_item_r_calls(extract_all(filepath))
+            potential_enums = extract_ui_item_r_calls(extract_all(filepath))
             if node_declare_code:
                 # print(f"  node_declare function:\n{node_declare_code}\n")
                 result[enum_name] = {
@@ -429,14 +429,14 @@ def main():
                     "description": description,
                     "inputs": inputs,
                     "outputs": outputs,
-                    "potential_params": potential_params,
+                    "potential_enums": potential_enums,
                 }
                 print(f"Node name extracted: {enum_name}")
                 print(f"Node description extracted: {description}")
                 print(
                     f"  Inputs extracted: {inputs}, Outputs extracted: {outputs}")
                 print("  Potential parameters extracted:")
-                for param in potential_params:
+                for param in potential_enums:
                     print(f"    {param}")
     write_to_file(result)
     print(f"Results written to output.json")

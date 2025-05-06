@@ -92,6 +92,19 @@ def generate_input_output_code(items, is_output=False):
         )
     return ",\n".join(code)
 
+def generate_enum_code(enums):
+    code = []
+    for enum in enums:
+        enum_name = enum["name"]
+        enum_values = enum["enum_values"]
+        if enum_values == []:
+            continue
+        enum_description = enum["description"] or ""
+        enum_default_value = enum["default_value"]
+        code.append(
+            f'    "{enum_name}": z.enum([{", ".join(["'" + value + "'" for value in enum_values])}]).describe("{enum["description"]}").default("{enum_default_value}")'
+        )
+    return ",\n".join(code)
 
 def generate_ts_code(json_data):
     ts_code = """import { z } from "zod";\n\n"""
@@ -101,12 +114,14 @@ def generate_ts_code(json_data):
     for key, value in json_data.items():
         inputs_object = generate_input_output_code(value["inputs"])
         outputs_object = generate_input_output_code(value["outputs"], True)
+        potential_enums = generate_enum_code(value["potential_enums"])
 
         all_types_code.append(
             f"""z.object({{
   type: z.literal("{value['category']}{value['struct_name']}"),
   inputs: z.object({{
 {inputs_object}
+{",\n" + potential_enums if potential_enums else ""}
   }}),
   outputs: z.object({{
 {outputs_object}

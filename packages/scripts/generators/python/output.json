@@ -6,7 +6,7 @@
         "description": "Input numerical values to other nodes in the tree",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_VALTORGB": {
         "category": "ShaderNode",
@@ -31,7 +31,7 @@
                 "description": "\n          \"The value used to map onto the color gradient. 0.0 results in the leftmost color, \"\n          \"while 1.0 results in the rightmost"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_CURVE_VEC": {
         "category": "ShaderNode",
@@ -70,7 +70,7 @@
                 "description": "\n      \"Vector which would be mapped to the curve"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_CURVE_RGB": {
         "category": "ShaderNode",
@@ -109,7 +109,7 @@
                 "description": "\n      \"Vector which would be mapped to the curve"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_MAP_RANGE": {
         "category": "ShaderNode",
@@ -246,10 +246,19 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "interpolation_type",
-            "clamp"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "interpolation_type",
+                "enum_values": []
+            },
+            {
+                "name": "clamp",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_CLAMP": {
@@ -303,8 +312,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "clamp_type"
+        "potential_enums": [
+            {
+                "name": "clamp_type",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_MATH": {
@@ -358,7 +370,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_VECTOR_MATH": {
         "category": "ShaderNode",
@@ -425,8 +437,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "operation"
+        "potential_enums": [
+            {
+                "name": "operation",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_BLACKBODY": {
@@ -452,7 +467,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_TEX_GRADIENT": {
         "category": "ShaderNode",
@@ -477,8 +492,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "gradient_type"
+        "potential_enums": [
+            {
+                "name": "gradient_type",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_TEX_NOISE": {
@@ -504,10 +522,19 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "noise_dimensions",
-            "noise_type",
-            "normalize"
+        "potential_enums": [
+            {
+                "name": "noise_dimensions",
+                "enum_values": []
+            },
+            {
+                "name": "noise_type",
+                "enum_values": []
+            },
+            {
+                "name": "normalize",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_TEX_MAGIC": {
@@ -561,8 +588,11 @@
                 "description": "Amount of distortion"
             }
         ],
-        "potential_params": [
-            "turbulence_depth"
+        "potential_enums": [
+            {
+                "name": "turbulence_depth",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_TEX_WAVE": {
@@ -672,11 +702,23 @@
                 "description": "\n          \"Position of the wave along the Bands Direction.\\n\"\n          \"This can be used as an input for more control over the distortion"
             }
         ],
-        "potential_params": [
-            "wave_type",
-            "bands_direction",
-            "rings_direction",
-            "wave_profile"
+        "potential_enums": [
+            {
+                "name": "wave_type",
+                "enum_values": []
+            },
+            {
+                "name": "bands_direction",
+                "enum_values": []
+            },
+            {
+                "name": "rings_direction",
+                "enum_values": []
+            },
+            {
+                "name": "wave_profile",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_TEX_VORONOI": {
@@ -702,11 +744,23 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "voronoi_dimensions",
-            "feature",
-            "distance",
-            "normalize"
+        "potential_enums": [
+            {
+                "name": "voronoi_dimensions",
+                "enum_values": []
+            },
+            {
+                "name": "feature",
+                "enum_values": []
+            },
+            {
+                "name": "distance",
+                "enum_values": []
+            },
+            {
+                "name": "normalize",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_TEX_CHECKER": {
@@ -732,7 +786,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_TEX_BRICK": {
         "category": "ShaderNode",
@@ -757,11 +811,23 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "offset",
-            "offset_frequency",
-            "squash",
-            "squash_frequency"
+        "potential_enums": [
+            {
+                "name": "offset",
+                "enum_values": []
+            },
+            {
+                "name": "offset_frequency",
+                "enum_values": []
+            },
+            {
+                "name": "squash",
+                "enum_values": []
+            },
+            {
+                "name": "squash_frequency",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_VECTOR_ROTATE": {
@@ -801,9 +867,15 @@
                 "description": "Point to rotate around"
             }
         ],
-        "potential_params": [
-            "rotation_type",
-            "invert"
+        "potential_enums": [
+            {
+                "name": "rotation_type",
+                "enum_values": []
+            },
+            {
+                "name": "invert",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_SEPXYZ": {
@@ -829,7 +901,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_COMBXYZ": {
         "category": "ShaderNode",
@@ -854,7 +926,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_TEX_WHITE_NOISE": {
         "category": "ShaderNode",
@@ -879,8 +951,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "noise_dimensions"
+        "potential_enums": [
+            {
+                "name": "noise_dimensions",
+                "enum_values": []
+            }
         ]
     },
     "SH_NODE_CURVE_FLOAT": {
@@ -920,7 +995,7 @@
                 "description": "\n      \"Vector which would be mapped to the curve"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "SH_NODE_MIX": {
         "category": "ShaderNode",
@@ -1001,12 +1076,27 @@
                 "description": "Value of the second vector input"
             }
         ],
-        "potential_params": [
-            "data_type",
-            "factor_mode",
-            "blend_type",
-            "clamp_result",
-            "clamp_factor"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "factor_mode",
+                "enum_values": []
+            },
+            {
+                "name": "blend_type",
+                "enum_values": []
+            },
+            {
+                "name": "clamp_result",
+                "enum_values": []
+            },
+            {
+                "name": "clamp_factor",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_ALIGN_EULER_TO_VECTOR": {
@@ -1046,9 +1136,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "axis",
-            "pivot_axis"
+        "potential_enums": [
+            {
+                "name": "axis",
+                "enum_values": []
+            },
+            {
+                "name": "pivot_axis",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_ALIGN_ROTATION_TO_VECTOR": {
@@ -1088,9 +1184,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "axis",
-            "pivot_axis"
+        "potential_enums": [
+            {
+                "name": "axis",
+                "enum_values": []
+            },
+            {
+                "name": "pivot_axis",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_AXES_TO_ROTATION": {
@@ -1100,9 +1202,15 @@
         "description": "Create a rotation from a primary and (ideally orthogonal) secondary axis",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "primary_axis",
-            "secondary_axis"
+        "potential_enums": [
+            {
+                "name": "primary_axis",
+                "enum_values": []
+            },
+            {
+                "name": "secondary_axis",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_AXIS_ANGLE_TO_ROTATION": {
@@ -1112,7 +1220,7 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_BOOLEAN_MATH": {
         "category": "FunctionNode",
@@ -1151,8 +1259,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "operation"
+        "potential_enums": [
+            {
+                "name": "operation",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_COMBINE_COLOR": {
@@ -1220,8 +1331,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_COMBINE_MATRIX": {
@@ -1457,7 +1571,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_QUATERNION_TO_ROTATION": {
         "category": "FunctionNode",
@@ -1524,7 +1638,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_COMBINE_TRANSFORM": {
         "category": "FunctionNode",
@@ -1563,7 +1677,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_COMPARE": {
         "category": "FunctionNode",
@@ -1756,10 +1870,19 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "mode",
-            "operation"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "mode",
+                "enum_values": []
+            },
+            {
+                "name": "operation",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_EULER_TO_ROTATION": {
@@ -1785,7 +1908,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_FLOAT_TO_INT": {
         "category": "FunctionNode",
@@ -1810,8 +1933,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "rounding_mode"
+        "potential_enums": [
+            {
+                "name": "rounding_mode",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INPUT_BOOL": {
@@ -1821,8 +1947,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "boolean"
+        "potential_enums": [
+            {
+                "name": "boolean",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INPUT_COLOR": {
@@ -1832,8 +1961,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "value"
+        "potential_enums": [
+            {
+                "name": "value",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INPUT_INT": {
@@ -1843,8 +1975,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "integer"
+        "potential_enums": [
+            {
+                "name": "integer",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INPUT_ROTATION": {
@@ -1854,8 +1989,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "rotation_euler"
+        "potential_enums": [
+            {
+                "name": "rotation_euler",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INPUT_SPECIAL_CHARACTERS": {
@@ -1865,7 +2003,7 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_INPUT_STRING": {
         "category": "FunctionNode",
@@ -1874,8 +2012,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "string"
+        "potential_enums": [
+            {
+                "name": "string",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INPUT_VECTOR": {
@@ -1885,8 +2026,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "vector"
+        "potential_enums": [
+            {
+                "name": "vector",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_INVERT_MATRIX": {
@@ -1912,7 +2056,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_INVERT_ROTATION": {
         "category": "FunctionNode",
@@ -1937,7 +2081,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_MATRIX_MULTIPLY": {
         "category": "FunctionNode",
@@ -1976,7 +2120,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_PROJECT_POINT": {
         "category": "FunctionNode",
@@ -2015,7 +2159,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_RANDOM_VALUE": {
         "category": "FunctionNode",
@@ -2040,8 +2184,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_REPLACE_STRING": {
@@ -2095,7 +2242,7 @@
                 "description": "The string to replace each match with"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_ROTATE_EULER": {
         "category": "FunctionNode",
@@ -2104,9 +2251,15 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "rotation_type",
-            "space"
+        "potential_enums": [
+            {
+                "name": "rotation_type",
+                "enum_values": []
+            },
+            {
+                "name": "space",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_ROTATE_ROTATION": {
@@ -2146,8 +2299,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "rotation_space"
+        "potential_enums": [
+            {
+                "name": "rotation_space",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_ROTATE_VECTOR": {
@@ -2187,7 +2343,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_ROTATION_TO_AXIS_ANGLE": {
         "category": "FunctionNode",
@@ -2212,7 +2368,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_ROTATION_TO_EULER": {
         "category": "FunctionNode",
@@ -2237,7 +2393,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_SEPARATE_COLOR": {
         "category": "FunctionNode",
@@ -2246,8 +2402,11 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "FN_NODE_SEPARATE_MATRIX": {
@@ -2273,7 +2432,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_ROTATION_TO_QUATERNION": {
         "category": "FunctionNode",
@@ -2298,7 +2457,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_SEPARATE_TRANSFORM": {
         "category": "FunctionNode",
@@ -2323,7 +2482,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_SLICE_STRING": {
         "category": "FunctionNode",
@@ -2376,7 +2535,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_STRING_LENGTH": {
         "category": "FunctionNode",
@@ -2401,7 +2560,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_TRANSFORM_DIRECTION": {
         "category": "FunctionNode",
@@ -2440,7 +2599,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_TRANSFORM_POINT": {
         "category": "FunctionNode",
@@ -2479,7 +2638,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_TRANSPOSE_MATRIX": {
         "category": "FunctionNode",
@@ -2504,7 +2663,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "FN_NODE_VALUE_TO_STRING": {
         "category": "FunctionNode",
@@ -2543,7 +2702,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_ACCUMULATE_FIELD": {
         "category": "GeometryNode",
@@ -2552,9 +2711,15 @@
         "description": "Add the values of an evaluated field together and output the running total for each element",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type",
-            "domain"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_ATTRIBUTE_DOMAIN_SIZE": {
@@ -2580,8 +2745,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "component"
+        "potential_enums": [
+            {
+                "name": "component",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_ATTRIBUTE_STATISTIC": {
@@ -2621,9 +2789,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "domain"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_BAKE": {
@@ -2633,19 +2807,55 @@
         "description": "Cache the incoming data so that it can be used without recomputation",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "name",
-            "socket_type",
-            "attribute_domain",
-            "is_attribute",
-            "bake_mode",
-            "bake_mode",
-            "use_custom_path",
-            "directory",
-            "use_custom_simulation_frame_range",
-            "frame_start",
-            "frame_end",
-            "id"
+        "potential_enums": [
+            {
+                "name": "name",
+                "enum_values": []
+            },
+            {
+                "name": "socket_type",
+                "enum_values": []
+            },
+            {
+                "name": "attribute_domain",
+                "enum_values": []
+            },
+            {
+                "name": "is_attribute",
+                "enum_values": []
+            },
+            {
+                "name": "bake_mode",
+                "enum_values": []
+            },
+            {
+                "name": "bake_mode",
+                "enum_values": []
+            },
+            {
+                "name": "use_custom_path",
+                "enum_values": []
+            },
+            {
+                "name": "directory",
+                "enum_values": []
+            },
+            {
+                "name": "use_custom_simulation_frame_range",
+                "enum_values": []
+            },
+            {
+                "name": "frame_start",
+                "enum_values": []
+            },
+            {
+                "name": "frame_end",
+                "enum_values": []
+            },
+            {
+                "name": "id",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_BLUR_ATTRIBUTE": {
@@ -2655,8 +2865,11 @@
         "description": "Mix attribute values of neighboring elements",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_BOUNDING_BOX": {
@@ -2682,7 +2895,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CAPTURE_ATTRIBUTE": {
         "category": "GeometryNode",
@@ -2707,11 +2920,23 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "domain",
-            "name",
-            "domain",
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            },
+            {
+                "name": "name",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            },
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_COLLECTION_INFO": {
@@ -2765,8 +2990,11 @@
                 "description": "\n          \"Reset the transforms of every child instance in the output. Only used when Separate \"\n          \"Children is enabled"
             }
         ],
-        "potential_params": [
-            "transform_space"
+        "potential_enums": [
+            {
+                "name": "transform_space",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CONVEX_HULL": {
@@ -2792,7 +3020,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_ENDPOINT_SELECTION": {
         "category": "GeometryNode",
@@ -2831,7 +3059,7 @@
                 "description": "The amount of points to select from the end of each spline"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_HANDLE_TYPE_SELECTION": {
         "category": "GeometryNode",
@@ -2840,9 +3068,15 @@
         "description": "Provide a selection based on the handle types of Bézier control points",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode",
-            "handle_type"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            },
+            {
+                "name": "handle_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_LENGTH": {
@@ -2852,7 +3086,7 @@
         "description": "Retrieve the length of all splines added together",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_PRIMITIVE_ARC": {
         "category": "GeometryNode",
@@ -2861,8 +3095,11 @@
         "description": "Generate a poly spline arc",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_BEZIER_SEGMENT": {
@@ -2888,8 +3125,11 @@
                 "description": "The number of evaluated points on the curve"
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_CIRCLE": {
@@ -2899,8 +3139,11 @@
         "description": "Generate a poly spline circle",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_LINE": {
@@ -2910,8 +3153,11 @@
         "description": "Generate a poly spline line with two points",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_QUADRATIC_BEZIER": {
@@ -2937,7 +3183,7 @@
                 "description": "The number of edges on the curve"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_PRIMITIVE_QUADRILATERAL": {
         "category": "GeometryNode",
@@ -3046,8 +3292,11 @@
                 "description": "The distance between the top point and the X axis"
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_PRIMITIVE_SPIRAL": {
@@ -3143,7 +3392,7 @@
                 "description": "\n      \"Switch the direction from clockwise to counterclockwise"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_PRIMITIVE_STAR": {
         "category": "GeometryNode",
@@ -3210,7 +3459,7 @@
                 "description": "The counterclockwise rotation of the inner set of points"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_SET_HANDLE_TYPE": {
         "category": "GeometryNode",
@@ -3249,9 +3498,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "mode",
-            "handle_type"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            },
+            {
+                "name": "handle_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_SPLINE_PARAMETER": {
@@ -3261,7 +3516,7 @@
         "description": "Retrieve how far along each spline a control point is",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_SPLINE_TYPE": {
         "category": "GeometryNode",
@@ -3300,8 +3555,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "spline_type"
+        "potential_enums": [
+            {
+                "name": "spline_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_TO_MESH": {
@@ -3311,7 +3569,7 @@
         "description": "Convert curves into a mesh, optionally with a custom profile shape defined by curves",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_TO_POINTS": {
         "category": "GeometryNode",
@@ -3320,8 +3578,11 @@
         "description": "Generate a point cloud by sampling positions along curves",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_CURVE_TOPOLOGY_CURVE_OF_POINT": {
@@ -3347,7 +3608,7 @@
                 "description": "The control point to retrieve data from"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_CURVE_TOPOLOGY_POINTS_OF_CURVE": {
         "category": "GeometryNode",
@@ -3400,7 +3661,7 @@
                 "description": "Which of the sorted points to output"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_DEFORM_CURVES_ON_SURFACE": {
         "category": "GeometryNode",
@@ -3425,7 +3686,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_DELETE_GEOMETRY": {
         "category": "GeometryNode",
@@ -3464,9 +3725,15 @@
                 "description": "The parts of the geometry to be deleted"
             }
         ],
-        "potential_params": [
-            "domain",
-            "mode"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            },
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_DISTRIBUTE_POINTS_IN_GRID": {
@@ -3520,8 +3787,11 @@
                 "description": "\n      \"Seed used by the random number generator to generate random points"
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_DISTRIBUTE_POINTS_IN_VOLUME": {
@@ -3575,8 +3845,11 @@
                 "description": "\n      \"Seed used by the random number generator to generate random points"
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_DISTRIBUTE_POINTS_ON_FACES": {
@@ -3586,9 +3859,15 @@
         "description": "Generate points spread out on the surface of a mesh",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "distribute_method",
-            "use_legacy_normal"
+        "potential_enums": [
+            {
+                "name": "distribute_method",
+                "enum_values": []
+            },
+            {
+                "name": "use_legacy_normal",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_DUAL_MESH": {
@@ -3628,7 +3907,7 @@
                 "description": "\n          \"Keep non-manifold boundaries of the input mesh in place by avoiding the dual \"\n          \"transformation there"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_DUPLICATE_ELEMENTS": {
         "category": "GeometryNode",
@@ -3681,8 +3960,11 @@
                 "description": "\n      \"The number of duplicates to create for each element"
             }
         ],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_EDGE_PATHS_TO_CURVES": {
@@ -3736,7 +4018,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_EDGE_PATHS_TO_SELECTION": {
         "category": "GeometryNode",
@@ -3775,7 +4057,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_EDGES_TO_FACE_GROUPS": {
         "category": "GeometryNode",
@@ -3800,7 +4082,7 @@
                 "description": "Edges used to split faces into separate groups"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_EVALUATE_AT_INDEX": {
         "category": "GeometryNode",
@@ -3825,9 +4107,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "domain"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_EVALUATE_ON_DOMAIN": {
@@ -3837,9 +4125,15 @@
         "description": "Retrieve values from a field on a different domain besides the domain from the context",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type",
-            "domain"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_EXTRUDE_MESH": {
@@ -3907,8 +4201,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_FILL_CURVE": {
@@ -3918,8 +4215,11 @@
         "description": "Generate a mesh on the XY plane with faces on the inside of input curves",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_FILLET_CURVE": {
@@ -3929,8 +4229,11 @@
         "description": "Round corners by generating circular arcs on each control point",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_FLIP_FACES": {
@@ -3970,7 +4273,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_GEOMETRY_TO_INSTANCE": {
         "category": "GeometryNode",
@@ -3995,7 +4298,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_GET_NAMED_GRID": {
         "category": "GeometryNode",
@@ -4048,8 +4351,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_GRID_TO_MESH": {
@@ -4103,7 +4409,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_IMAGE_INFO": {
         "category": "GeometryNode",
@@ -4142,7 +4448,7 @@
                 "description": "\n      \"Which frame to use for videos. Note that different frames in videos can \"\n      \"have different resolutions"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_IMAGE_TEXTURE": {
         "category": "GeometryNode",
@@ -4195,9 +4501,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "interpolation",
-            "extension"
+        "potential_enums": [
+            {
+                "name": "interpolation",
+                "enum_values": []
+            },
+            {
+                "name": "extension",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_IMAGE": {
@@ -4207,7 +4519,7 @@
         "description": "Input image",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_IMPORT_STL": {
         "category": "GeometryNode",
@@ -4232,7 +4544,7 @@
                 "description": "Path to a STL file"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INDEX_OF_NEAREST": {
         "category": "GeometryNode",
@@ -4271,7 +4583,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INDEX_SWITCH": {
         "category": "GeometryNode",
@@ -4280,8 +4592,11 @@
         "description": "Choose between an arbitrary number of values with an index",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_INPUT_ACTIVE_CAMERA": {
@@ -4291,7 +4606,7 @@
         "description": "Retrieve the scene's active camera",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_CURVE_HANDLES": {
         "category": "GeometryNode",
@@ -4316,7 +4631,7 @@
                 "description": "\n          \"Output the handle positions relative to the corresponding control point \"\n          \"instead of in the local space of the geometry"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_CURVE_TILT": {
         "category": "GeometryNode",
@@ -4325,7 +4640,7 @@
         "description": "Retrieve the angle at each control point used to twist the curve's normal around its tangent",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_EDGE_SMOOTH": {
         "category": "GeometryNode",
@@ -4334,7 +4649,7 @@
         "description": "Retrieve whether each edge is marked for smooth or split normals",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_FACE_SMOOTH": {
         "category": "GeometryNode",
@@ -4343,7 +4658,7 @@
         "description": "Retrieve whether each face is marked for smooth or sharp normals",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_ID": {
         "category": "GeometryNode",
@@ -4352,7 +4667,7 @@
         "description": "Retrieve a stable random identifier value from the \\\"id\\\" attribute on the point domain, or the index if the attribute does not exist",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_INDEX": {
         "category": "GeometryNode",
@@ -4361,7 +4676,7 @@
         "description": "Retrieve an integer value indicating the position of each element in the list, starting at zero",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_INSTANCE_ROTATION": {
         "category": "GeometryNode",
@@ -4370,7 +4685,7 @@
         "description": "Retrieve the rotation of each instance in the geometry",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_INSTANCE_SCALE": {
         "category": "GeometryNode",
@@ -4379,7 +4694,7 @@
         "description": "Retrieve the scale of each instance in the geometry",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MATERIAL_INDEX": {
         "category": "GeometryNode",
@@ -4388,7 +4703,7 @@
         "description": "Retrieve the index of the material used for each element in the geometry's list of materials",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_INSTANCE_TRANSFORM": {
         "category": "GeometryNode",
@@ -4397,7 +4712,7 @@
         "description": "Retrieve the full transformation of each instance in the geometry",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MATERIAL": {
         "category": "GeometryNode",
@@ -4406,8 +4721,11 @@
         "description": "Output a single material",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "material"
+        "potential_enums": [
+            {
+                "name": "material",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_INPUT_MESH_EDGE_ANGLE": {
@@ -4417,7 +4735,7 @@
         "description": "Calculate the surface area of each face in a mesh",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_EDGE_NEIGHBORS": {
         "category": "GeometryNode",
@@ -4426,7 +4744,7 @@
         "description": "Retrieve the number of faces that use each edge as one of their sides",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_EDGE_VERTICES": {
         "category": "GeometryNode",
@@ -4435,7 +4753,7 @@
         "description": "Retrieve topology information relating to each edge of a mesh",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_FACE_AREA": {
         "category": "GeometryNode",
@@ -4444,7 +4762,7 @@
         "description": "Calculate the surface area of a mesh's faces",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_FACE_IS_PLANAR": {
         "category": "GeometryNode",
@@ -4469,7 +4787,7 @@
                 "description": "\n          \"The distance a point can be from the surface before the face is no longer \"\n          \"considered planar"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_FACE_NEIGHBORS": {
         "category": "GeometryNode",
@@ -4478,7 +4796,7 @@
         "description": "Retrieve topology information relating to each face of a mesh",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_ISLAND": {
         "category": "GeometryNode",
@@ -4487,7 +4805,7 @@
         "description": "Retrieve information about separate connected regions in a mesh",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_MESH_VERTEX_NEIGHBORS": {
         "category": "GeometryNode",
@@ -4496,7 +4814,7 @@
         "description": "Retrieve topology information relating to each vertex of a mesh",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_NAMED_ATTRIBUTE": {
         "category": "GeometryNode",
@@ -4521,8 +4839,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_INPUT_NAMED_LAYER_SELECTION": {
@@ -4548,7 +4869,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_NORMAL": {
         "category": "GeometryNode",
@@ -4557,7 +4878,7 @@
         "description": "Retrieve a unit length vector indicating the direction pointing away from the geometry at each element",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_POSITION": {
         "category": "GeometryNode",
@@ -4566,7 +4887,7 @@
         "description": "Retrieve a vector indicating the location of each element",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_RADIUS": {
         "category": "GeometryNode",
@@ -4575,7 +4896,7 @@
         "description": "Retrieve the radius at each point on curve or point cloud geometry",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_SCENE_TIME": {
         "category": "GeometryNode",
@@ -4584,7 +4905,7 @@
         "description": "Retrieve the current time in the scene's animation in units of seconds or frames",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_SHORTEST_EDGE_PATHS": {
         "category": "GeometryNode",
@@ -4623,7 +4944,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_SPLINE_CYCLIC": {
         "category": "GeometryNode",
@@ -4632,7 +4953,7 @@
         "description": "Retrieve whether each spline endpoint connects to the beginning",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_SPLINE_LENGTH": {
         "category": "GeometryNode",
@@ -4641,7 +4962,7 @@
         "description": "Retrieve the total length of each spline, as a distance or as a number of points",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_SPLINE_RESOLUTION": {
         "category": "GeometryNode",
@@ -4650,7 +4971,7 @@
         "description": "Retrieve the number of evaluated points that will be generated for every control point on curves",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INPUT_TANGENT": {
         "category": "GeometryNode",
@@ -4659,7 +4980,7 @@
         "description": "Retrieve the direction of curves at each control point",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INSTANCE_ON_POINTS": {
         "category": "GeometryNode",
@@ -4684,7 +5005,7 @@
                 "description": "Points to instance on"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INSTANCES_TO_POINTS": {
         "category": "GeometryNode",
@@ -4751,7 +5072,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_INTERPOLATE_CURVES": {
         "category": "GeometryNode",
@@ -4776,7 +5097,7 @@
                 "description": "Base curves that new curves are interpolated between"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_IS_VIEWPORT": {
         "category": "GeometryNode",
@@ -4785,7 +5106,7 @@
         "description": "Retrieve whether the nodes are being evaluated for the viewport rather than the final render",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_JOIN_GEOMETRY": {
         "category": "GeometryNode",
@@ -4810,7 +5131,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MATERIAL_SELECTION": {
         "category": "GeometryNode",
@@ -4835,7 +5156,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MENU_SWITCH": {
         "category": "GeometryNode",
@@ -4844,11 +5165,23 @@
         "description": "Select from multiple inputs by name",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type",
-            "name",
-            "data_type",
-            "description"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "name",
+                "enum_values": []
+            },
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "description",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MERGE_BY_DISTANCE": {
@@ -4858,8 +5191,11 @@
         "description": "Merge vertices or points within a given distance",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_BOOLEAN": {
@@ -4927,9 +5263,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "operation",
-            "solver"
+        "potential_enums": [
+            {
+                "name": "operation",
+                "enum_values": []
+            },
+            {
+                "name": "solver",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_FACE_GROUP_BOUNDARIES": {
@@ -4955,7 +5297,7 @@
                 "description": "\n          \"An identifier for the group of each face. All contiguous faces with the \"\n          \"same value are in the same region"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_PRIMITIVE_CIRCLE": {
         "category": "GeometryNode",
@@ -4994,8 +5336,11 @@
                 "description": "Distance of the vertices from the origin"
             }
         ],
-        "potential_params": [
-            "fill_type"
+        "potential_enums": [
+            {
+                "name": "fill_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_PRIMITIVE_CONE": {
@@ -5091,8 +5436,11 @@
                 "description": "Height of the generated cone"
             }
         ],
-        "potential_params": [
-            "fill_type"
+        "potential_enums": [
+            {
+                "name": "fill_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_PRIMITIVE_CUBE": {
@@ -5146,7 +5494,7 @@
                 "description": "Number of vertices for the Z side of the shape"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_PRIMITIVE_CYLINDER": {
         "category": "GeometryNode",
@@ -5227,8 +5575,11 @@
                 "description": "The height of the cylinder"
             }
         ],
-        "potential_params": [
-            "fill_type"
+        "potential_enums": [
+            {
+                "name": "fill_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_PRIMITIVE_GRID": {
@@ -5296,7 +5647,7 @@
                 "description": "Number of vertices in the Y direction"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_PRIMITIVE_ICO_SPHERE": {
         "category": "GeometryNode",
@@ -5335,7 +5686,7 @@
                 "description": "Number of subdivisions on top of the basic icosahedron"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_PRIMITIVE_LINE": {
         "category": "GeometryNode",
@@ -5388,9 +5739,15 @@
                 "description": "Position of the first vertex"
             }
         ],
-        "potential_params": [
-            "mode",
-            "count_mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            },
+            {
+                "name": "count_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_PRIMITIVE_UV_SPHERE": {
@@ -5444,7 +5801,7 @@
                 "description": "Distance from the generated points to the origin"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TO_CURVE": {
         "category": "GeometryNode",
@@ -5483,7 +5840,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TO_DENSITY_GRID": {
         "category": "GeometryNode",
@@ -5550,7 +5907,7 @@
                 "description": "Width of the gradient inside of the mesh"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TO_POINTS": {
         "category": "GeometryNode",
@@ -5617,8 +5974,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_TO_SDF_GRID": {
@@ -5672,7 +6032,7 @@
                 "description": "Width of the active voxel surface, in voxels"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TO_VOLUME": {
         "category": "GeometryNode",
@@ -5753,8 +6113,11 @@
                 "description": "Width of the gradient inside of the mesh"
             }
         ],
-        "potential_params": [
-            "resolution_mode"
+        "potential_enums": [
+            {
+                "name": "resolution_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_EDGE": {
@@ -5808,7 +6171,7 @@
                 "description": "Which of the sorted corners to output"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_FACE": {
         "category": "GeometryNode",
@@ -5861,7 +6224,7 @@
                 "description": "Which of the sorted corners to output"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_CORNERS_OF_VERTEX": {
         "category": "GeometryNode",
@@ -5914,7 +6277,7 @@
                 "description": "Which of the sorted corners to output"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_EDGES_OF_CORNER": {
         "category": "GeometryNode",
@@ -5939,7 +6302,7 @@
                 "description": "The corner to retrieve data from. Defaults to the corner from the context"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_EDGES_OF_VERTEX": {
         "category": "GeometryNode",
@@ -5992,7 +6355,7 @@
                 "description": "Which of the sorted edges to output"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_FACE_OF_CORNER": {
         "category": "GeometryNode",
@@ -6017,7 +6380,7 @@
                 "description": "The corner to retrieve data from. Defaults to the corner from the context"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_OFFSET_CORNER_IN_FACE": {
         "category": "GeometryNode",
@@ -6056,7 +6419,7 @@
                 "description": "\n      \"The number of corners to move around the face before finding the result, \"\n      \"circling around the start of the face if necessary"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_MESH_TOPOLOGY_VERTEX_OF_CORNER": {
         "category": "GeometryNode",
@@ -6081,7 +6444,7 @@
                 "description": "The corner to retrieve data from. Defaults to the corner from the context"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_OBJECT_INFO": {
         "category": "GeometryNode",
@@ -6120,8 +6483,11 @@
                 "description": "\n          \"Output the entire object as single instance. \"\n          \"This allows instancing non-geometry object types"
             }
         ],
-        "potential_params": [
-            "transform_space"
+        "potential_enums": [
+            {
+                "name": "transform_space",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_OFFSET_POINT_IN_CURVE": {
@@ -6161,7 +6527,7 @@
                 "description": "\n      \"The number of control points along the curve to traverse"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_POINTS_TO_CURVES": {
         "category": "GeometryNode",
@@ -6214,7 +6580,7 @@
                 "description": "\n      \"Determines the order of points in each curve"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_POINTS_TO_SDF_GRID": {
         "category": "GeometryNode",
@@ -6267,7 +6633,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_POINTS_TO_VERTICES": {
         "category": "GeometryNode",
@@ -6306,7 +6672,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_POINTS_TO_VOLUME": {
         "category": "GeometryNode",
@@ -6345,8 +6711,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "resolution_mode"
+        "potential_enums": [
+            {
+                "name": "resolution_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_POINTS": {
@@ -6386,7 +6755,7 @@
                 "description": "The radii of the new points"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_PROXIMITY": {
         "category": "GeometryNode",
@@ -6395,8 +6764,11 @@
         "description": "Compute the closest location on the target geometry",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "target_element"
+        "potential_enums": [
+            {
+                "name": "target_element",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_RAYCAST": {
@@ -6422,9 +6794,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "mapping"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "mapping",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_REALIZE_INSTANCES": {
@@ -6492,7 +6870,7 @@
                 "description": "\n      \"Number of levels of nested instances to realize for each top-level instance"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_REMOVE_ATTRIBUTE": {
         "category": "GeometryNode",
@@ -6531,8 +6909,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "pattern_mode"
+        "potential_enums": [
+            {
+                "name": "pattern_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_REPLACE_MATERIAL": {
@@ -6542,7 +6923,7 @@
         "description": "Swap one material with another",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_RESAMPLE_CURVE": {
         "category": "GeometryNode",
@@ -6551,8 +6932,11 @@
         "description": "Generate a poly spline for each input spline",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_REVERSE_CURVE": {
@@ -6562,7 +6946,7 @@
         "description": "Change the direction of curves by swapping their start and end data",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_ROTATE_INSTANCES": {
         "category": "GeometryNode",
@@ -6643,7 +7027,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SAMPLE_CURVE": {
         "category": "GeometryNode",
@@ -6668,10 +7052,19 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "mode",
-            "use_all_curves"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "mode",
+                "enum_values": []
+            },
+            {
+                "name": "use_all_curves",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SAMPLE_GRID": {
@@ -6681,9 +7074,15 @@
         "description": "",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type",
-            "interpolation_mode"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "interpolation_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SAMPLE_GRID_INDEX": {
@@ -6693,8 +7092,11 @@
         "description": "Retrieve volume grid values at specific voxels",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SAMPLE_INDEX": {
@@ -6704,10 +7106,19 @@
         "description": "Retrieve values from specific geometry elements",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "data_type",
-            "domain",
-            "clamp"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            },
+            {
+                "name": "clamp",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SAMPLE_NEAREST_SURFACE": {
@@ -6733,8 +7144,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SAMPLE_NEAREST": {
@@ -6744,8 +7158,11 @@
         "description": "Find the element of a geometry closest to a position. Similar to the \\\"Index of Nearest\\\" node",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SAMPLE_UV_SURFACE": {
@@ -6771,8 +7188,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SCALE_ELEMENTS": {
@@ -6840,9 +7260,15 @@
                 "description": "\n          \"Origin of the scaling for each element. If multiple elements are connected, their \"\n          \"center is averaged"
             }
         ],
-        "potential_params": [
-            "domain",
-            "scale_mode"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            },
+            {
+                "name": "scale_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SCALE_INSTANCES": {
@@ -6882,7 +7308,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SDF_GRID_BOOLEAN": {
         "category": "GeometryNode",
@@ -6907,8 +7333,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "operation"
+        "potential_enums": [
+            {
+                "name": "operation",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SELF_OBJECT": {
@@ -6918,7 +7347,7 @@
         "description": "Retrieve the object that contains the geometry nodes modifier currently being executed",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SEPARATE_COMPONENTS": {
         "category": "GeometryNode",
@@ -6943,7 +7372,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SEPARATE_GEOMETRY": {
         "category": "GeometryNode",
@@ -6982,8 +7411,11 @@
                 "description": "The parts of the geometry that go into the first output"
             }
         ],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SET_CURVE_HANDLES": {
@@ -7023,8 +7455,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SET_CURVE_NORMAL": {
@@ -7034,8 +7469,11 @@
         "description": "Set the evaluation mode for curve normals",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SET_CURVE_RADIUS": {
@@ -7045,7 +7483,7 @@
         "description": "Set the radius of the curve at each control point",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_CURVE_TILT": {
         "category": "GeometryNode",
@@ -7054,7 +7492,7 @@
         "description": "Set the tilt angle at each curve control point",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_ID": {
         "category": "GeometryNode",
@@ -7107,7 +7545,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_MATERIAL_INDEX": {
         "category": "GeometryNode",
@@ -7116,7 +7554,7 @@
         "description": "Set the material index for each selected geometry element",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_MATERIAL": {
         "category": "GeometryNode",
@@ -7125,7 +7563,7 @@
         "description": "Assign a material to geometry elements",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_POINT_RADIUS": {
         "category": "GeometryNode",
@@ -7178,7 +7616,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_POSITION": {
         "category": "GeometryNode",
@@ -7245,7 +7683,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_SHADE_SMOOTH": {
         "category": "GeometryNode",
@@ -7298,8 +7736,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SET_SPLINE_CYCLIC": {
@@ -7309,7 +7750,7 @@
         "description": "Control whether each spline loops back on itself by changing the \\\"cyclic\\\" attribute",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_SPLINE_RESOLUTION": {
         "category": "GeometryNode",
@@ -7318,7 +7759,7 @@
         "description": "Control how many evaluated points should be generated on every curve segment",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SET_INSTANCE_TRANSFORM": {
         "category": "GeometryNode",
@@ -7371,7 +7812,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SORT_ELEMENTS": {
         "category": "GeometryNode",
@@ -7438,8 +7879,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SPLIT_EDGES": {
@@ -7479,7 +7923,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SPLIT_TO_INSTANCES": {
         "category": "GeometryNode",
@@ -7488,8 +7932,11 @@
         "description": "Create separate geometries containing the elements from the same group",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_STORE_NAMED_ATTRIBUTE": {
@@ -7543,9 +7990,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type",
-            "domain"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            },
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_STORE_NAMED_GRID": {
@@ -7585,8 +8038,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_STRING_JOIN": {
@@ -7626,7 +8082,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_STRING_TO_CURVES": {
         "category": "GeometryNode",
@@ -7721,11 +8177,23 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "overflow",
-            "align_x",
-            "align_y",
-            "pivot_mode"
+        "potential_enums": [
+            {
+                "name": "overflow",
+                "enum_values": []
+            },
+            {
+                "name": "align_x",
+                "enum_values": []
+            },
+            {
+                "name": "align_y",
+                "enum_values": []
+            },
+            {
+                "name": "pivot_mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SUBDIVIDE_CURVE": {
@@ -7735,7 +8203,7 @@
         "description": "Dividing each curve segment into a specified number of pieces",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SUBDIVIDE_MESH": {
         "category": "GeometryNode",
@@ -7774,7 +8242,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_SUBDIVISION_SURFACE": {
         "category": "GeometryNode",
@@ -7841,9 +8309,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "uv_smooth",
-            "boundary_smooth"
+        "potential_enums": [
+            {
+                "name": "uv_smooth",
+                "enum_values": []
+            },
+            {
+                "name": "boundary_smooth",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_SWITCH": {
@@ -7869,8 +8343,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "input_type"
+        "potential_enums": [
+            {
+                "name": "input_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_TOOL_3D_CURSOR": {
@@ -7880,7 +8357,7 @@
         "description": "The scene's 3D cursor location and rotation",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TOOL_FACE_SET": {
         "category": "GeometryNode",
@@ -7889,7 +8366,7 @@
         "description": "Each face's sculpt face set value",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TOOL_MOUSE_POSITION": {
         "category": "GeometryNode",
@@ -7898,7 +8375,7 @@
         "description": "Retrieve the position of the mouse cursor",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TOOL_SELECTION": {
         "category": "GeometryNode",
@@ -7907,7 +8384,7 @@
         "description": "User selection of the edited geometry, for tool execution",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TOOL_ACTIVE_ELEMENT": {
         "category": "GeometryNode",
@@ -7916,8 +8393,11 @@
         "description": "Active element indices of the edited geometry, for tool execution",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_TOOL_SET_FACE_SET": {
@@ -7971,7 +8451,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TOOL_SET_SELECTION": {
         "category": "GeometryNode",
@@ -8010,8 +8490,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "domain"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_TOOL_VIEWPORT_TRANSFORM": {
@@ -8021,7 +8504,7 @@
         "description": "Retrieve the view direction and location of the 3D viewport",
         "inputs": [],
         "outputs": [],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TRANSFORM_GEOMETRY": {
         "category": "GeometryNode",
@@ -8074,8 +8557,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_TRANSLATE_INSTANCES": {
@@ -8143,7 +8629,7 @@
                 "description": ""
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_TRIANGULATE": {
         "category": "GeometryNode",
@@ -8196,9 +8682,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "quad_method",
-            "ngon_method"
+        "potential_enums": [
+            {
+                "name": "quad_method",
+                "enum_values": []
+            },
+            {
+                "name": "ngon_method",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_TRIM_CURVE": {
@@ -8208,8 +8700,11 @@
         "description": "Shorten curves by removing portions at the start or end",
         "inputs": [],
         "outputs": [],
-        "potential_params": [
-            "mode"
+        "potential_enums": [
+            {
+                "name": "mode",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_UV_PACK_ISLANDS": {
@@ -8277,7 +8772,7 @@
                 "description": "Rotate islands for best fit"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_UV_UNWRAP": {
         "category": "GeometryNode",
@@ -8344,8 +8839,11 @@
                 "description": "\n          \"Virtually fill holes in mesh before unwrapping, to better avoid overlaps \"\n          \"and preserve symmetry"
             }
         ],
-        "potential_params": [
-            "method"
+        "potential_enums": [
+            {
+                "name": "method",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_VIEWER": {
@@ -8371,9 +8869,15 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "domain",
-            "data_type"
+        "potential_enums": [
+            {
+                "name": "domain",
+                "enum_values": []
+            },
+            {
+                "name": "data_type",
+                "enum_values": []
+            }
         ]
     },
     "GEO_NODE_VOLUME_CUBE": {
@@ -8455,7 +8959,7 @@
                 "description": "Number of voxels in the Z axis"
             }
         ],
-        "potential_params": []
+        "potential_enums": []
     },
     "GEO_NODE_VOLUME_TO_MESH": {
         "category": "GeometryNode",
@@ -8480,8 +8984,11 @@
                 "description": ""
             }
         ],
-        "potential_params": [
-            "resolution_mode"
+        "potential_enums": [
+            {
+                "name": "resolution_mode",
+                "enum_values": []
+            }
         ]
     }
 }

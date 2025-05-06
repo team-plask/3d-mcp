@@ -7,6 +7,7 @@ z.object({
   type: z.literal("ShaderNodeValue"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
     "Value": z.number().optional().describe(". Type : Float")
@@ -16,6 +17,7 @@ z.object({
   type: z.literal("ShaderNodeValToRGB"),
   inputs: z.object({
     "Fac": z.number().optional().default(0.5).describe("          'The value used to map onto the color gradient. 0.0 results in the leftmost color, '          'while 1.0 results in the rightmost. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -26,6 +28,7 @@ z.object({
   inputs: z.object({
     "Fac": z.number().optional().default(1).describe("Amount of influence the node exerts on the output vector. Type : Float"),
     "Vector": z.array(z.number()).optional().describe("      'Vector which would be mapped to the curve. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -36,6 +39,7 @@ z.object({
   inputs: z.object({
     "Fac": z.number().optional().default(1).describe("Amount of influence the node exerts on the output vector. Type : Float"),
     "Vector": z.array(z.number()).optional().describe("      'Vector which would be mapped to the curve. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -53,6 +57,7 @@ z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector"),
     "From\_Min\_FLOAT3": z.array(z.number()).optional().describe(". Type : Vector"),
     "To\_Min\_FLOAT3": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -64,6 +69,7 @@ z.object({
     "Value": z.number().optional().default(1).describe(". Type : Float"),
     "Min": z.number().optional().default(0).describe(". Type : Float"),
     "Max": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -76,6 +82,7 @@ z.object({
     "Value\_001": z.number().optional().default(0.5).describe(". Type : Float"),
     "Value\_002": z.number().optional().default(0.5).describe(". Type : Float"),
     "operation": z.string().optional().default('ADD').describe("The operation to perform on the values. Can be one of the following: 'ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREES'. Type : String")
+
   }),
   outputs: z.object({
 
@@ -87,8 +94,9 @@ z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector"),
     "Vector\_001": z.array(z.number()).optional().describe(". Type : Vector"),
     "Vector\_002": z.array(z.number()).optional().describe(". Type : Vector"),
-    "Scale": z.number().optional().default(1).describe(". Type : Float"),
-    "operation": z.string().optional().default('ADD').describe("The operation to perform on the vectors. Can be one of the following: ADD, SUBTRACT,MULTIPLY,DIVIDE,MULTIPLY_ADD,POWER,LOGARITHM,SQRT,INVERSE_SQRT,ABSOLUTE,EXPONENT,MINIMUM,MAXIMUM,LESS_THAN,GREATER_THAN,SIGN,COMPARE,SMOOTH_MIN,SMOOTH_MAX,ROUND,FLOOR,CEIL,TRUNC,FRACT,MODULO,FLOORED_MODULO,WRAP,SNAP,PINGPONG,SINE,COSINE,TANGENT,ARCSINE,ARCCOSINE,ARCTANGENT,ARCTAN2,SINH,COSH,TANH,RADIANS,DEGREES. Type : String")
+    "Scale": z.number().optional().default(1).describe(". Type : Float")
+,
+    "operation": z.enum(['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE', 'MULTIPLY_ADD', 'POWER', 'LOGARITHM', 'SQRT', 'INVERSE_SQRT', 'ABSOLUTE', 'EXPONENT', 'MINIMUM', 'MAXIMUM', 'LESS_THAN', 'GREATER_THAN', 'SIGN', 'COMPARE', 'SMOOTH_MIN', 'SMOOTH_MAX', 'ROUND', 'FLOOR', 'CEIL', 'TRUNC', 'FRACT', 'MODULO', 'FLOORED_MODULO', 'WRAP', 'SNAP', 'PINGPONG', 'SINE', 'COSINE', 'TANGENT', 'ARCSINE', 'ARCCOSINE', 'ARCTANGENT', 'ARCTAN2', 'SINH', 'COSH', 'TANH', 'RADIANS', 'DEGREE']).describe("The operation to perform on the vectors. Can be one of the following: ADD, SUBTRACT,MULTIPLY,DIVIDE,MULTIPLY_ADD,POWER,LOGARITHM,SQRT,INVERSE_SQRT,ABSOLUTE,EXPONENT,MINIMUM,MAXIMUM,LESS_THAN,GREATER_THAN,SIGN,COMPARE,SMOOTH_MIN,SMOOTH_MAX,ROUND,FLOOR,CEIL,TRUNC,FRACT,MODULO,FLOORED_MODULO,WRAP,SNAP,PINGPONG,SINE,COSINE,TANGENT,ARCSINE,ARCCOSINE,ARCTANGENT,ARCTAN2,SINH,COSH,TANH,RADIANS,DEGREES").default("ADD")
   }),
   outputs: z.object({
 
@@ -98,6 +106,7 @@ z.object({
   type: z.literal("ShaderNodeBlackbody"),
   inputs: z.object({
     "Temperature": z.number().optional().default(1500).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -107,6 +116,7 @@ z.object({
   type: z.literal("ShaderNodeTexGradient"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -116,6 +126,7 @@ z.object({
   type: z.literal("ShaderNodeTexNoise"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -127,6 +138,7 @@ z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector"),
     "Scale": z.number().optional().default(5).describe("      'Scale of the texture. Type : Float"),
     "Distortion": z.number().optional().default(1).describe("Amount of distortion. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -142,6 +154,7 @@ z.object({
     "Detail__Scale": z.number().optional().default(1).describe("Scale of distortion noise. Type : Float"),
     "Detail__Roughness": z.number().optional().default(0.5).describe("Blend between a smoother noise pattern, and rougher with sharper peaks. Type : Float"),
     "Phase__Offset": z.number().optional().default(0).describe("          'Position of the wave along the Bands Direction.\n'          'This can be used as an input for more control over the distortion. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -151,6 +164,7 @@ z.object({
   type: z.literal("ShaderNodeTexVoronoi"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -160,6 +174,7 @@ z.object({
   type: z.literal("ShaderNodeTexChecker"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -169,6 +184,7 @@ z.object({
   type: z.literal("ShaderNodeTexBrick"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -179,6 +195,7 @@ z.object({
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector"),
     "Center": z.array(z.number()).optional().describe("Point to rotate around. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -188,6 +205,7 @@ z.object({
   type: z.literal("ShaderNodeSeparateXYZ"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -197,6 +215,7 @@ z.object({
   type: z.literal("ShaderNodeCombineXYZ"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -206,6 +225,7 @@ z.object({
   type: z.literal("ShaderNodeTexWhiteNoise"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -216,6 +236,7 @@ z.object({
   inputs: z.object({
     "Fac": z.number().optional().default(1).describe("Amount of influence the node exerts on the output vector. Type : Float"),
     "Vector": z.array(z.number()).optional().describe("      'Vector which would be mapped to the curve. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -229,6 +250,7 @@ z.object({
     "B\_Float": z.number().optional().describe("Value of the second floating number input. Type : Float"),
     "A\_Vector": z.array(z.number()).optional().describe("Value of the first vector input. Type : Vector"),
     "B\_Vector": z.array(z.number()).optional().describe("Value of the second vector input. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -239,6 +261,7 @@ z.object({
   inputs: z.object({
     "Rotation": z.array(z.number()).optional().describe(". Type : Vector"),
     "Factor": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -248,6 +271,7 @@ z.object({
   type: z.literal("FunctionNodeAlignRotationToVector"),
   inputs: z.object({
     "Factor": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -257,6 +281,7 @@ z.object({
   type: z.literal("FunctionNodeAxesToRotation"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -265,6 +290,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeAxisAngleToRotation"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -276,6 +302,7 @@ z.object({
   inputs: z.object({
     "Boolean": z.boolean().optional().describe(". Type : Bool"),
     "Boolean\_001": z.boolean().optional().describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -288,6 +315,7 @@ z.object({
     "Green": z.number().optional().default(0).describe(". Type : Float"),
     "Blue": z.number().optional().default(0).describe(". Type : Float"),
     "Alpha": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -312,6 +340,7 @@ z.object({
     "Column__4__Row__2": z.number().optional().describe(". Type : Float"),
     "Column__4__Row__3": z.number().optional().describe(". Type : Float"),
     "Column__4__Row__4": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -324,6 +353,7 @@ z.object({
     "X": z.number().optional().default(0).describe(". Type : Float"),
     "Y": z.number().optional().default(0).describe(". Type : Float"),
     "Z": z.number().optional().default(0).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -333,6 +363,7 @@ z.object({
   type: z.literal("FunctionNodeCombineTransform"),
   inputs: z.object({
     "Translation": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -352,6 +383,7 @@ z.object({
     "C": z.number().optional().default(0.9).describe(". Type : Float"),
     "Angle": z.number().optional().default(0.0872665).describe(". Type : Float"),
     "Epsilon": z.number().optional().default(0.001).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -361,6 +393,7 @@ z.object({
   type: z.literal("FunctionNodeEulerToRotation"),
   inputs: z.object({
     "Euler": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -370,6 +403,7 @@ z.object({
   type: z.literal("FunctionNodeFloatToInt"),
   inputs: z.object({
     "Float": z.number().optional().describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -378,6 +412,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeInputBool"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -388,6 +423,7 @@ z.object({
   type: z.literal("FunctionNodeInputColor"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -396,6 +432,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeInputInt"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -406,6 +443,7 @@ z.object({
   type: z.literal("FunctionNodeInputRotation"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -414,6 +452,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeInputSpecialCharacters"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -424,6 +463,7 @@ z.object({
   type: z.literal("FunctionNodeInputString"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -432,6 +472,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeInputVector"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -442,6 +483,7 @@ z.object({
   type: z.literal("FunctionNodeInvertMatrix"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -450,6 +492,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeInvertRotation"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -460,6 +503,7 @@ z.object({
   type: z.literal("FunctionNodeMatrixMultiply"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -469,6 +513,7 @@ z.object({
   type: z.literal("FunctionNodeProjectPoint"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -478,6 +523,7 @@ z.object({
   type: z.literal("FunctionNodeRandomValue"),
   inputs: z.object({
     "Min": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -489,6 +535,7 @@ z.object({
     "String": z.string().optional().describe(". Type : String"),
     "Find": z.string().optional().describe("The string to find in the input string. Type : String"),
     "Replace": z.string().optional().describe("The string to replace each match with. Type : String")
+
   }),
   outputs: z.object({
 
@@ -497,6 +544,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeRotateEuler"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -507,6 +555,7 @@ z.object({
   type: z.literal("FunctionNodeRotateRotation"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -516,6 +565,7 @@ z.object({
   type: z.literal("FunctionNodeRotateVector"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -524,6 +574,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeRotationToAxisAngle"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -534,6 +585,7 @@ z.object({
   type: z.literal("FunctionNodeRotationToEuler"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -542,6 +594,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeSeparateColor"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -552,6 +605,7 @@ z.object({
   type: z.literal("FunctionNodeSeparateMatrix"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -561,6 +615,7 @@ z.object({
   type: z.literal("FunctionNodeRotationToQuaternion"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -569,6 +624,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeSeparateTransform"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -581,6 +637,7 @@ z.object({
     "String": z.string().optional().describe(". Type : String"),
     "Position": z.number().int().optional().describe(". Type : Int"),
     "Length": z.number().int().optional().default(10).describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -590,6 +647,7 @@ z.object({
   type: z.literal("FunctionNodeStringLength"),
   inputs: z.object({
     "String": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -599,6 +657,7 @@ z.object({
   type: z.literal("FunctionNodeTransformDirection"),
   inputs: z.object({
     "Direction": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -608,6 +667,7 @@ z.object({
   type: z.literal("FunctionNodeTransformPoint"),
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -616,6 +676,7 @@ z.object({
 z.object({
   type: z.literal("FunctionNodeTransposeMatrix"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -627,6 +688,7 @@ z.object({
   inputs: z.object({
     "Value": z.number().optional().describe(". Type : Float"),
     "Decimals": z.number().int().optional().describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -635,6 +697,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeAccumulateField"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -645,6 +708,7 @@ z.object({
   type: z.literal("GeometryNodeAttributeDomainSize"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -654,6 +718,7 @@ z.object({
   type: z.literal("GeometryNodeAttributeStatistic"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -662,6 +727,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeBake"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -672,6 +738,7 @@ z.object({
   type: z.literal("GeometryNodeBlurAttribute"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -681,6 +748,7 @@ z.object({
   type: z.literal("GeometryNodeBoundBox"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -689,6 +757,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeCaptureAttribute"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -700,6 +769,7 @@ z.object({
   inputs: z.object({
     "Separate__Children": z.boolean().optional().describe("          'Output each child of the collection as a separate instance, sorted alphabetically. Type : Bool"),
     "Reset__Children": z.boolean().optional().describe("          'Reset the transforms of every child instance in the output. Only used when Separate '          'Children is enabled. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -708,6 +778,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeConvexHull"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -719,6 +790,7 @@ z.object({
   inputs: z.object({
     "Start__Size": z.number().int().optional().default(1).describe("The amount of points to select from the start of each spline. Type : Int"),
     "End__Size": z.number().int().optional().default(1).describe("The amount of points to select from the end of each spline. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -727,6 +799,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeCurveHandleTypeSelection"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -737,6 +810,7 @@ z.object({
   type: z.literal("GeometryNodeCurveLength"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -745,6 +819,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeCurveArc"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -755,6 +830,7 @@ z.object({
   type: z.literal("GeometryNodeCurvePrimitiveBezierSegment"),
   inputs: z.object({
     "Resolution": z.number().int().optional().default(16).describe("The number of evaluated points on the curve. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -763,6 +839,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeCurvePrimitiveCircle"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -773,6 +850,7 @@ z.object({
   type: z.literal("GeometryNodeCurvePrimitiveLine"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -782,6 +860,7 @@ z.object({
   type: z.literal("GeometryNodeCurveQuadraticBezier"),
   inputs: z.object({
     "Resolution": z.number().int().optional().default(16).describe("The number of edges on the curve. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -797,6 +876,7 @@ z.object({
     "Offset": z.number().optional().default(1).describe("          'For Parallelogram, the relative X difference between the top and bottom edges. For '          'Trapezoid, the amount to move the top edge in the positive X axis. Type : Float"),
     "Bottom__Height": z.number().optional().default(3).describe("The distance between the bottom point and the X axis. Type : Float"),
     "Top__Height": z.number().optional().default(1).describe("The distance between the top point and the X axis. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -811,6 +891,7 @@ z.object({
     "End__Radius": z.number().optional().default(2).describe("Horizontal Distance from the Z axis at the end of the spiral. Type : Float"),
     "Height": z.number().optional().default(2).describe("The height perpendicular to the base of the spiral. Type : Float"),
     "Reverse": z.boolean().optional().describe("      'Switch the direction from clockwise to counterclockwise. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -823,6 +904,7 @@ z.object({
     "Inner__Radius": z.number().optional().default(1).describe("Radius of the inner circle; can be larger than outer radius. Type : Float"),
     "Outer__Radius": z.number().optional().default(2).describe("Radius of the outer circle; can be smaller than inner radius. Type : Float"),
     "Twist": z.number().optional().describe("The counterclockwise rotation of the inner set of points. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -832,6 +914,7 @@ z.object({
   type: z.literal("GeometryNodeCurveSetHandles"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -840,6 +923,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSplineParameter"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -850,6 +934,7 @@ z.object({
   type: z.literal("GeometryNodeCurveSplineType"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -858,6 +943,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeCurveToMesh"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -868,6 +954,7 @@ z.object({
   type: z.literal("GeometryNodeCurveToPoints"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -877,6 +964,7 @@ z.object({
   type: z.literal("GeometryNodeCurveOfPoint"),
   inputs: z.object({
     "Point__Index": z.number().int().optional().describe("The control point to retrieve data from. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -888,6 +976,7 @@ z.object({
     "Curve__Index": z.number().int().optional().describe("The curve to retrieve data from. Defaults to the curve from the context. Type : Int"),
     "Weights": z.number().optional().describe("      'Values used to sort the curve's points. Uses indices by default. Type : Float"),
     "Sort__Index": z.number().int().optional().describe("Which of the sorted points to output. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -896,6 +985,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeDeformCurvesOnSurface"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -906,6 +996,7 @@ z.object({
   type: z.literal("GeometryNodeDeleteGeometry"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe("The parts of the geometry to be deleted. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -917,6 +1008,7 @@ z.object({
     "Grid": z.number().optional().describe(". Type : Float"),
     "Density": z.number().optional().default(1).describe("          'When combined with each voxel's value, determines the number of points to sample per '          'unit volume. Type : Float"),
     "Seed": z.number().int().optional().describe("      'Seed used by the random number generator to generate random points. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -927,6 +1019,7 @@ z.object({
   inputs: z.object({
     "Density": z.number().optional().default(1).describe("Number of points to sample per unit volume. Type : Float"),
     "Seed": z.number().int().optional().describe("      'Seed used by the random number generator to generate random points. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -935,6 +1028,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeDistributePointsOnFaces"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -945,6 +1039,7 @@ z.object({
   type: z.literal("GeometryNodeDualMesh"),
   inputs: z.object({
     "Keep__Boundaries": z.boolean().optional().default(false).describe("          'Keep non-manifold boundaries of the input mesh in place by avoiding the dual '          'transformation there. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -955,6 +1050,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Amount": z.number().int().optional().default(1).describe("      'The number of duplicates to create for each element. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -965,6 +1061,7 @@ z.object({
   inputs: z.object({
     "Start__Vertices": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Next__Vertex__Index": z.number().int().optional().default(-1).describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -975,6 +1072,7 @@ z.object({
   inputs: z.object({
     "Start__Vertices": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Next__Vertex__Index": z.number().int().optional().default(-1).describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -984,6 +1082,7 @@ z.object({
   type: z.literal("GeometryNodeEdgesToFaceGroups"),
   inputs: z.object({
     "Boundary__Edges": z.boolean().optional().default(true).describe("Edges used to split faces into separate groups. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -993,6 +1092,7 @@ z.object({
   type: z.literal("GeometryNodeFieldAtIndex"),
   inputs: z.object({
     "Index": z.number().int().optional().describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1001,6 +1101,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeFieldOnDomain"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1013,6 +1114,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Offset": z.array(z.number()).optional().describe(". Type : Vector"),
     "Offset__Scale": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1021,6 +1123,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeFillCurve"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1031,6 +1134,7 @@ z.object({
   type: z.literal("GeometryNodeFilletCurve"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1040,6 +1144,7 @@ z.object({
   type: z.literal("GeometryNodeFlipFaces"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1048,6 +1153,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeGeometryToInstance"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1059,6 +1165,7 @@ z.object({
   inputs: z.object({
     "Name": z.string().optional().describe(". Type : String"),
     "Remove": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1070,6 +1177,7 @@ z.object({
     "Grid": z.number().optional().describe(". Type : Float"),
     "Threshold": z.number().optional().default(0.1).describe("Values larger than the threshold are inside the generated mesh. Type : Float"),
     "Adaptivity": z.number().optional().describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1079,6 +1187,7 @@ z.object({
   type: z.literal("GeometryNodeImageInfo"),
   inputs: z.object({
     "Frame": z.number().int().optional().describe("      'Which frame to use for videos. Note that different frames in videos can '      'have different resolutions. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1089,6 +1198,7 @@ z.object({
   inputs: z.object({
     "Vector": z.array(z.number()).optional().describe("Texture coordinates from 0 to 1. Type : Vector"),
     "Frame": z.number().int().optional().describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1097,6 +1207,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputImage"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1107,6 +1218,7 @@ z.object({
   type: z.literal("GeometryNodeImportSTL"),
   inputs: z.object({
     "Path": z.string().optional().default("").describe("Path to a STL file. Type : String")
+
   }),
   outputs: z.object({
 
@@ -1117,6 +1229,7 @@ z.object({
   inputs: z.object({
     "Position": z.array(z.number()).optional().describe(". Type : Vector"),
     "Group__ID": z.number().int().optional().describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1125,6 +1238,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeIndexSwitch"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1135,6 +1249,7 @@ z.object({
   type: z.literal("GeometryNodeInputActiveCamera"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1144,6 +1259,7 @@ z.object({
   type: z.literal("GeometryNodeInputCurveHandlePositions"),
   inputs: z.object({
     "Relative": z.boolean().optional().default(false).describe("          'Output the handle positions relative to the corresponding control point '          'instead of in the local space of the geometry. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1152,6 +1268,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputCurveTilt"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1162,6 +1279,7 @@ z.object({
   type: z.literal("GeometryNodeInputEdgeSmooth"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1170,6 +1288,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputShadeSmooth"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1180,6 +1299,7 @@ z.object({
   type: z.literal("GeometryNodeInputID"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1188,6 +1308,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputIndex"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1198,6 +1319,7 @@ z.object({
   type: z.literal("GeometryNodeInputInstanceRotation"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1206,6 +1328,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputInstanceScale"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1216,6 +1339,7 @@ z.object({
   type: z.literal("GeometryNodeInputMaterialIndex"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1224,6 +1348,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInstanceTransform"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1234,6 +1359,7 @@ z.object({
   type: z.literal("GeometryNodeInputMaterial"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1242,6 +1368,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputMeshEdgeAngle"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1252,6 +1379,7 @@ z.object({
   type: z.literal("GeometryNodeInputMeshEdgeNeighbors"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1260,6 +1388,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputMeshEdgeVertices"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1270,6 +1399,7 @@ z.object({
   type: z.literal("GeometryNodeInputMeshFaceArea"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1279,6 +1409,7 @@ z.object({
   type: z.literal("GeometryNodeInputMeshFaceIsPlanar"),
   inputs: z.object({
     "Threshold": z.number().optional().default(0.01).describe("          'The distance a point can be from the surface before the face is no longer '          'considered planar. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1287,6 +1418,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputMeshFaceNeighbors"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1297,6 +1429,7 @@ z.object({
   type: z.literal("GeometryNodeInputMeshIsland"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1305,6 +1438,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputMeshVertexNeighbors"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1315,6 +1449,7 @@ z.object({
   type: z.literal("GeometryNodeInputNamedAttribute"),
   inputs: z.object({
     "Name": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -1324,6 +1459,7 @@ z.object({
   type: z.literal("GeometryNodeInputNamedLayerSelection"),
   inputs: z.object({
     "Name": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -1332,6 +1468,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputNormal"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1342,6 +1479,7 @@ z.object({
   type: z.literal("GeometryNodeInputPosition"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1351,6 +1489,7 @@ z.object({
   type: z.literal("GeometryNodeInputRadius"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1359,6 +1498,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputSceneTime"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1370,6 +1510,7 @@ z.object({
   inputs: z.object({
     "End__Vertex": z.boolean().optional().default(false).describe(". Type : Bool"),
     "Edge__Cost": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1378,6 +1519,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputSplineCyclic"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1388,6 +1530,7 @@ z.object({
   type: z.literal("GeometryNodeSplineLength"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1396,6 +1539,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInputSplineResolution"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1406,6 +1550,7 @@ z.object({
   type: z.literal("GeometryNodeInputTangent"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1414,6 +1559,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInstanceOnPoints"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1426,6 +1572,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Position": z.array(z.number()).optional().describe(". Type : Vector"),
     "Radius": z.number().optional().default(0.05).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1434,6 +1581,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeInterpolateCurves"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1444,6 +1592,7 @@ z.object({
   type: z.literal("GeometryNodeIsViewport"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1452,6 +1601,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeJoinGeometry"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1462,6 +1612,7 @@ z.object({
   type: z.literal("GeometryNodeMaterialSelection"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1471,6 +1622,7 @@ z.object({
   type: z.literal("GeometryNodeMenuSwitch"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1479,6 +1631,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeMergeByDistance"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1490,6 +1643,7 @@ z.object({
   inputs: z.object({
     "Self__Intersection": z.boolean().optional().describe(". Type : Bool"),
     "Hole__Tolerant": z.boolean().optional().describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1499,6 +1653,7 @@ z.object({
   type: z.literal("GeometryNodeMeshFaceSetBoundaries"),
   inputs: z.object({
     "Face__Set": z.number().int().optional().default(0).describe("          'An identifier for the group of each face. All contiguous faces with the '          'same value are in the same region. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1509,6 +1664,7 @@ z.object({
   inputs: z.object({
     "Vertices": z.number().int().optional().default(32).describe("Number of vertices on the circle. Type : Int"),
     "Radius": z.number().optional().default(1).describe("Distance of the vertices from the origin. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1523,17 +1679,19 @@ z.object({
     "Radius__Top": z.number().optional().describe("Radius of the top circle of the cone. Type : Float"),
     "Radius__Bottom": z.number().optional().default(1).describe("Radius of the bottom circle of the cone. Type : Float"),
     "Depth": z.number().optional().default(2).describe("Height of the generated cone. Type : Float")
+
   }),
   outputs: z.object({
 
 })
-}).describe("Generate a cone mesh"),
+}).describe("Generate a cone mesh. The cone is aligned with the Z axis and centered at the origin."),
 z.object({
   type: z.literal("GeometryNodeMeshCube"),
   inputs: z.object({
     "Vertices__X": z.number().int().optional().default(2).describe("Number of vertices for the X side of the shape. Type : Int"),
     "Vertices__Y": z.number().int().optional().default(2).describe("Number of vertices for the Y side of the shape. Type : Int"),
     "Vertices__Z": z.number().int().optional().default(2).describe("Number of vertices for the Z side of the shape. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1547,11 +1705,12 @@ z.object({
     "Fill__Segments": z.number().int().optional().default(1).describe("The number of concentric rings used to fill the round faces. Type : Int"),
     "Radius": z.number().optional().default(1).describe("The radius of the cylinder. Type : Float"),
     "Depth": z.number().optional().default(2).describe("The height of the cylinder. Type : Float")
+
   }),
   outputs: z.object({
 
 })
-}).describe("Generate a cylinder mesh"),
+}).describe("Generate a cylinder mesh. The cylinder is aligned with the Z axis and centered at the origin."),
 z.object({
   type: z.literal("GeometryNodeMeshGrid"),
   inputs: z.object({
@@ -1559,6 +1718,7 @@ z.object({
     "Size__Y": z.number().optional().default(1).describe("Side length of the plane in the Y direction. Type : Float"),
     "Vertices__X": z.number().int().optional().default(3).describe("Number of vertices in the X direction. Type : Int"),
     "Vertices__Y": z.number().int().optional().default(3).describe("Number of vertices in the Y direction. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1569,6 +1729,7 @@ z.object({
   inputs: z.object({
     "Radius": z.number().optional().default(1).describe("Distance from the generated points to the origin. Type : Float"),
     "Subdivisions": z.number().int().optional().default(1).describe("Number of subdivisions on top of the basic icosahedron. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1580,6 +1741,7 @@ z.object({
     "Count": z.number().int().optional().default(10).describe("      'Number of vertices on the line. Type : Int"),
     "Resolution": z.number().optional().default(1).describe("Length of each individual edge. Type : Float"),
     "Start__Location": z.array(z.number()).optional().describe("Position of the first vertex. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -1591,6 +1753,7 @@ z.object({
     "Segments": z.number().int().optional().default(32).describe("Horizontal resolution of the sphere. Type : Int"),
     "Rings": z.number().int().optional().default(16).describe("      'The number of horizontal rings. Type : Int"),
     "Radius": z.number().optional().default(1).describe("Distance from the generated points to the origin. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1600,6 +1763,7 @@ z.object({
   type: z.literal("GeometryNodeMeshToCurve"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1611,6 +1775,7 @@ z.object({
     "Density": z.number().optional().default(1).describe(". Type : Float"),
     "Voxel__Size": z.number().optional().default(0.3).describe(". Type : Float"),
     "Gradient__Width": z.number().optional().default(0.2).describe("Width of the gradient inside of the mesh. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1622,6 +1787,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Position": z.array(z.number()).optional().describe(". Type : Vector"),
     "Radius": z.number().optional().default(0.05).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1632,6 +1798,7 @@ z.object({
   inputs: z.object({
     "Voxel__Size": z.number().optional().default(0.3).describe(". Type : Float"),
     "Band__Width": z.number().int().optional().default(3).describe("Width of the active voxel surface, in voxels. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1644,6 +1811,7 @@ z.object({
     "Voxel__Size": z.number().optional().default(0.3).describe(". Type : Float"),
     "Voxel__Amount": z.number().optional().default(64).describe(". Type : Float"),
     "Interior__Band__Width": z.number().optional().default(0.2).describe("Width of the gradient inside of the mesh. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1655,6 +1823,7 @@ z.object({
     "Edge__Index": z.number().int().optional().describe("The edge to retrieve data from. Defaults to the edge from the context. Type : Int"),
     "Weights": z.number().optional().describe("      'Values that sort the corners attached to the edge. Type : Float"),
     "Sort__Index": z.number().int().optional().describe("Which of the sorted corners to output. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1666,6 +1835,7 @@ z.object({
     "Face__Index": z.number().int().optional().describe("The face to retrieve data from. Defaults to the face from the context. Type : Int"),
     "Weights": z.number().optional().describe("      'Values used to sort the face's corners. Uses indices by default. Type : Float"),
     "Sort__Index": z.number().int().optional().describe("Which of the sorted corners to output. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1677,6 +1847,7 @@ z.object({
     "Vertex__Index": z.number().int().optional().describe("The vertex to retrieve data from. Defaults to the vertex from the context. Type : Int"),
     "Weights": z.number().optional().describe("      'Values used to sort corners attached to the vertex. Uses indices by default. Type : Float"),
     "Sort__Index": z.number().int().optional().describe("Which of the sorted corners to output. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1686,6 +1857,7 @@ z.object({
   type: z.literal("GeometryNodeEdgesOfCorner"),
   inputs: z.object({
     "Corner__Index": z.number().int().optional().describe("The corner to retrieve data from. Defaults to the corner from the context. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1697,6 +1869,7 @@ z.object({
     "Vertex__Index": z.number().int().optional().describe("The vertex to retrieve data from. Defaults to the vertex from the context. Type : Int"),
     "Weights": z.number().optional().describe("      'Values used to sort the edges connected to the vertex. Uses indices by default. Type : Float"),
     "Sort__Index": z.number().int().optional().describe("Which of the sorted edges to output. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1706,6 +1879,7 @@ z.object({
   type: z.literal("GeometryNodeFaceOfCorner"),
   inputs: z.object({
     "Corner__Index": z.number().int().optional().describe("The corner to retrieve data from. Defaults to the corner from the context. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1716,6 +1890,7 @@ z.object({
   inputs: z.object({
     "Corner__Index": z.number().int().optional().describe("The corner to retrieve data from. Defaults to the corner from the context. Type : Int"),
     "Offset": z.number().int().optional().describe("      'The number of corners to move around the face before finding the result, '      'circling around the start of the face if necessary. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1725,6 +1900,7 @@ z.object({
   type: z.literal("GeometryNodeVertexOfCorner"),
   inputs: z.object({
     "Corner__Index": z.number().int().optional().describe("The corner to retrieve data from. Defaults to the corner from the context. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1734,6 +1910,7 @@ z.object({
   type: z.literal("GeometryNodeObjectInfo"),
   inputs: z.object({
     "As__Instance": z.boolean().optional().describe("          'Output the entire object as single instance. '          'This allows instancing non-geometry object types. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1744,6 +1921,7 @@ z.object({
   inputs: z.object({
     "Point__Index": z.number().int().optional().describe("The index of the control point to evaluate. Defaults to the current index. Type : Int"),
     "Offset": z.number().int().optional().describe("      'The number of control points along the curve to traverse. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1754,6 +1932,7 @@ z.object({
   inputs: z.object({
     "Curve__Group__ID": z.number().int().optional().describe("          'A curve is created for every distinct group ID. All points with the same ID are put '          'into the same curve. Type : Int"),
     "Weight": z.number().optional().describe("      'Determines the order of points in each curve. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1764,6 +1943,7 @@ z.object({
   inputs: z.object({
     "Radius": z.number().optional().default(0.5).describe(". Type : Float"),
     "Voxel__Size": z.number().optional().default(0.3).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1773,6 +1953,7 @@ z.object({
   type: z.literal("GeometryNodePointsToVertices"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1782,6 +1963,7 @@ z.object({
   type: z.literal("GeometryNodePointsToVolume"),
   inputs: z.object({
     "Density": z.number().optional().default(1).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1792,6 +1974,7 @@ z.object({
   inputs: z.object({
     "Count": z.number().int().optional().default(1).describe("      'The number of points to create. Type : Int"),
     "Radius": z.number().optional().default(0.1).describe("The radii of the new points. Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1801,6 +1984,7 @@ z.object({
   type: z.literal("GeometryNodeProximity"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1809,6 +1993,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeRaycast"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1821,6 +2006,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe("Which top-level instances to realize. Type : Bool"),
     "Realize__All": z.boolean().optional().default(true).describe("          'Realize all levels of nested instances for a top-level instances. Overrides the value '          'of the Depth input. Type : Bool"),
     "Depth": z.number().int().optional().default(0).describe("      'Number of levels of nested instances to realize for each top-level instance. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -1830,6 +2016,7 @@ z.object({
   type: z.literal("GeometryNodeRemoveAttribute"),
   inputs: z.object({
     "Name": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -1838,6 +2025,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeReplaceMaterial"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1848,6 +2036,7 @@ z.object({
   type: z.literal("GeometryNodeResampleCurve"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1856,6 +2045,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeReverseCurve"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1868,6 +2058,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Pivot__Point": z.array(z.number()).optional().describe(". Type : Vector"),
     "Local__Space": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1876,6 +2067,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSampleCurve"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1886,6 +2078,7 @@ z.object({
   type: z.literal("GeometryNodeSampleGrid"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1894,6 +2087,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSampleGridIndex"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1904,6 +2098,7 @@ z.object({
   type: z.literal("GeometryNodeSampleIndex"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1912,6 +2107,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSampleNearestSurface"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1922,6 +2118,7 @@ z.object({
   type: z.literal("GeometryNodeSampleNearest"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1930,6 +2127,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSampleUVSurface"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1942,6 +2140,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Scale": z.number().optional().default(1).describe(". Type : Float"),
     "Center": z.array(z.number()).optional().describe("          'Origin of the scaling for each element. If multiple elements are connected, their '          'center is averaged. Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -1951,6 +2150,7 @@ z.object({
   type: z.literal("GeometryNodeScaleInstances"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1960,6 +2160,7 @@ z.object({
   type: z.literal("GeometryNodeSDFGridBoolean"),
   inputs: z.object({
     "Grid__1": z.number().optional().describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -1968,6 +2169,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSelfObject"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -1978,6 +2180,7 @@ z.object({
   type: z.literal("GeometryNodeSeparateComponents"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -1987,6 +2190,7 @@ z.object({
   type: z.literal("GeometryNodeSeparateGeometry"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe("The parts of the geometry that go into the first output. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -1996,6 +2200,7 @@ z.object({
   type: z.literal("GeometryNodeSetCurveHandlePositions"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2004,6 +2209,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSetCurveNormal"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2014,6 +2220,7 @@ z.object({
   type: z.literal("GeometryNodeSetCurveRadius"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -2022,6 +2229,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSetCurveTilt"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2033,6 +2241,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "ID": z.number().int().optional().describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -2042,6 +2251,7 @@ z.object({
   type: z.literal("GeometryNodeSetMaterialIndex"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -2050,6 +2260,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSetMaterial"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2061,6 +2272,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Radius": z.number().optional().default(0.05).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -2072,6 +2284,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Position": z.array(z.number()).optional().describe(". Type : Vector"),
     "Offset": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -2082,6 +2295,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Shade__Smooth": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2090,6 +2304,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSetSplineCyclic"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2100,6 +2315,7 @@ z.object({
   type: z.literal("GeometryNodeSetSplineResolution"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -2109,6 +2325,7 @@ z.object({
   type: z.literal("GeometryNodeSetInstanceTransform"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2120,6 +2337,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Group__ID": z.number().int().optional().describe(". Type : Int"),
     "Sort__Weight": z.number().optional().describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -2129,6 +2347,7 @@ z.object({
   type: z.literal("GeometryNodeSplitEdges"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2137,6 +2356,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSplitToInstances"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2148,6 +2368,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Name": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -2157,6 +2378,7 @@ z.object({
   type: z.literal("GeometryNodeStoreNamedGrid"),
   inputs: z.object({
     "Name": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -2167,6 +2389,7 @@ z.object({
   inputs: z.object({
     "Delimiter": z.string().optional().describe(". Type : String"),
     "Strings": z.string().optional().describe(". Type : String")
+
   }),
   outputs: z.object({
 
@@ -2181,6 +2404,7 @@ z.object({
     "Word__Spacing": z.number().optional().default(1).describe(". Type : Float"),
     "Line__Spacing": z.number().optional().default(1).describe(". Type : Float"),
     "Text__Box__Width": z.number().optional().default(0).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -2189,6 +2413,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeSubdivideCurve"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2199,6 +2424,7 @@ z.object({
   type: z.literal("GeometryNodeSubdivideMesh"),
   inputs: z.object({
     "Level": z.number().int().optional().default(1).describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -2210,6 +2436,7 @@ z.object({
     "Level": z.number().int().optional().default(1).describe(". Type : Int"),
     "Edge__Crease": z.number().optional().default(0).describe(". Type : Float"),
     "Vertex__Crease": z.number().optional().default(0).describe(". Type : Float")
+
   }),
   outputs: z.object({
 
@@ -2219,6 +2446,7 @@ z.object({
   type: z.literal("GeometryNodeSwitch"),
   inputs: z.object({
     "Switch": z.boolean().optional().describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2227,6 +2455,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeTool3DCursor"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2237,6 +2466,7 @@ z.object({
   type: z.literal("GeometryNodeToolFaceSet"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -2245,6 +2475,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeToolMousePosition"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2255,6 +2486,7 @@ z.object({
   type: z.literal("GeometryNodeToolSelection"),
   inputs: z.object({
 
+
   }),
   outputs: z.object({
 
@@ -2263,6 +2495,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeToolActiveElement"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2274,6 +2507,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Face__Set": z.number().int().optional().describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -2283,6 +2517,7 @@ z.object({
   type: z.literal("GeometryNodeToolSetSelection"),
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2291,6 +2526,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeViewportTransform"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2301,6 +2537,7 @@ z.object({
   type: z.literal("GeometryNodeTransform"),
   inputs: z.object({
     "Translation": z.array(z.number()).optional().describe(". Type : Vector")
+
   }),
   outputs: z.object({
 
@@ -2312,6 +2549,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Translation": z.array(z.number()).optional().describe(". Type : Vector"),
     "Local__Space": z.boolean().optional().default(true).describe(". Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2322,6 +2560,7 @@ z.object({
   inputs: z.object({
     "Selection": z.boolean().optional().default(true).describe(". Type : Bool"),
     "Minimum__Vertices": z.number().int().optional().default(4).describe(". Type : Int")
+
   }),
   outputs: z.object({
 
@@ -2330,6 +2569,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeTrimCurve"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2343,6 +2583,7 @@ z.object({
     "Selection": z.boolean().optional().default(true).describe("Faces to consider when packing islands. Type : Bool"),
     "Margin": z.number().optional().default(0.001).describe("      'Space between islands. Type : Float"),
     "Rotate": z.boolean().optional().default(true).describe("Rotate islands for best fit. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2355,6 +2596,7 @@ z.object({
     "Seam": z.boolean().optional().describe("      'Edges to mark where the mesh is \'cut\' for the purposes of unwrapping. Type : Bool"),
     "Margin": z.number().optional().default(0.001).describe("      'Space between islands. Type : Float"),
     "Fill__Holes": z.boolean().optional().default(true).describe("          'Virtually fill holes in mesh before unwrapping, to better avoid overlaps '          'and preserve symmetry. Type : Bool")
+
   }),
   outputs: z.object({
 
@@ -2363,6 +2605,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeViewer"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
@@ -2377,6 +2620,7 @@ z.object({
     "Resolution__X": z.number().int().optional().default(32).describe("Number of voxels in the X axis. Type : Int"),
     "Resolution__Y": z.number().int().optional().default(32).describe("Number of voxels in the Y axis. Type : Int"),
     "Resolution__Z": z.number().int().optional().default(32).describe("Number of voxels in the Z axis. Type : Int")
+
   }),
   outputs: z.object({
 
@@ -2385,6 +2629,7 @@ z.object({
 z.object({
   type: z.literal("GeometryNodeVolumeToMesh"),
   inputs: z.object({
+
 
   }),
   outputs: z.object({
