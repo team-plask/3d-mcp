@@ -120,6 +120,7 @@ def generate_ts_code(json_data):
             f"""z.object({{
   type: z.literal("{value['category']}{value['struct_name']}"),
   inputs: z.object({{
+    \"name\": z.string().optional(),
 {inputs_object}
 {",\n" + potential_enums if potential_enums else ""}
   }}),

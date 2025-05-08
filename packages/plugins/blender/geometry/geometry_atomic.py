@@ -741,7 +741,7 @@ def connectNodes(fromNode: str, fromPort: str, toNode: str, toPort: str) -> Dict
         return {"success": False, "error": str(e)}
 
 
-def createGeometry(id: str) -> Dict[str, Any]:
+def createGeometry(id: Optional[str] = None) -> Dict[str, Any]:
     """
     Creates a new geometry object. Starting point for every geometry creation.
 
@@ -752,15 +752,19 @@ def createGeometry(id: str) -> Dict[str, Any]:
     success (bool): Operation success status
     """
     tool_name = "createGeometry"  # Define tool name for logging
+    id = id or "Geometry"
+    
     params = {"id": id}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
     try:
         # Check if a mesh with the given id already exists
         if id in bpy.data.meshes:
-            raise ValueError(
-                f"A geometry with the name '{id}' already exists.")
-
+            temp_id = id
+            i = 0
+            while temp_id + "_" + str(i) in bpy.data.meshes:
+                i += 1
+            id = temp_id + "_" + str(i)
         # Create a new mesh object
         mesh = bpy.data.meshes.new(name=id)
         obj = bpy.data.objects.new(name=id, object_data=mesh)
@@ -788,6 +792,7 @@ def createGeometry(id: str) -> Dict[str, Any]:
 
         return {
             "success": True,
+            "id": obj.name
         }
     except Exception as e:
         print(f"Error in {tool_name}: {str(e)}")

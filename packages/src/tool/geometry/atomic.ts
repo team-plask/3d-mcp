@@ -160,9 +160,11 @@ const geometryAtomicTools = {
       The node graph output is already added in the node graph, and its id is 'Group Output'. \
       Its input port 'Mesh' is the output of the geometry.",
     parameters: z.object({
-      id: z.string().describe("Object identifier. Must be unique."),
+      id: z.string().optional().describe("Object identifier. If the id already exists, a variant of the id will be used and returned."),
     }),
-    returns: _OperationResponse,
+    returns: _OperationResponse.extend({
+      id: z.string().describe("Created object identifier"),
+    }),
   },
   startEditGeometry: {
     description: "Starts editing the geometry of an object.",

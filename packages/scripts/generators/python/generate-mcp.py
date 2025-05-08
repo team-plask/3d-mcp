@@ -37,7 +37,7 @@ def parse_zod_union(file_path):
         description = match[3]
         
         # Combine inputs and outputs
-        stripped_inputs = inputs.replace("\n", "").replace(" ", "")
+        stripped_inputs =  inputs.replace("\n", "").replace(" ", "")
         stripped_outputs = outputs.replace("\n", "").replace(" ", "")
         combined_parameters = f"{inputs[:-1]}, {outputs[1:]}" if stripped_inputs != "{}" and stripped_outputs != "{}" else (
             inputs if stripped_outputs == "{}" else outputs)
