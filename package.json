@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "generate-geometry-tools": "cd ./packages/scripts/generators/python && python3 generate-zod.py && python3 generate-mcp.py && cd ../../../..",
     "extract-schemas": "bun run packages/scripts/extract-schemas.ts",
     "codegen": "bun --silent run packages/scripts/plugin-codegen.ts",
     "update-blender": "bun run packages/scripts/update-blender.ts",
