@@ -8,8 +8,9 @@
       "esModuleInterop": true,    /* CommonJS 모듈과의 호환성 지원 */
       "skipLibCheck": true,       /* 라이브러리 타입 체크 스킵 */
       "forceConsistentCasingInFileNames": true, /* 파일 이름 대소문자 일관성 강제 */
-      "moduleResolution": "node" /* 모듈 해석 방식 설정 */
+      "moduleResolution": "node", /* 모듈 해석 방식 설정 */
+      "sourceMap": true           /* 소스맵 생성 활성화 */
     },
     "include": ["*.ts"],          /* 컴파일할 TS 파일 패턴 */
-    "exclude": ["node_modules"]   /* 컴파일에서 제외할 폴더 */
+    "exclude": ["node_modules", "dist"]   /* 컴파일에서 제외할 폴더 */
   }
