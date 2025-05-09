@@ -24,29 +24,21 @@ function generateId(type: string, order: number, parentId?: string): string {
   return parentId ? `${parentId}_${type}_${order}` : `${type}_${order}`;
 }
 
-// XML 파싱 결과에서 <w:t> 요소의 텍스트 내용을 추출하는 함수
+// XML 파싱 결과에서 <w:t> 요소의 텍스트 내용을 추출하는 함수 (숫자 처리 제거)
 function getTextFromTElement(tElement: any): string {
-  if (tElement === null || tElement === undefined) return ""; // null 또는 undefined 체크
+  if (tElement === null || tElement === undefined) return "";
 
   // Case 1: Handles object { '#text': '...' }
   if (typeof tElement === 'object' && typeof tElement['#text'] === 'string') {
     return tElement['#text'];
   }
-  // Case 2: Handles string 'Text'
+  // Case 2: Handles string 'Text' (parseTagValue: false 설정 시 이 경우가 기본)
   if (typeof tElement === 'string') {
       return tElement;
   }
-  // **** 추가된 Case 3: Handles number type ****
-  if (typeof tElement === 'number') {
-      return String(tElement); // 숫자를 문자열로 변환하여 반환
-  }
-  // **** 추가된 Case 4: Handles boolean type (필요 시) ****
-  if (typeof tElement === 'boolean') {
-      return String(tElement); // 불리언을 문자열로 변환
-  }
 
-  console.warn(`[getTextFromTElement] 예상치 못한 타입의 입력값: ${typeof tElement}`, tElement); // 디버깅용 로그
-  return ""; // 그 외 경우는 빈 문자열 반환
+  console.warn(`[getTextFromTElement] 예상치 못한 타입의 입력값: ${typeof tElement}`, tElement);
+  return "";
 }
 
 // 단락 속성(<w:pPr>) 객체 처리 함수
@@ -277,17 +269,16 @@ function processTable(tblElement: any, parentId?: string): TableJson | null {
 // 메인 변환 함수
 export function convertOoxmlToJson(xmlString: string): DocumentJson {
   const parser = new XMLParser({
-    ignoreAttributes: false,    // 속성 유지
-    attributeNamePrefix: "",    // 속성 이름 접두사 없음
-    removeNSPrefix: false,      // 네임스페이스 접두사 ('w:') 유지
-    parseTagValue: true,        // 태그 값 파싱 시도
-    parseAttributeValue: true,  // 속성 값 파싱 시도
-    textNodeName: "#text",      // 텍스트 노드 이름 지정
-    isArray: (name, jpath, isLeafNode, isAttribute) => { // 항상 배열로 처리할 태그 목록
+    ignoreAttributes: false,
+    attributeNamePrefix: "",
+    removeNSPrefix: false,
+    parseTagValue: false, // 태그 값을 자동으로 숫자/불리언으로 변환하지 않음
+    trimValues: false,         // 태그 값의 앞뒤 공백을 제거하지 않음
+    parseAttributeValue: true, // 속성 값은 변환 시도 (w:val="1" 같은 경우)
+    textNodeName: "#text",
+    isArray: (name, jpath, isLeafNode, isAttribute) => {
         return ['w:document', 'w:body', 'w:p', 'w:r', 'w:tbl', 'w:tr', 'w:tc', 'w:hyperlink', 'w:proofErr'].includes(name);
     },
-    // stopNodes: ["*.ignore"], // 특정 노드 파싱 중지 (필요시 사용)
-    // parseBooleanAttributes: true, // 불리언 속성 파싱 (기본값 true일 수 있음)
   });
 
   let parsedXml;
