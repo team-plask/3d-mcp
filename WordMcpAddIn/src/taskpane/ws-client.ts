@@ -1,8 +1,8 @@
 import { v4 as uuid } from 'uuid';
 import * as svc from './service';
 
-type Req = { kind:'req'; id:string; app:string; action:string; params:any };
-type Res = { kind:'res'; id:string; app:string; action:string; ok:boolean; data?:any; err?:string };
+type Req = { kind:'req'; id:string; action:string; params:any };
+type Res = { kind:'res'; id:string; action:string; ok:boolean; data?:any; err?:string };
 
 export class RpcWebSocket {
   private ws: WebSocket | null = null;
@@ -84,10 +84,10 @@ export class RpcWebSocket {
 
   /* ------------------------------------------------------------------ */
   sendReq(action:string, params:any={}) {
-    this.raw({ kind:'req', id:this.id, app:this.app, action, params });
+    this.raw({ kind:'req', id:this.id, action, params });
   }
   private sendRes(action:string, ok:boolean, data?:any, err?:string) {
-    this.raw({ kind:'res', id:this.id, app:this.app, action, ok, data, err });
+    this.raw({ kind:'res', id:this.id, action, ok, data, err });
   }
   private raw(o:any) {
     if (this.ws?.readyState === WebSocket.OPEN)

@@ -1,100 +1,69 @@
+// ──────────────────────────────────────────────────────────
 // src/taskpane/document.ts
-import { parseFlowNodes } from './parser';
+// ──────────────────────────────────────────────────────────
+import { XMLParser } from 'fast-xml-parser';
+import { convertOoxmlToJson, pickDocumentPart } from './converter';  // 이미 제공
+import { ParagraphJson, DocumentBlock } from './types';
 
-export interface DocumentBlock {
-  id: string;
-  type: 'paragraph'|'table'|'image';
-  content: any;
-  controlId?: string;
-  paraId?: string;
-}
+// XML 파서 설정 (OOXML 수정용)
+const domParser = new DOMParser();
+const xmlSerializer = new XMLSerializer();
+const wNs   = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const w14Ns = 'http://schemas.microsoft.com/office/word/2010/wordml';
 
-export async function exportDocumentStructureJson(): Promise<DocumentBlock[]> {
-    return Word.run(async ctx => {
-      const body     = ctx.document.body;
-      const tables   = body.tables;
-      const controls = ctx.document.contentControls;
-      const paras    = body.paragraphs;
-  
-      tables.load('items,items/styleBuiltIn');
-      controls.load('items/id,text');
-      paras.load('items/text');
-      await ctx.sync();
-  
-      // HTML 가져오기
-      const htmlResult = body.getHtml();
-      // 중요: HTML 결과를 사용하기 전에 sync 호출 필요
-      await ctx.sync();
-      
-      const blocks: DocumentBlock[] = [];
-      parseFlowNodes(new DOMParser().parseFromString(htmlResult.value, 'text/html').body.childNodes, blocks);
-  
-      // 스타일, id 매핑 (기존 로직 그대로)
-      let ti = 0, pi = 0, ii = 0;
-      for (const b of blocks) {
-        if (b.type === 'table')  b.content.style = tables.items[ti].styleBuiltIn || 'TableGrid';
-        if (b.type === 'paragraph') {
-          const txt = b.content.text;
-          const ctrl = controls.items.find(c => c.text?.includes(txt));
-          b.controlId = ctrl?.id.toString();
-          if (!b.controlId)      b.id = `para-${pi++}`;
-          else                   b.id = `cc-${b.controlId}`;
-        }
-        else if (b.type === 'table') { b.id = `table-${ti}`; ti++; }
-        else if (b.type === 'image') { b.id = `image-${ii}`; ii++; }
-      }
-      return blocks;
-    });
-  }
-
-export async function importDocumentStructureJson(blocks: DocumentBlock[]): Promise<void> {
+// ──────────────────────────────────────────────────────────
+// EXPORT  → OOXML(document.xml) → JSON 블록 배열
+// ──────────────────────────────────────────────────────────
+export async function exportDocumentStructureJson() {
   return Word.run(async ctx => {
-    const body = ctx.document.body;
-    body.clear();
-    for (const b of blocks) {
-      if (b.type === 'paragraph') {
-        const p = body.insertParagraph(b.content.text, Word.InsertLocation.end);
-        const key = b.content.style.replace(/\s+/g,'');
-        // @ts-ignore
-        p.styleBuiltIn = (Word.Style as any)[key] || Word.Style.Normal;
-      }
-      if (b.type === 'table') {
-        const rows = b.content.rows as string[][];
-        const tbl = body.insertTable(rows.length, rows[0]?.length||1, Word.InsertLocation.end, rows);
-        // @ts-ignore
-        tbl.styleBuiltIn = b.content.style || 'TableGrid';
-      }
-      if (b.type === 'image') {
-        const base64 = (b.content.src as string).split(',')[1];
-        body.insertInlinePictureFromBase64(base64, Word.InsertLocation.end);
-      }
-    }
+    const flat   = ctx.document.body.getOoxml();
     await ctx.sync();
+
+    const docXml   = pickDocumentPart(flat.value);  // ← 여기서 본문만 추출
+    console.log('Document XML:', docXml);
+    const docJson = convertOoxmlToJson(docXml);    // ⬅ 이미 구현
+    console.log('Document JSON:', docJson);
+    return docJson.blocks;                              // [{ id, type, … }]
   });
 }
 
-/** 문서 끝에 그대로 덧붙임 */
-export async function appendBlocks(blocks: DocumentBlock[]): Promise<void> {
+export async function importDocumentStructureJson(blocks: DocumentBlock[]) {
   return Word.run(async ctx => {
-    const body = ctx.document.body;
-    for (const b of blocks) {
-      if (b.type === 'paragraph') {
-        const p = body.insertParagraph(b.content.text, Word.InsertLocation.end);
-        const key = b.content.style.replace(/\s+/g,'');
-        // @ts-ignore
-        p.styleBuiltIn = (Word.Style as any)[key] || Word.Style.Normal;
-      }
-      if (b.type === 'table') {
-        const rows = b.content.rows as string[][];
-        const tbl = body.insertTable(rows.length, rows[0]?.length||1, Word.InsertLocation.end, rows);
-        // @ts-ignore
-        tbl.styleBuiltIn = b.content.style || 'TableGrid';
-      }
-      if (b.type === 'image') {
-        const base64 = (b.content.src as string).split(',')[1];
-        body.insertInlinePictureFromBase64(base64, Word.InsertLocation.end);
-      }
-    }
+    // ① 본문 OOXML 가져오기
+    const flat = ctx.document.body.getOoxml();
+    await ctx.sync();
+
+    const xmlDoc = domParser.parseFromString(flat.value, 'application/xml');
+    const bodyEl = xmlDoc.getElementsByTagNameNS(wNs, 'body')[0];
+    const pNodes = Array.from(bodyEl.getElementsByTagNameNS(wNs, 'p'));
+
+    // ② Map <paragraph-id , ParagraphJson>
+    const pMap = new Map<string, ParagraphJson>();
+    blocks.filter(b => b.type === 'paragraph')
+          .forEach(p => pMap.set(p.id, p as ParagraphJson));
+
+    // ③ 순차 매핑(p_1 , p_2 …)  ↔  실제 <w:p>
+    let idx = 1, patched = 0;
+    pNodes.forEach(pEl => {
+      const pId = `p_${idx++}`;
+      const pj  = pMap.get(pId);
+      if (!pj) return;
+
+      const newText = pj.runs.map(r => r.text).join('');
+      const tEls = pEl.getElementsByTagNameNS(wNs, 't');
+      if (!tEls.length) return;
+
+      // 첫 <w:t> 에 새 텍스트, 나머지는 비움
+      (tEls[0] as Element).textContent = newText;
+      for (let i=1;i<tEls.length;i++) tEls[i].textContent = '';
+      patched++;
+    });
+    console.log('patched paragraphs =', patched);
+
+    // ④ Word 에 다시 삽입
+    const newOoxml = xmlSerializer.serializeToString(xmlDoc)
+                       .replace(/<\?xml.*?\?>/, '');
+    ctx.document.body.insertOoxml(newOoxml, Word.InsertLocation.replace);
     await ctx.sync();
   });
 }
