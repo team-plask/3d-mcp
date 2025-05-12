@@ -21,14 +21,13 @@ function updateStatus(txt: string, error = false) {
 function connectWS() {
   updateStatus('연결 중…');
 
-  const url = `wss://localhost:8080/ws`;      // 서버의 공통 엔드포인트
+  const url = `wss://localhost:8080/ws`;     
   rpc = new RpcWebSocket(url, 'word');
 
   rpc.onOpen    = () => updateStatus('연결됨');
   rpc.onClose   = () => updateStatus('연결 종료', true);
   rpc.onError   = () => updateStatus('연결 오류', true);
 
-  /*  add‑in ←→ 서버  모든 결과를 패널에 출력  */
   rpc.onMessage = res => {
     console.log('↙︎  WS response:', res);
     logResult(res);
@@ -47,5 +46,5 @@ Office.onReady(() => {
   $('wsButton')   .addEventListener('click', connectWS);
   $('reconnectBtn').addEventListener('click', connectWS);
 
-  connectWS();      // 시작하자마자 연결
+  connectWS();    
 });

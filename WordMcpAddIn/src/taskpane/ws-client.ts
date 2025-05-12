@@ -1,96 +1,123 @@
-import { v4 as uuid } from 'uuid';
-import * as svc from './service';
+import { v4 as uuid }                     from 'uuid';
+import * as svc                           from './service';
+import { exportDocumentStructureJson }    from './document';
 
-type Req = { kind:'req'; id:string; action:string; params:any };
-type Res = { kind:'res'; id:string; action:string; ok:boolean; data?:any; err?:string };
+type Action = 'init' | 'read' | 'search' | 'edit';
+
+type BaseMsg = { kind: 'req' | 'res'; id: string };
+
+export type Req = BaseMsg & { kind: 'req' } &
+  { [K in Action]?: any };
+
+export type ResPayload = { ok: boolean; data?: any; err?: string };
+export type Res = BaseMsg & { kind: 'res' } &
+  { [K in Action]?: ResPayload };
+
+const META_KEYS = new Set(['kind', 'id'] as const);
+function getAction(obj: Req | Res): Action | undefined {
+  for (const k of Object.keys(obj))
+    if (!META_KEYS.has(k as any)) return k as Action;
+}
 
 export class RpcWebSocket {
   private ws: WebSocket | null = null;
-  readonly id = uuid();                   // add‑in 고유 ID
+  readonly id = uuid();               
 
   constructor(private url: string, private app = 'word') {}
 
-  /* 외부에서 필요하면 콜백 갈아끼우세요 */
-  onOpen    = ()           => {};
-  onClose   = ()           => {};
-  onError   = (_:any)      => {};
-  onMessage = (_:Res)      => {};
+  onOpen    = ()        => {};
+  onClose   = ()        => {};
+  onError   = (_: any)  => {};
+  onMessage = (_: Res)  => {};
 
-  /* ------------------------------------------------------------------ */
-  connect() {
+  async connect(): Promise<void> {
     this.ws = new WebSocket(this.url);
 
-    /* open → init & 테스트 search */
-    this.ws.onopen = () => {
+    this.ws.onopen = async () => {
       this.onOpen();
 
-      /* 1️⃣ 서버에게 자기 소개 */
+      let snapshot: unknown[] = [];
+      try { snapshot = await exportDocumentStructureJson(); }
+      catch { }
+
       this.sendReq('init', {
-        name:         'Word JSON Add‑in',
+        name:         'Word JSON Add-in',
         version:      '0.1.0',
-        description:  'Task‑pane add‑in exposing read/search/edit RPC',
-        capabilities: ['read','search','edit'],
-        requires_ui:  true
+        description:  'Task-pane add-in exposing read/search/edit RPC',
+        capabilities: ['read', 'search', 'edit'],
+        requires_ui:  true,
+        document:     snapshot
       });
 
-      /* 2️⃣ 테스트 검색 */
-      this.sendReq('search', { keyword:'소프트웨어' });
+      this.sendReq('search', { keyword: '소프트웨어' });
     };
 
     this.ws.onclose = ()  => this.onClose();
-    this.ws.onerror = err => this.onError(err);
+    this.ws.onerror = e   => this.onError(e);
 
-    /* 모든 ‑‑> 애드‑인 수신 */
     this.ws.onmessage = async ev => {
-      let m: Req | Res;
-      try { m = JSON.parse(ev.data as string); } catch { return; }
+      let msg: Req | Res;
+      try { msg = JSON.parse(ev.data as string); } catch { return; }
 
-      /* ① 서버 → add‑in 응답 → UI 에 그대로 전달 */
-      if (m.kind === 'res') {
-        this.onMessage(m);
+      const act = getAction(msg);
+      if (!act) return;
+
+      if (msg.kind === 'res') {
+        this.onMessage(msg as Res);
         return;
       }
 
-      /* ② 서버 → add‑in 요청 처리 */
-      if (m.kind !== 'req') return;
-
+      const req = msg as Req;
       try {
-        switch (m.action) {
+        switch (act) {
           case 'read': {
-            const blk = await svc.readBlockById(m.params.blockId);
-            this.sendRes('read',  true, blk);
+            const blk = await svc.readBlockById(req.read.blockId);
+            this.sendRes('read', true, blk);
             break;
           }
           case 'search': {
-            const hits = await svc.searchBlocks(m.params.keyword);
+            const hits = await svc.searchBlocks(req.search.keyword);
             this.sendRes('search', true, hits);
             break;
           }
           case 'edit': {
             const ok = await svc.editBlockParagraph(
-              m.params.blockId, m.params.content);
-            this.sendRes('edit', ok, undefined,
-                         ok ? undefined : 'not paragraph / not found');
+              req.edit.blockId,
+              req.edit.content
+            );
+            this.sendRes(
+              'edit',
+              ok,
+              undefined,
+              ok ? undefined : 'not paragraph / not found'
+            );
             break;
           }
           default:
-            this.sendRes(m.action, false, undefined, 'unknown action');
+            this.sendRes(act, false, undefined, 'unknown action');
         }
-      } catch (e:any) {
-        this.sendRes(m.action, false, undefined, e.message||String(e));
+      } catch (e: any) {
+        this.sendRes(act, false, undefined, e?.message ?? String(e));
       }
     };
   }
 
-  /* ------------------------------------------------------------------ */
-  sendReq(action:string, params:any={}) {
-    this.raw({ kind:'req', id:this.id, action, params });
+  sendReq(action: Action, params: unknown = {}): void {
+    const payload: Req = { kind: 'req', id: this.id, [action]: params };
+    this.raw(payload);
   }
-  private sendRes(action:string, ok:boolean, data?:any, err?:string) {
-    this.raw({ kind:'res', id:this.id, action, ok, data, err });
+
+  private sendRes(action: Action, ok: boolean, data?: unknown, err?: string) {
+    const payload: Res = {
+      kind: 'res',
+      id:   this.id,
+      [action]: { ok, data, err }
+    } as Res;
+    this.raw(payload);
   }
-  private raw(o:any) {
+
+  private raw(obj: object): void {
     if (this.ws?.readyState === WebSocket.OPEN)
-      this.ws.send(JSON.stringify(o));
+      this.ws.send(JSON.stringify(obj));
   }
 }

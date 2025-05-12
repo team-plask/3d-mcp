@@ -1,13 +1,9 @@
-// ──────────────────────────────────────────────────────────
-// src/taskpane/service.ts
-// ──────────────────────────────────────────────────────────
 import {
   exportDocumentStructureJson,
   importDocumentStructureJson,
 } from './document';
 import type { DocumentBlock, ParagraphJson, TableJson } from './types';
 
-/** 블록을 “검색용 한줄 문자열”로 변환 */
 function blockToPlain(b: DocumentBlock): string {
   if (b.type === 'paragraph') {
     // runs[].text 이어 붙이기
@@ -25,8 +21,6 @@ function blockToPlain(b: DocumentBlock): string {
   return '';
 }
 
-type DocumentBlock = ParagraphJson | TableJson;
-
 let _buffer: DocumentBlock[] = [];
 
 // 문서 읽기 캐시
@@ -37,21 +31,18 @@ async function ensureBuffer() {
 
 function plainText(b: DocumentBlock): string {
   if (b.type === 'paragraph') {
-    // ① convertOoxmlToJson이 runs 배열만 줄 때:
-    if (Array.isArray(b.content?.runs)) {
-      return b.content.runs.map((r:any)=> r.text).join('');
+    if (Array.isArray((b as ParagraphJson).runs)) {
+      return (b as ParagraphJson).runs.map((r:any)=> r.text).join('');
     }
-    // ② 예전 포맷(back-compat) – content.text 가 있을 때:
-    return String(b.content?.text ?? '');
+    return '';
   }
   if (b.type === 'table') {
-    return (b.content?.rows || [])
+    return ((b as TableJson).rows || [])
            .flat().join(' ');
   }
-  return '';     // image 등 검색 대상 아님
+  return '';    
 }
 
-/*────────── read / search / edit ──────────*/
 export async function readBlockById(id: string) {
   await ensureBuffer();
   return _buffer.find(b => b.id === id) ?? null;
@@ -80,11 +71,9 @@ export async function searchBlocks(keyword: string){
 }
 
 
-/** id = p_26  |  id = p_26_r_3  둘 다 허용  */
 export async function editBlockParagraph(id: string, newText: string) {
   await ensureBuffer();
 
-  // ── Paragraph-ID? ─────────────────────
   let para = _buffer.find(b => b.id === id && b.type === 'paragraph') as ParagraphJson | undefined;
   if (para) {
     para.runs = [{
@@ -93,7 +82,6 @@ export async function editBlockParagraph(id: string, newText: string) {
       text: newText, properties:{}
     }];
   } else {
-    // ── Run-ID? (p_26_r_3) ────────────────
     const m = id.match(/^(p_\d+)_r_\d+$/);
     if (!m) return false;
     const pId = m[1];
@@ -105,30 +93,26 @@ export async function editBlockParagraph(id: string, newText: string) {
   }
 
   await importDocumentStructureJson(_buffer);
-  _buffer = [];            // invalidate cache
+  _buffer = [];         
   return true;
 }
 
-/** 특정 run(id) 의 text 를 교체 */
 export async function editRunText(runId: string, newText: string) {
-  await ensureBuffer();                       // 최신 JSON 확보
+  await ensureBuffer();                      
 
-  // runId → paragraph 찾기
   const m = runId.match(/^(.+_p_\d+)_r_\d+$/);
-  if (!m) return false;                       // id 형식 오류
+  if (!m) return false;                  
   const paraId = m[1];
 
-  // ParagraphJson
   const para = _buffer.find(b => b.id === paraId) as ParagraphJson | undefined;
   if (!para) return false;
 
-  // Run 찾기
   const run = para.runs.find(r => r.id === runId);
   if (!run) return false;
 
-  run.text = newText;                         // 🔄 수정
+  run.text = newText;                        
 
-  await importDocumentStructureJson(_buffer); // Word 에 반영
-  _buffer = [];                               // 캐시 무효화
+  await importDocumentStructureJson(_buffer); 
+  _buffer = [];                               
   return true;
 }

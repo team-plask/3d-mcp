@@ -2,15 +2,15 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>87cb5cfb-5e88-42d7-9277-70c7cc0b140c</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Contoso</ProviderName>
+  <ProviderName>Oppice AI Assistant</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="WordMcpAddIn"/>
-  <Description DefaultValue="A template to get started."/>
-  <IconUrl DefaultValue="https://localhost:3001/assets/icon-32.png"/>
+  <DisplayName DefaultValue="Oppice AI Assistant"/>
+  <Description DefaultValue="Boost your productivity with Oppice AI — an intelligent agent that edits Office documents for you."/>
+  <IconUrl DefaultValue="https://wugypesggextuwltuyjh.supabase.co/storage/v1/object/public/asset/logo/torrus%20eye.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3001/assets/icon-64.png"/>
-  <SupportUrl DefaultValue="https://www.contoso.com/help"/>
+  <SupportUrl DefaultValue="https://www.oppice.com/docs"/>
   <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>https://www.oppice.com</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Document"/>
@@ -72,13 +72,13 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3001/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with Oppice AI"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Oppice Assistant"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Oppice Assistant"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Your sample add-in loaded successfully. Go to the HOME tab and click the 'Show Task Pane' button to get started."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane"/>
+        <bt:String id="GetStarted.Description" DefaultValue="Oppice AI Assistant helps you edit and manage Word, Excel, and PowerPoint documents using natural language. Just describe what you want — Oppice does the rest."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to open the Oppice AI Assistant and start editing your document with AI."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
