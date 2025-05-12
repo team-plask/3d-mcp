@@ -808,6 +808,8 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
             if hasattr(new_node, propName):
                 try:
                     setattr(new_node, propName, value)
+                    if (propName == "name"):
+                        new_node.label = value
                     continue
                 except Exception as e:
                     pass

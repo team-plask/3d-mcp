@@ -160,7 +160,12 @@ const geometryAtomicTools = {
       The node graph output is already added in the node graph, and its id is 'Group Output'. \
       Its input port 'Mesh' is the output of the geometry.",
     parameters: z.object({
-      id: z.string().optional().describe("Object identifier. If the id already exists, a variant of the id will be used and returned."),
+      id: z
+        .string()
+        .optional()
+        .describe(
+          "Object identifier. If the id already exists, a variant of the id will be used and returned."
+        ),
     }),
     returns: _OperationResponse.extend({
       id: z.string().describe("Created object identifier"),
@@ -415,7 +420,7 @@ const geometryAtomicTools = {
   // },
   setNodePropertyByIndex: {
     description:
-      "Sets an input default value of a node. For the available inputs and their type, use 'getNodeInputsOutputs'. Note that vectors are written Vector(x, y, z)",
+      "Sets an input default value of a node. For the available inputs and their type, use 'getNode'. Note that vectors are written Vector(x, y, z)",
     parameters: z.object({
       nodeId: z.string().describe("Node identifier"),
       propertyIndex: z
@@ -433,14 +438,13 @@ const geometryAtomicTools = {
   //     nodeTypes: z.array(z.string()),
   //   }),
   // },
-  getNodeInputsOutputs: {
-    description:
-      "Retrieves all input and output socket names for a node, and checks if input sockets can accept a default_value.",
+  getNode: {
+    description: "Retrieves a node and list all input and output socket names",
     parameters: z.object({
       nodeId: z
         .string()
         .describe(
-          "The node id to get information about, must exist in the node graph"
+          "The node id to get information about, that exist in the node graph. An error will be raised if the node does not exist."
         ),
     }),
     returns: _OperationResponse.extend({

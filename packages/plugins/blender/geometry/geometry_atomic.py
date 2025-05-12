@@ -123,7 +123,7 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
                     if region.type == 'WINDOW':
                         with bpy.context.temp_override(area=area, region=region):
                             bpy.ops.node.na_batch_arrange()
-    result = getNodeInputsOutputs(new_node.name)
+    result = getNode(new_node.name)
     inputs, outputs = result["inputs"], result["outputs"]
 
     # Set properties
@@ -504,7 +504,7 @@ def setNodePropertyByIndex(nodeId: str, propertyIndex: int, value: Optional[Any]
  # === NEWLY GENERATED ===
 
 
-def getNodeInputsOutputs(nodeId: str) -> Dict[str, Any]:
+def getNode(nodeId: str) -> Dict[str, Any]:
     """
     Retrieves all input and output socket names for a node, and checks if input sockets can accept a default_value.
 
@@ -753,7 +753,7 @@ def createGeometry(id: Optional[str] = None) -> Dict[str, Any]:
     """
     tool_name = "createGeometry"  # Define tool name for logging
     id = id or "Geometry"
-    
+
     params = {"id": id}  # Create params dict for logging
     print(f"Executing {tool_name} in Blender with params: {params}")
 
