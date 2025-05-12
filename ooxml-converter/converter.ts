@@ -1,118 +1,172 @@
-// converter.ts (전체 수정본)
+// converter.ts (사용자 수정 기반 + 추가 개선)
 
-import { XMLParser, XMLValidator } from 'fast-xml-parser';
+import { XMLParser } from 'fast-xml-parser';
 
-// --- 인터페이스 정의 ---
+// --- 인터페이스 정의 (동일) ---
 interface JsonBlock { id: string; type: string; order: number; parentId?: string; }
-interface ParagraphProperties { justification?: string; spacing?: { after?: string | number; line?: string | number; lineRule?: string; }; } // 타입을 좀 더 구체화 (string | number)
+interface ParagraphProperties { justification?: string; spacing?: { after?: string | number; line?: string | number; lineRule?: string; }; }
 interface TextRunProperties { bold?: boolean; italic?: boolean; underline?: string; fontSize?: string; color?: string; fontHint?: string; isLink?: boolean; linkId?: string; }
-interface TextRunJson extends JsonBlock { type: "textRun"; text: string; properties?: TextRunProperties; }
-interface ParagraphJson extends JsonBlock { type: "paragraph"; properties?: ParagraphProperties; runs: TextRunJson[]; }
-interface TableCellJson extends JsonBlock { type: "tableCell"; content: (ParagraphJson | TableJson)[]; } // 셀 안에 테이블도 올 수 있으므로 수정
+interface TextRunJson extends JsonBlock { type: "textRun"; text: string; properties: TextRunProperties; } // properties를 non-optional로 변경 고려
+interface ParagraphJson extends JsonBlock { type: "paragraph"; properties: ParagraphProperties; runs: TextRunJson[]; } // properties를 non-optional로 변경 고려
+interface TableCellJson extends JsonBlock { type: "tableCell"; content: (ParagraphJson | TableJson)[]; }
 interface TableRowJson extends JsonBlock { type: "tableRow"; cells: TableCellJson[]; }
 interface TableJson extends JsonBlock { type: "table"; rows: TableRowJson[]; }
 interface DocumentJson { blocks: (ParagraphJson | TableJson)[]; }
 
-// --- Whitelist 정의 ---
-const WHITELISTED_PARA_PROPS = ['w:spacing', 'w:jc', 'w:rPr']; // 단락 속성 처리 대상
-const WHITELISTED_RUN_PROPS = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts']; // 텍스트 런 속성 처리 대상
-
-let globalOrderCounter = 0; // 문서 전체 블록 순서 카운터
+const WHITELISTED_PARA_PROPS = ['w:spacing', 'w:jc', 'w:rPr'];
+const WHITELISTED_RUN_PROPS = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts'];
+let globalOrderCounter = 0;
 
 function generateId(type: string, order: number, parentId?: string): string {
-  // ID 생성 규칙: parentId가 있으면 계층적으로, 없으면 타입과 순서만 사용
   return parentId ? `${parentId}_${type}_${order}` : `${type}_${order}`;
 }
 
-// XML 파싱 결과에서 <w:t> 요소의 텍스트 내용을 추출하는 함수 (숫자 처리 제거)
-function getTextFromTElement(tElementContainer: any): string {
-    // preserveOrder:true 시, tElementContainer는 [{ '#text': '...' }] 또는 [{ '#text': '...' }, {':@': {...}}] 형태일 수 있음
-    if (!tElementContainer || !Array.isArray(tElementContainer) || tElementContainer.length === 0) return "";
+// 실제 태그 이름을 반환하는 견고한 getTagName 함수
+function getTagName(elementObject: any): string | null {
+  if (typeof elementObject !== 'object' || elementObject === null) {
+    return null;
+  }
+  const keys = Object.keys(elementObject);
+  // ':@' (속성 그룹)이나 '#text' (텍스트 노드)가 아닌 첫 번째 키를 태그 이름으로 간주
+  return keys.find(key => key !== ':@' && key !== '#text') || null;
+}
+
+// 요소의 속성 객체를 가져오는 함수
+function getAttributesFromElementObject(elementObject: any): any {
+  if (typeof elementObject !== 'object' || elementObject === null) {
+    return {};
+  }
+  
+  // 중첩된 속성 구조 처리
+  if (elementObject[':@']) {
+    if (elementObject[':@'][':@']) {
+      return elementObject[':@'][':@'];
+    }
+    return elementObject[':@'];
+  }
+  
+  return {};
+}
+
+// 요소의 자식 콘텐츠 배열을 가져오는 함수 ( preserveOrder:true 형식 )
+function getContentArrayFromElementObject(elementObject: any, tagName: string): any[] {
+  if (typeof elementObject === 'object' && elementObject !== null && typeof tagName === 'string' && Array.isArray(elementObject[tagName])) {
+    return elementObject[tagName];
+  }
+  return [];
+}
+
+// preserveOrder:true로 파싱된 배열에서 실제 자식 요소 객체들만 필터링
+function getActualChildElementObjects(parsedContentArray: any[]): any[] {
+    if (!parsedContentArray || !Array.isArray(parsedContentArray)) {
+        return [];
+    }
+    // 속성 객체({':@':{}})나 순수 텍스트 노드 객체({"#text":"..."})가 아닌 것들만 필터링
+    return parsedContentArray.filter(item => {
+        if (typeof item !== 'object' || item === null) return false;
+        const keys = Object.keys(item);
+        if (keys.length === 1 && (keys[0] === ':@' || keys[0] === '#text')) return false;
+        // '#text' 와 'w:tagName' 이 같이 있는 경우는 (예: w:t 안의 텍스트) 여기서 걸러지지 않도록 주의.
+        // getTagName을 통해 실제 태그가 있는 객체인지 확인하는 것이 더 정확.
+        return getTagName(item) !== null;
+    });
+}
+
+
+function getTextFromTContentArray(tContentArray: any[]): string {
     let text = "";
-    for (const item of tElementContainer) {
-        if (item && typeof item['#text'] === 'string') {
-            text += item['#text'];
+    if (tContentArray && Array.isArray(tContentArray)) {
+        for (const item of tContentArray) {
+            if (item && typeof item['#text'] === 'string') {
+                text += item['#text'];
+            }
         }
     }
     return text;
 }
 
-// 단락 속성(<w:pPr>) 객체 처리 함수
-function processParagraphProperties(pPrContainer: any): ParagraphProperties {
+function processParagraphProperties(pPrElementObject: any): ParagraphProperties {
     const properties: ParagraphProperties = {};
-    if (!pPrContainer || !Array.isArray(pPrContainer) || pPrContainer.length === 0) return properties;
+    const tagName = getTagName(pPrElementObject); // "w:pPr"
+    if (!tagName || tagName !== 'w:pPr') return properties;
 
-    const pPrObject = pPrContainer[0]; // pPr 요소는 하나만 존재 가정
-    if (typeof pPrObject !== 'object' || pPrObject === null) return properties;
+    const pPrContentArray = getContentArrayFromElementObject(pPrElementObject, tagName);
+    const pPrChildren = getActualChildElementObjects(pPrContentArray);
 
-    for (const key in pPrObject) { // <w:spacing>, <w:jc> 등이 키로 존재
-        if (WHITELISTED_PARA_PROPS.includes(key)) {
-            const propValueArray = pPrObject[key]; // [{...attributes...}] 형태
-            if (propValueArray && Array.isArray(propValueArray) && propValueArray.length > 0) {
-                const attributes = propValueArray[0][':@'] || {}; // 속성 접근
-                if (key === 'w:jc' && attributes['w:val']) {
-                    properties.justification = attributes['w:val'];
-                } else if (key === 'w:spacing') {
-                    properties.spacing = {
-                        after: attributes['w:after'],
-                        line: attributes['w:line'],
-                        lineRule: attributes['w:lineRule']
-                    };
-                }
+    pPrChildren.forEach(childObject => { // childObject 예: {"w:spacing": [{":@":{...}}]}
+        const childTagName = getTagName(childObject);
+        if (childTagName && WHITELISTED_PARA_PROPS.includes(childTagName)) {
+            const childContentArray = getContentArrayFromElementObject(childObject, childTagName);
+            const attributes = getAttributesFromElementObject(childObject); // <w:spacing> 태그의 속성
+
+            if (childTagName === 'w:jc' && attributes['w:val']) {
+                properties.justification = attributes['w:val'];
+            } else if (childTagName === 'w:spacing' && attributes) {
+                properties.spacing = {
+                    after: attributes['w:after'],
+                    line: attributes['w:line'],
+                    lineRule: attributes['w:lineRule']
+                };
             }
         }
-    }
+    });
     return properties;
 }
 
-// 텍스트 런 속성(<w:rPr>) 객체 처리 함수
-function processRunProperties(rPrContainer: any): TextRunProperties {
+function processRunProperties(rPrElementObject: any): TextRunProperties {
     const properties: TextRunProperties = {};
-    if (!rPrContainer || !Array.isArray(rPrContainer) || rPrContainer.length === 0) return properties;
-    
-    const rPrObject = rPrContainer[0];
-    if (typeof rPrObject !== 'object' || rPrObject === null) return properties;
+    const tagName = getTagName(rPrElementObject); // "w:rPr"
+     if (!tagName || tagName !== 'w:rPr') return properties;
 
-    for (const key in rPrObject) {
-        if (WHITELISTED_RUN_PROPS.includes(key)) {
-            const propValueArray = rPrObject[key];
-             if (propValueArray && Array.isArray(propValueArray) && propValueArray.length > 0) {
-                const attributes = propValueArray[0][':@'] || {}; // 속성 객체
-                const hasValue = Object.keys(attributes).length > 0 || (propValueArray[0] && Object.keys(propValueArray[0]).length > 0 && !propValueArray[0][':@']);
+    const rPrContentArray = getContentArrayFromElementObject(rPrElementObject, tagName);
+    const rPrChildren = getActualChildElementObjects(rPrContentArray);
+
+    rPrChildren.forEach(childObject => {
+        const childTagName = getTagName(childObject);
+        if (childTagName && WHITELISTED_RUN_PROPS.includes(childTagName)) {
+            const childContentArray = getContentArrayFromElementObject(childObject, childTagName);
+            const attributes = getAttributesFromElementObject(childObject);
+            const isEmptyTag = childContentArray.length === 1 && Object.keys(childContentArray[0]).length === 0 && !childContentArray[0][':@'];
 
 
-                if (key === 'w:b' && hasValue) properties.bold = true; // <w:b/> 또는 <w:b w:val="true"/>
-                else if (key === 'w:i' && hasValue) properties.italic = true;
-                else if (key === 'w:u' && attributes['w:val']) properties.underline = attributes['w:val'];
-                else if (key === 'w:sz' && attributes['w:val']) properties.fontSize = String(attributes['w:val']);
-                else if (key === 'w:color' && attributes['w:val']) properties.color = attributes['w:val'];
-                else if (key === 'w:rFonts' && attributes['w:hint']) properties.fontHint = attributes['w:hint'];
-             }
+            if (childTagName === 'w:b' && (attributes['w:val'] !== "0" || isEmptyTag )) properties.bold = true;
+            else if (childTagName === 'w:i' && (attributes['w:val'] !== "0" || isEmptyTag)) properties.italic = true;
+            else if (childTagName === 'w:u' && attributes['w:val']) properties.underline = attributes['w:val'];
+            else if (childTagName === 'w:sz' && attributes['w:val']) properties.fontSize = String(attributes['w:val']);
+            else if (childTagName === 'w:color' && attributes['w:val']) properties.color = attributes['w:val'];
+            else if (childTagName === 'w:rFonts' && attributes['w:hint']) properties.fontHint = attributes['w:hint'];
         }
-    }
+    });
     return properties;
 }
 
-// 텍스트 런(<w:r>) 객체 처리 함수
-function processTextRun(rContentArray: any[], parentId: string, order: number, extraProps?: any): TextRunJson | null {
-    if (!rContentArray || !Array.isArray(rContentArray)) return null;
+function processTextRun(rElementObject: any, parentId: string, order: number, extraProps?: any): TextRunJson | null {
+    const tagName = getTagName(rElementObject);
+    if (!tagName || tagName !== 'w:r') return null;
+    
+    const rTagAttributes = getAttributesFromElementObject(rElementObject);
+    const rContentArray = getContentArrayFromElementObject(rElementObject, tagName);
 
     const runId = generateId('r', order, parentId);
     const textRunJson: TextRunJson = {
         id: runId, type: "textRun", order, parentId, text: "", properties: {}
     };
 
-    // rContentArray는 <w:r>의 자식 요소들의 배열: 예: [{ "w:rPr": [...] }, { "w:t": ["Text"] }]
-    rContentArray.forEach(childElement => {
-        if (childElement['w:rPr']) {
-            textRunJson.properties = processRunProperties(childElement['w:rPr']);
-        } else if (childElement['w:t']) {
-            textRunJson.text += getTextFromTElement(childElement['w:t']);
-        } else if (childElement['w:br']) {
+    // <w:r> 태그의 자식 요소들 (예: <w:rPr>, <w:t>, <w:br>)을 순회
+    const rChildren = getActualChildElementObjects(rContentArray);
+    rChildren.forEach(childObject => {
+        const childTagName = getTagName(childObject);
+        if (childTagName === 'w:rPr') {
+            textRunJson.properties = processRunProperties(childObject); // pPrElementObject 전체를 넘김
+        } else if (childTagName === 'w:t') {
+            textRunJson.text += getTextFromTContentArray(getContentArrayFromElementObject(childObject, childTagName));
+        } else if (childTagName === 'w:br') {
             textRunJson.text += '\n';
         }
-        // <w:tab> 등 다른 요소 처리
     });
+    
+    // <w:r> 태그 자체의 속성도 properties에 포함시킬 수 있음 (예: w:rsidRPr)
+    // textRunJson.properties = { ...textRunJson.properties, ...rTagAttributes };
 
     if (extraProps) {
         textRunJson.properties = { ...textRunJson.properties, ...extraProps };
@@ -120,107 +174,116 @@ function processTextRun(rContentArray: any[], parentId: string, order: number, e
     return textRunJson;
 }
 
-// 단락(<w:p>) 객체 처리 함수
-function processParagraph(pContainer: any, parentId?: string): ParagraphJson | null {
-    if (!pContainer || !Array.isArray(pContainer) || pContainer.length === 0) return null;
+function processParagraph(pElementObject: any, parentJsonBlockId?: string): ParagraphJson | null {
+    const tagName = getTagName(pElementObject);
+    if (!tagName || tagName !== 'w:p') return null;
 
-    const pAttributes = pContainer[0][':@'] || {}; // <w:p> 태그의 속성들
-    const pChildren = pContainer.slice(pContainer[0][':@'] ? 1 : 0); // 속성 객체를 제외한 실제 자식 요소들의 배열
+    const pTagAttributes = getAttributesFromElementObject(pElementObject);
+    const pContentArray = getContentArrayFromElementObject(pElementObject, tagName);
 
     globalOrderCounter++;
-    const paraId = pAttributes['w14:paraId'] || generateId('p', globalOrderCounter, parentId);
+    const paraId = pTagAttributes['w14:paraId'] || generateId('p', globalOrderCounter, parentJsonBlockId);
 
     const paragraphJson: ParagraphJson = {
         id: paraId, type: "paragraph", order: globalOrderCounter, runs: [], properties: {}
     };
-    if (parentId) paragraphJson.parentId = parentId;
+    if (parentJsonBlockId) paragraphJson.parentId = parentJsonBlockId;
 
+    const pChildren = getActualChildElementObjects(pContentArray);
     let runOrder = 0;
-    pChildren.forEach((childElementObject: any) => { // childElementObject 예: { "w:pPr": [...] } 또는 { "w:r": [...] }
-        const elementName = Object.keys(childElementObject)[0]; // "w:pPr", "w:r", "w:hyperlink" 등
 
-        if (elementName === 'w:pPr') {
-            paragraphJson.properties = processParagraphProperties(childElementObject['w:pPr']);
-        } else if (elementName === 'w:r') {
+    pChildren.forEach((childObject: any) => {
+        const childTagName = getTagName(childObject);
+        if (!childTagName) return;
+
+        if (childTagName === 'w:pPr') {
+            paragraphJson.properties = processParagraphProperties(childObject);
+        } else if (childTagName === 'w:r') {
             runOrder++;
-            const runJson = processTextRun(childElementObject['w:r'], paraId, runOrder);
+            const runJson = processTextRun(childObject, paraId, runOrder);
             if (runJson) paragraphJson.runs.push(runJson);
-        } else if (elementName === 'w:hyperlink') {
-            const hyperlinkContent = childElementObject['w:hyperlink']; // [{ "w:r": [...] }, { ":@": { "r:id": "..."} }]
-            if (hyperlinkContent && Array.isArray(hyperlinkContent)) {
-                const linkAttributes = hyperlinkContent.find(item => item[':@'])?.[':@'] || {};
-                hyperlinkContent.forEach(linkChild => {
-                    if (linkChild['w:r']) { // 하이퍼링크 내부의 <w:r>
-                         runOrder++;
-                         const runJson = processTextRun(linkChild['w:r'], paraId, runOrder, { isLink: true, linkId: linkAttributes['r:id'] });
-                         if (runJson) paragraphJson.runs.push(runJson);
-                    }
-                });
-            }
+        } else if (childTagName === 'w:hyperlink') {
+            const hyperlinkTagAttributes = getAttributesFromElementObject(childObject);
+            const hyperlinkContentArray = getContentArrayFromElementObject(childObject, childTagName);
+            const hyperlinkChildren = getActualChildElementObjects(hyperlinkContentArray);
+            
+            hyperlinkChildren.forEach(linkChildNode => {
+                const linkChildTagName = getTagName(linkChildNode);
+                if (linkChildTagName === 'w:r') {
+                    runOrder++;
+                    const runJson = processTextRun(
+                        linkChildNode, // <w:r> 요소 객체 자체를 전달
+                        paraId,
+                        runOrder,
+                        { isLink: true, linkId: hyperlinkTagAttributes['r:id'] }
+                    );
+                    if (runJson) paragraphJson.runs.push(runJson);
+                }
+            });
         }
-        // <w:proofErr> 등 기타 요소 처리...
     });
     return paragraphJson;
 }
 
-// 테이블 셀(<w:tc>) 객체 처리 함수
-function processTableCell(tcContainer: any, parentId: string, order: number): TableCellJson | null {
-    if (!tcContainer || !Array.isArray(tcContainer) || tcContainer.length === 0) return null;
-    const tcAttributes = tcContainer[0][':@'] || {};
-    const tcChildren = tcContainer.slice(tcContainer[0][':@'] ? 1: 0);
+function processTableCell(tcElementObject: any, parentJsonBlockId: string, order: number): TableCellJson | null {
+    const tagName = getTagName(tcElementObject);
+    if (!tagName || tagName !== 'w:tc') return null;
 
-    const cellId = generateId('tc', order, parentId);
+    const tcTagAttributes = getAttributesFromElementObject(tcElementObject);
+    const tcContentArray = getContentArrayFromElementObject(tcElementObject, tagName);
+
+    const cellId = generateId('tc', order, parentJsonBlockId);
     const cellJson: TableCellJson = {
-        id: cellId, type: "tableCell", order, parentId, content: []
+        id: cellId, type: "tableCell", order, parentId: parentJsonBlockId, content: []
     };
 
-    // <w:tcPr> 처리 로직
-    // ...
+    const tcChildren = getActualChildElementObjects(tcContentArray);
+    tcChildren.forEach(tcChild => {
+        const childTagName = getTagName(tcChild);
+        if (!childTagName) return;
 
-    tcChildren.forEach((childElementObject: any) => {
-        const elementName = Object.keys(childElementObject)[0];
-        if (elementName === 'w:p') {
-            const paragraph = processParagraph(childElementObject['w:p'], cellId);
+        if (childTagName === 'w:p') {
+            const paragraph = processParagraph(tcChild, cellId);
             if (paragraph) cellJson.content.push(paragraph);
-        } else if (elementName === 'w:tbl') {
-            const table = processTable(childElementObject['w:tbl'], cellId);
+        } else if (childTagName === 'w:tbl') {
+            const table = processTable(tcChild, cellId);
             if (table) cellJson.content.push(table);
         }
     });
     return cellJson;
 }
 
-// 테이블 행(<w:tr>) 객체 처리 함수
-function processTableRow(trContainer: any, parentId: string, order: number): TableRowJson | null {
-    if (!trContainer || !Array.isArray(trContainer) || trContainer.length === 0) return null;
-    const trAttributes = trContainer[0][':@'] || {};
-    const trChildren = trContainer.slice(trContainer[0][':@'] ? 1 : 0);
+function processTableRow(trElementObject: any, parentId: string, order: number): TableRowJson | null {
+    const tagName = getTagName(trElementObject);
+    if (!tagName || tagName !== 'w:tr') return null;
 
+    const trTagAttributes = getAttributesFromElementObject(trElementObject);
+    const trContentArray = getContentArrayFromElementObject(trElementObject, tagName);
+    
     const rowId = generateId('tr', order, parentId);
     const rowJson: TableRowJson = {
         id: rowId, type: "tableRow", order, parentId, cells: []
     };
     
-    // <w:trPr> 처리
-    // ...
-
+    const trChildren = getActualChildElementObjects(trContentArray);
     let cellOrder = 0;
-    trChildren.forEach((childElementObject: any) => {
-        const elementName = Object.keys(childElementObject)[0];
-        if (elementName === 'w:tc') {
+    trChildren.forEach((trChild: any) => {
+        const childTagName = getTagName(trChild);
+        if (childTagName === 'w:tc') {
             cellOrder++;
-            const cellJson = processTableCell(childElementObject['w:tc'], rowId, cellOrder);
+            const cellJson = processTableCell(trChild, rowId, cellOrder);
             if (cellJson) rowJson.cells.push(cellJson);
         }
     });
     return rowJson;
 }
 
-// 테이블(<w:tbl>) 객체 처리 함수
-function processTable(tblContainer: any, parentId?: string): TableJson | null {
-    if (!tblContainer || !Array.isArray(tblContainer) || tblContainer.length === 0) return null;
-    const tblAttributes = tblContainer[0][':@'] || {};
-    const tblChildren = tblContainer.slice(tblContainer[0][':@'] ? 1 : 0);
+function processTable(tblElementObject: any, parentId?: string): TableJson | null {
+    const tagName = getTagName(tblElementObject);
+    if (!tagName || tagName !== 'w:tbl') return null;
+
+    const tblTagAttributes = getAttributesFromElementObject(tblElementObject);
+    const tblContentArray = getContentArrayFromElementObject(tblElementObject, tagName);
 
     globalOrderCounter++;
     const tableId = generateId('tbl', globalOrderCounter, parentId);
@@ -229,15 +292,13 @@ function processTable(tblContainer: any, parentId?: string): TableJson | null {
     };
     if (parentId) tableJson.parentId = parentId;
 
-    // <w:tblPr>, <w:tblGrid> 처리
-    // ...
-
+    const tblChildren = getActualChildElementObjects(tblContentArray);
     let rowOrder = 0;
-    tblChildren.forEach((childElementObject: any) => {
-        const elementName = Object.keys(childElementObject)[0];
-        if (elementName === 'w:tr') {
+    tblChildren.forEach((tblChild: any) => {
+        const childTagName = getTagName(tblChild);
+        if (childTagName === 'w:tr') {
             rowOrder++;
-            const rowJson = processTableRow(childElementObject['w:tr'], tableId, rowOrder);
+            const rowJson = processTableRow(tblChild, tableId, rowOrder);
             if (rowJson) tableJson.rows.push(rowJson);
         }
     });
@@ -248,19 +309,18 @@ function processTable(tblContainer: any, parentId?: string): TableJson | null {
 export function convertOoxmlToJson(xmlString: string): DocumentJson {
   const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: "",    // 속성 이름 접두사 사용 안 함
-    attributesGroupName: ":@",  // 속성을 별도 그룹으로 (예: element[':@'])
-    removeNSPrefix: false,      // 네임스페이스 접두사 유지 ('w:')
-    parseTagValue: false,       // 태그 값 자동 타입 변환 비활성화 (모두 문자열로)
-    trimValues: false,          // 값 앞뒤 공백 유지
+    attributeNamePrefix: "",
+    attributesGroupName: ":@",
+    removeNSPrefix: false,
+    parseTagValue: false, 
+    trimValues: false, // 사용자의 요청에 따라 false로 유지
     textNodeName: "#text",
-    preserveOrder: true,       // **** XML 요소 순서 보존 활성화 ****
-    // isArray는 preserveOrder:true 시에는 일반적으로 필요 없거나 다르게 동작할 수 있음.
-    // 파서 문서를 참조하여 preserveOrder와 함께 사용할 때의 정확한 동작 확인 필요.
-    // 여기서는 일단 제거하고, 필요시 다시 추가.
+    preserveOrder: true,
+    ignoreDeclaration: true, // XML 선언부 무시
+    ignorePiTags: true,      // 처리 지시문 무시
   });
 
-  let parsedXmlArray; // preserveOrder: true 시, 최상위는 배열
+  let parsedXmlArray;
   try {
     parsedXmlArray = parser.parse(xmlString);
     console.log("--- XML 파싱 성공 (preserveOrder:true) ---");
@@ -269,53 +329,43 @@ export function convertOoxmlToJson(xmlString: string): DocumentJson {
     return { blocks: [] };
   }
 
-  // console.log("--- 파싱된 XML 객체 구조 (preserveOrder:true, 일부) ---");
-  // console.log(JSON.stringify(parsedXmlArray, null, 2).substring(0, 5000) + '\n...(후략)...');
-  // console.log("----------------------------------------------------");
-
   const documentJson: DocumentJson = { blocks: [] };
   globalOrderCounter = 0;
 
-  // parsedXmlArray는 [{ "?xml": { ... } }, { "w:document": [ ... ] }] 형태일 것임
-  const docEntry = parsedXmlArray.find((entry: any) => entry['w:document']);
-  if (!docEntry || !Array.isArray(docEntry['w:document']) || docEntry['w:document'].length === 0) {
+  const docEntry = parsedXmlArray.find((entry: any) => getTagName(entry) === 'w:document'); // getTagName 사용
+  if (!docEntry) {
     console.error("오류: <w:document> 요소를 찾을 수 없습니다.");
     return documentJson;
   }
 
-  // docElementContent는 <w:document> 태그의 속성과 자식들을 담는 배열
-  const docElementContent = docEntry['w:document'];
-  const docAttributes = docElementContent[0][':@'] || {}; // <w:document>의 속성 (필요 시 사용)
-  // 실제 body를 찾기 위해 docElementContent 내부에서 <w:body> 키를 가진 객체를 찾아야 함
-  const bodyEntry = docElementContent.find((entry: any) => entry['w:body']);
+  const docContentArray = getContentArrayFromElementObject(docEntry, 'w:document');
+  const bodyEntry = docContentArray.find((entry: any) => getTagName(entry) === 'w:body');
 
-  if (!bodyEntry || !Array.isArray(bodyEntry['w:body']) || bodyEntry['w:body'].length === 0) {
+  if (!bodyEntry) {
     console.error("오류: <w:body> 요소를 찾을 수 없습니다.");
     return documentJson;
   }
-
-  // bodyContent는 <w:body> 태그의 속성과 자식들을 담는 배열
-  const bodyContent = bodyEntry['w:body'];
-  const bodyAttributes = bodyContent[0][':@'] || {}; // <w:body>의 속성 (필요 시 사용)
-  const bodyChildren = bodyContent.slice(bodyContent[0][':@'] ? 1 : 0); // 속성 객체 제외
-
-  console.log(`<w:body> 내부의 자식 요소(그룹) 개수: ${bodyChildren.length}`);
+  
+  const bodyContentArray = getContentArrayFromElementObject(bodyEntry, 'w:body');
+  const bodyChildren = getActualChildElementObjects(bodyContentArray);
+  
+  console.log(`<w:body> 내부의 유효한 자식 요소(그룹) 개수: ${bodyChildren.length}`);
 
   if (bodyChildren.length > 0) {
-    bodyChildren.forEach((childElementObject: any) => { // 예: { "w:p": [...] } 또는 { "w:tbl": [...] }
-      const elementName = Object.keys(childElementObject)[0]; // 'w:p', 'w:tbl' 등
-      const elementContent = childElementObject[elementName]; // [<p attributes>, <p children>...]
+    bodyChildren.forEach((bodyChildElementObject: any) => { // 변수명 변경 bodyChild -> bodyChildElementObject
+      const tagName = getTagName(bodyChildElementObject);
 
-      if (elementName === 'w:p') {
-        const paragraph = processParagraph(elementContent, undefined);
+      if (tagName === 'w:p') {
+        // processParagraph에는 { "w:p": [...], ":@": {...} } 형태의 객체 자체를 전달
+        const paragraph = processParagraph(bodyChildElementObject, undefined);
         if (paragraph) documentJson.blocks.push(paragraph);
-      } else if (elementName === 'w:tbl') {
-        const table = processTable(elementContent, undefined);
+      } else if (tagName === 'w:tbl') {
+        const table = processTable(bodyChildElementObject, undefined);
         if (table) documentJson.blocks.push(table);
-      } else if (elementName === 'w:sectPr') {
-         console.log(`  - 섹션 속성(w:sectPr)은 현재 처리 로직에서 건너뜁니다.`);
-      } else if (elementName.startsWith('w:')) {
-         console.log(`  - 처리되지 않은 WordprocessingML 요소 타입 (body 자식): ${elementName}`);
+      } else if (tagName === 'w:sectPr') {
+         // console.log(`  - 섹션 속성(w:sectPr)은 현재 처리 로직에서 건너뜁니다.`);
+      } else if (tagName && tagName.startsWith('w:')) {
+         // console.log(`  - 처리되지 않은 WordprocessingML 요소 타입 (body 자식): ${tagName}`);
       }
     });
   } else {
@@ -323,5 +373,8 @@ export function convertOoxmlToJson(xmlString: string): DocumentJson {
   }
 
   console.log(`최종 블록 개수: ${documentJson.blocks.length}`);
+  if (documentJson.blocks.length === 0 && xmlString.includes("<w:p>")) {
+      console.warn("경고: XML에 <w:p> 태그가 있지만, JSON 블록이 생성되지 않았습니다. 파싱 또는 처리 로직을 확인하세요.");
+  }
   return documentJson;
 }
