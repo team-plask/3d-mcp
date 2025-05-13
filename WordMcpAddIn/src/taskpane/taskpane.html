@@ -2,54 +2,57 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Word JSON Demo</title>
+    <title>Oppice AI Assistant</title>
 
-    <!-- Office.js must load first -->
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-    <!-- 여기에 있던 스타일 태그를 제거 -->
+    <link rel="stylesheet" href="taskpane.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" />
   </head>
 
   <body class="ms-font-m">
-    <!-- 웹소켓 연결 상태 패널 -->
-    <div id="connectionPanel">
-      <div id="connectionStatus">연결 중...</div>
+    <div class="container">
+      <!-- Connection status -->
+      <div id="connectionPanel">
+        <div id="connectionStatus">Connecting to server...</div>
+      </div>
+
+      <!-- Reconnect panel -->
+      <div id="reconnectPanel" style="display: none;">
+        <p>Failed to connect to the server. Please make sure it's running.</p>
+        <button id="reconnectBtn">Reconnect</button>
+      </div>
+
+      <!-- Main UI -->
+      <div id="mainContent">
+        <h2>📎 Oppice AI Assistant</h2>
+
+        <div class="section">
+          <h3>📘 Read by Block ID</h3>
+          <input id="readId" placeholder="e.g. para-0" />
+          <button id="readBtn">Read</button>
+        </div>
+
+        <div class="section">
+          <h3>🔎 Search by Keyword</h3>
+          <input id="searchKw" placeholder="e.g. introduction" />
+          <button id="searchBtn">Search</button>
+        </div>
+
+        <div class="section">
+          <h3>✏️ Edit Paragraph</h3>
+          <input id="editId" placeholder="Block ID" style="width: 120px;" />
+          <input id="editTxt" placeholder="New paragraph text" style="width: 280px;" />
+          <button id="editBtn">Apply Edit</button>
+        </div>
+
+        <hr />
+
+        <div class="section">
+          <h4>📝 Result</h4>
+          <pre id="result"></pre>
+        </div>
+      </div>
     </div>
-
-    <!-- 연결 실패 시 표시할 재연결 패널 -->
-    <div id="reconnectPanel" style="display: none;">
-      <p>서버에 연결할 수 없습니다. 서버가 실행 중인지 확인하세요.</p>
-      <button id="reconnectBtn">재연결</button>
-    </div>
-
-    <!-- 메인 컨텐츠 영역 -->
-    <div id="mainContent">
-      <!-- 0. Connection / snapshot -->
-      <button id="wsButton">Connect WebSocket</button>
-      <button id="snapshotBtn">↻ Export current document → JSON</button>
-      <hr />
-
-      <!-- 1. READ -->
-      <h3>Read (by ID)</h3>
-      <input id="readId"  placeholder="block id (e.g. para‑0)" />
-      <button id="readBtn">Read</button>
-
-      <!-- 2. SEARCH -->
-      <h3>Search (by keyword)</h3>
-      <input id="searchKw" placeholder="keyword (e.g. introduction)" />
-      <button id="searchBtn">Search</button>
-
-      <!-- 3. EDIT -->
-      <h3>Edit (text replace)</h3>
-      <input id="editId"  placeholder="block id"        style="width:140px" />
-      <input id="editTxt" placeholder="new paragraph text" style="width:300px" />
-      <button id="editBtn">Edit & Write‑back</button>
-
-      <hr />
-      <!-- Result panel -->
-      <pre id="result" style="border:1px solid #ccc; padding:.5em;"></pre>
-    </div>
-
-    <!-- webpack (or <script>) injects taskpane.js below -->
-    <!-- <script src="taskpane.js"></script> -->
   </body>
 </html>

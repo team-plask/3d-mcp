@@ -1,64 +1,55 @@
-const devCerts       = require("office-addin-dev-certs");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+// webpack.config.js
+const path = require("path");
+const devCerts = require("office-addin-dev-certs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const detectPort     = require("detect-port");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+const findFreePort = require("find-free-port");
 
-const urlDev = "https://localhost:3001/";
-const urlProd = "https://www.contoso.com/";
+const urlProd = "https://www.oppice.com/"; // 배포용 URL
 
 async function getHttpsOptions() {
-  const httpsOptions = await devCerts.getHttpsServerOptions();
-  return { ca: httpsOptions.ca, key: httpsOptions.key, cert: httpsOptions.cert };
+  return await devCerts.getHttpsServerOptions();
 }
 
 module.exports = async (env, options) => {
   const dev = options.mode === "development";
 
-  // 1) 베이스 포트 결정
-  const basePort =
-    env.port
-    || process.env.PORT
-    || process.env.npm_package_config_dev_server_port
-    || 3001;
+  // 1. 동적으로 사용 가능한 포트 찾기
+  const [actualPort] = await findFreePort(3000, 3100);
+  const urlDev = `https://localhost:${actualPort}/`;
 
-  // 2) 사용 가능한 포트 찾기
-  const actualPort = await detectPort(basePort);
-  if (actualPort !== basePort) {
-    console.log(`⚠️  Port ${basePort} is in use, using ${actualPort} instead.`);
-  }
-  
-  const config = {
+  console.log(`✅ Using dev server on ${urlDev}`);
+
+  return {
     devtool: "source-map",
     entry: {
       polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
-      taskpane: ["./src/taskpane/index.ts",    "./src/taskpane/taskpane.html"],
-      commands: "./src/commands/commands.ts",
-    },
-    output: {
-      clean: true,
-    },
-    resolve: {
-      extensions: [".ts", ".html", ".js"],
-    },
+      taskpane: ["./src/taskpane/index.ts", "./src/taskpane/taskpane.html"],
+      commands: "./src/commands/commands.ts"
+    },    
+    output: { clean: true },
+    resolve: { extensions: [".ts", ".js", ".html"]},
     module: {
       rules: [
         {
           test: /\.ts$/,
           exclude: /node_modules/,
           use: {
-            loader: "babel-loader"
-          },
+            loader: "babel-loader",
+            options: {
+              presets: ["@babel/preset-env", "@babel/preset-typescript"]
+            }
+          }
         },
         {
           test: /\.html$/,
-          exclude: /node_modules/,
           use: "html-loader",
         },
         {
           test: /\.(png|jpg|jpeg|gif|ico)$/,
           type: "asset/resource",
           generator: {
-            filename: "assets/[name][ext][query]",
+            filename: "assets/[name][ext]",
           },
         },
       ],
@@ -69,43 +60,33 @@ module.exports = async (env, options) => {
         template: "./src/taskpane/taskpane.html",
         chunks: ["polyfill", "taskpane"],
       }),
-      new CopyWebpackPlugin({
-        patterns: [
-          {
-            from: "assets/*",
-            to: "assets/[name][ext][query]",
-          },
-          {
-            from: "manifest*.xml",
-            to: "[name]" + "[ext]",
-            transform(content) {
-              if (dev) {
-                return content;
-              } else {
-                return content.toString().replace(new RegExp(urlDev, "g"), urlProd);
-              }
-            },
-          },
-        ],
-      }),
       new HtmlWebpackPlugin({
         filename: "commands.html",
         template: "./src/commands/commands.html",
         chunks: ["polyfill", "commands"],
       }),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: "assets/*", to: "assets/[name][ext]" },
+          {
+            from: "manifest*.xml",
+            to: "[name][ext]",
+            transform(content) {
+              return dev
+                ? content.toString().replace(/https:\/\/localhost:\d+\//g, urlDev)
+                : content.toString().replace(/https:\/\/localhost:\d+\//g, urlProd);
+            },
+          },
+        ],
+      }),
     ],
     devServer: {
+      port: actualPort,
       headers: { "Access-Control-Allow-Origin": "*" },
       server: {
         type: "https",
-        options:
-          env.WEBPACK_BUILD || options.https !== undefined
-            ? options.https
-            : await getHttpsOptions(),
+        options: await getHttpsOptions(),
       },
-      port: actualPort,
     },
   };
-
-  return config;
 };

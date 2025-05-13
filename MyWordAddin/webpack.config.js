@@ -62,17 +62,8 @@ module.exports = async (env, options) => {
             from: "assets/*",
             to: "assets/[name][ext][query]",
           },
-          {
-            from: "manifest*.xml",
-            to: "[name]" + "[ext]",
-            transform(content) {
-              if (dev) {
-                return content;
-              } else {
-                return content.toString().replace(new RegExp(urlDev, "g"), urlProd);
-              }
-            },
-          },
+          { from: "manifest*.xml",             to: "[name][ext]" },
+          { from: "src/telemetryproxy.html",  to: "" },
         ],
       }),
       new HtmlWebpackPlugin({

@@ -10,13 +10,25 @@ function logResult(obj: any) {
   $('result').textContent = JSON.stringify(obj, null, 2);
 }
 
-function updateStatus(txt: string, error = false) {
+function updateStatus(txt: string, error = false, connecting = false) {
   const s = $('connectionStatus');
   s.textContent = txt;
-  s.className   = error ? 'error' : 'success';
-  $('mainContent').style.display   = error ? 'none' : 'block';
-  $('reconnectPanel').style.display= error ? 'block' : 'none';
+
+  // 상태 클래스 초기화
+  s.classList.remove('connecting', 'connected', 'disconnected');
+
+  if (connecting) {
+    s.classList.add('connecting');
+  } else if (error) {
+    s.classList.add('disconnected');
+  } else {
+    s.classList.add('connected');
+  }
+
+  $('mainContent').style.display = error ? 'none' : 'block';
+  $('reconnectPanel').style.display = error ? 'block' : 'none';
 }
+
 
 function connectWS() {
   updateStatus('연결 중…');
@@ -24,9 +36,9 @@ function connectWS() {
   const url = `wss://localhost:8080/ws`;     
   rpc = new RpcWebSocket(url, 'word');
 
-  rpc.onOpen    = () => updateStatus('연결됨');
-  rpc.onClose   = () => updateStatus('연결 종료', true);
-  rpc.onError   = () => updateStatus('연결 오류', true);
+  rpc.onOpen    = () => updateStatus('Connected');
+  rpc.onClose   = () => updateStatus('Connection closed', true);
+  rpc.onError   = () => updateStatus('Connection error', true);
 
   rpc.onMessage = res => {
     console.log('↙︎  WS response:', res);
@@ -36,14 +48,11 @@ function connectWS() {
   rpc.connect();
 }
 
-/* ------------------------------------------------------------------ */
 Office.onReady(() => {
-  $('snapshotBtn').addEventListener('click', snapshot);
   $('readBtn')    .addEventListener('click', readById);
   $('searchBtn')  .addEventListener('click', searchKeyword);
   $('editBtn')    .addEventListener('click', editParagraph);
 
-  $('wsButton')   .addEventListener('click', connectWS);
   $('reconnectBtn').addEventListener('click', connectWS);
 
   connectWS();    

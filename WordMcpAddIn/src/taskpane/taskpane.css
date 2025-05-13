@@ -1,117 +1,110 @@
-/* 
- * Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
- * See LICENSE in the project root for license information.
- */
-
- html,
- body {
-     width: 100%;
-     height: 100%;
-     margin: 0;
-     padding: 0;
- }
- 
- ul {
-     margin: 0;
-     padding: 0;
- }
- 
- .ms-welcome__header {
+html, body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #f9f9f9;
+  }
+  
+  .container {
     padding: 20px;
-    padding-bottom: 30px;
-    padding-top: 100px;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    align-items: center;
- }
-
- .ms-welcome__main {
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    -webkit-flex-wrap: nowrap;
-    flex-wrap: nowrap;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-flex: 1 0 0;
-    flex: 1 0 0;
-    padding: 10px 20px;
- }
- 
- .ms-welcome__main > h2 {
-     width: 100%;
-     text-align: center;
- }
- 
- .ms-welcome__features {
-     list-style-type: none;
-     margin-top: 20px;
- }
- 
- .ms-welcome__features.ms-List .ms-ListItem {
-     padding-bottom: 20px;
-     display: -webkit-flex;
-     display: flex;
- }
- 
- .ms-welcome__features.ms-List .ms-ListItem > .ms-Icon {
-     margin-right: 10px;
- }
- 
- .ms-welcome__action.ms-Button--hero {
-     margin-top: 30px;
- }
- 
-.ms-Button.ms-Button--hero .ms-Button-label {
-  color: #0078d7;
-}
-
-.ms-Button.ms-Button--hero:hover .ms-Button-label,
-.ms-Button.ms-Button--hero:focus .ms-Button-label{
-  color: #005a9e;
-  cursor: pointer;
-}
-
-b {
-    font-weight: bold;
-}
-
-#connectionStatus {
-    padding: 5px 10px;
+    max-width: 640px;
+    margin: auto;
+  }
+  
+  h2 {
     margin-bottom: 10px;
-    font-weight: bold;
-}
+    color: #323130;
+    font-weight: 600;
+    text-align: center;
+  }
   
-.error {
-    color: red;
-    background-color: #ffeeee;
-}
-  
-.success {
-    color: green;
-    background-color: #eeffee;
-}
-  
-#reconnectPanel {
-    padding: 20px;
-    background-color: #f8f8f8;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+  .section {
     margin: 20px 0;
-}
+  }
   
-#reconnectBtn {
+  .section input {
+    margin-right: 8px; 
+    margin-bottom: 8px;
+  }
+  
+  .section button {
+    margin-right: 8px;
+    margin-bottom: 8px;
+  }
+
+  input {
+    padding: 8px 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  button {
+    padding: 8px 14px;
+    font-size: 14px;
+    background-color: #ffffff;
+    border: 1px solid #0078d4;
+    color: #0078d4;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+  
+  button:hover {
+    background-color: #e5f1fb;
+  }
+  
+  button.primary {
     background-color: #0078d4;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-}
+  }
   
-#reconnectBtn:hover {
+  button.primary:hover {
     background-color: #106ebe;
-}
+  }
+  
+  #connectionStatus {
+    font-weight: bold;
+    padding: 8px 16px;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
+  }
+  
+  #connectionStatus.connecting {
+    background-color: #fffbe6;
+    color: #8a6d3b;
+    border-top: 1px solid #ffe58f;
+  }
+  
+  #connectionStatus.connected {
+    background-color: #e6ffed;
+    color: #2e7d32;
+    border-top: 1px solid #81c784;
+  }
+  
+  #connectionStatus.disconnected {
+    background-color: #ffeaea;
+    color: #b00020;
+    border-top: 1px solid #f44336;
+  }
+  
+  #result {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #fff;
+    max-height: 200px;
+    overflow-x: auto; 
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre; 
+  }
+  
