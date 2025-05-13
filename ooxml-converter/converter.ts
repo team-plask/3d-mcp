@@ -1,6 +1,7 @@
 // converter.ts (사용자 수정 기반 + 추가 개선)
 
 import { XMLParser } from 'fast-xml-parser';
+import * as shortid from 'shortid';
 
 // --- 인터페이스 정의 (새로운 구조에 맞게 수정) ---
 interface DocumentJson {
@@ -66,19 +67,20 @@ const WHITELISTED_RUN_PROPS = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts
 let globalOrderCounter = 0;
 
 function generateId(type: string, order: number, parentId?: string): string {
-  //return parentId ? `${parentId}_${type}_${order}` : `${type}_${order}`;
-  // Generate an 8-character random hex string. Using Math.random for simplicity,
-  // consider a more robust UUID library if collisions are a critical concern.
-  const randomHex = Math.random().toString(16).substring(2, 10).toUpperCase();
 
-  // Follow the user's request: append random ID to parentId if it exists.
-  if (parentId) {
-    // Using underscore as separator based on user example and observed JSON patterns.
-    return `${parentId}_${randomHex}`;
-  } else {
-    // For elements without a parentId (likely top-level blocks), return the random hex ID.
-    return randomHex;
-  }
+    // type 1: use ordered id
+    //return parentId ? `${parentId}_${type}_${order}` : `${type}_${order}`;
+
+    // type 2: use randomHex id
+    // const randomHex = shortid.generate();
+    // if (parentId) {
+    //     return `${parentId}_${randomHex}`;
+    // } else {
+    //     return randomHex;
+    // }
+
+    // type 3: use shortid
+    return shortid.generate();
 }
 
 // 실제 태그 이름을 반환하는 견고한 getTagName 함수
