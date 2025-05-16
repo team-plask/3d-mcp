@@ -1,311 +1,190 @@
-// converter.ts (전체 수정본)
+/* ------------------------------------------------------------------
+ *  OOXML ↔ JSON 변환 + shortId 동기화 (bookmark-less, custom namespace)
+ *
+ *  ✅ 커스텀 네임스페이스 `cust` + `mc:Ignorable="cust"` 로 shortId 보존
+ *     + 파라그래프/런 속성 화이트리스트에도 shortId 주입 (재도입)
+ *       - WHITELISTED_PARA_PROPS / WHITELISTED_RUN_PROPS 항목마다
+ *         <w:…> 노드에 `cust:id="<shortid>"` 자동 부여
+ *  ✅ 북마크·w14:paraId 등 재활용 X ―> 완전히 독립적인 `cust:id` 속성만 사용
+ *  ✅ XML 스냅숏을 console.debug 로 실시간 확인  ── (rev.6)
+ *      ↳ 2025-05-17  fix: attributeNamePrefix → "" (no prefix) + grouped `:@`
+ *        so builder 미리보기에 더 이상 `[object Object]` 가 안 보임
+ * ----------------------------------------------------------------*/
+import { XMLParser, XMLBuilder } from 'fast-xml-parser';
+import * as shortid from 'shortid';
 
-import { XMLParser, XMLValidator, XMLBuilder } from 'fast-xml-parser';
+/* ---------- 상수 ---------- */
+const CUST_PREFIX   = 'cust';            // 커스텀 prefix
+const CUST_NS_URI   = 'urn:shortids';    // 임의 URI (고유하면 OK)
+const IGNORABLE_VAL = CUST_PREFIX;       // mc:Ignorable 값
 
-interface JsonBlock { id: string; type: string; order: number; parentId?: string; }
-interface ParagraphProperties { justification?: string; spacing?: { after?: string | number; line?: string | number; lineRule?: string; }; }
-interface TextRunProperties { bold?: boolean; italic?: boolean; underline?: string; fontSize?: string; color?: string; fontHint?: string; isLink?: boolean; linkId?: string; }
-interface TextRunJson extends JsonBlock { type: "textRun"; text: string; properties?: TextRunProperties; }
-interface ParagraphJson extends JsonBlock { type: "paragraph"; properties?: ParagraphProperties; runs: TextRunJson[]; }
-interface TableCellJson extends JsonBlock { type: "tableCell"; content: (ParagraphJson | TableJson)[]; } // 셀 안에 테이블도 올 수 있으므로 수정
-interface TableRowJson extends JsonBlock { type: "tableRow"; cells: TableCellJson[]; }
-interface TableJson extends JsonBlock { type: "table"; rows: TableRowJson[]; }
-interface DocumentJson { blocks: (ParagraphJson | TableJson)[]; }
+// *** attributeNamePrefix 를 비우고 (""),
+//     attributesGroupName = ':@'  →   attr 키는 plain name (접두사 없음)
+// -----------------------------------------------------------------
+const ATTR_PREFIX = '';                  // ← 핵심 변경
+const ATTR_GROUP  = ':@';
 
+/* ---------- 속성 화이트리스트 ---------- */
 const WHITELISTED_PARA_PROPS = ['w:spacing', 'w:jc', 'w:rPr'];
-const WHITELISTED_RUN_PROPS = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts'];
+const WHITELISTED_RUN_PROPS  = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts'];
 
-let globalOrderCounter = 0;
+/* ---------- 타입 요약 ---------- */
+interface Base { type:string; order:number; parentId?:string }
+interface ParagraphJson extends Base { type:'paragraph'; properties:any; [rid:string]:any }
+interface TableJson     extends Base { type:'table';     [rid:string]:any }
+export interface DocumentJson  { [id:string]:ParagraphJson|TableJson }
 
-function generateId(type: string, order: number, parentId?: string): string {
-  return parentId ? `${parentId}_${type}_${order}` : `${type}_${order}`;
+/* ---------- ID 주입 대상 & 경로 ---------- */
+export const ID_TARGET_MAP: Record<string,{ path:string[]; attr:string }> = {
+  paragraph:{ path:['w:pPr'],  attr:`${CUST_PREFIX}:id` },
+  table:    { path:['w:tblPr'],attr:`${CUST_PREFIX}:id` },
+  tableRow: { path:['w:trPr'], attr:`${CUST_PREFIX}:id` },
+  tableCell:{ path:['w:tcPr'], attr:`${CUST_PREFIX}:id` }
+};
+
+/* ---------- 전역 ---------- */
+let orderCnt = 0;
+
+/* ---------- util helpers ---------- */
+const genId = () => shortid.generate();
+const tagOf = (o:any)=> typeof o==='object'&&o?Object.keys(o).find(k=>k!==ATTR_GROUP&&k!=='#text')||null:null;
+const kids  = (arr:any[])=> (Array.isArray(arr)?arr:[]).filter(n=>typeof n==='object'&&tagOf(n));
+const content = (obj:any,tg:string)=>Array.isArray(obj?.[tg])?obj[tg]:[];
+
+/**
+ * attrNode()
+ *  preserveOrder 모드에서 **요소自身** 객체의 `:@` 속성 맵을 보장.
+ */
+function attrNode(elem:any):any {
+  if(!elem[ATTR_GROUP]) elem[ATTR_GROUP] = {};
+  return elem[ATTR_GROUP];
 }
 
-function getTextFromTElement(tElementContainer: any): string {
-    if (!tElementContainer || !Array.isArray(tElementContainer) || tElementContainer.length === 0) return "";
-    let text = "";
-    for (const item of tElementContainer) {
-        if (item && typeof item['#text'] === 'string') {
-            text += item['#text'];
-        }
-    }
-    return text;
-}
-
-function processParagraphProperties(pPrContainer: any): ParagraphProperties {
-    const properties: ParagraphProperties = {};
-    if (!pPrContainer || !Array.isArray(pPrContainer) || pPrContainer.length === 0) return properties;
-
-    const pPrObject = pPrContainer[0];
-    if (typeof pPrObject !== 'object' || pPrObject === null) return properties;
-
-    for (const key in pPrObject) { 
-        if (WHITELISTED_PARA_PROPS.includes(key)) {
-            const propValueArray = pPrObject[key]; 
-            if (propValueArray && Array.isArray(propValueArray) && propValueArray.length > 0) {
-                const attributes = propValueArray[0][':@'] || {}; 
-                if (key === 'w:jc' && attributes['w:val']) {
-                    properties.justification = attributes['w:val'];
-                } else if (key === 'w:spacing') {
-                    properties.spacing = {
-                        after: attributes['w:after'],
-                        line: attributes['w:line'],
-                        lineRule: attributes['w:lineRule']
-                    };
-                }
-            }
-        }
-    }
-    return properties;
-}
-
-function processRunProperties(rPrContainer: any): TextRunProperties {
-    const properties: TextRunProperties = {};
-    if (!rPrContainer || !Array.isArray(rPrContainer) || rPrContainer.length === 0) return properties;
-    
-    const rPrObject = rPrContainer[0];
-    if (typeof rPrObject !== 'object' || rPrObject === null) return properties;
-
-    for (const key in rPrObject) {
-        if (WHITELISTED_RUN_PROPS.includes(key)) {
-            const propValueArray = rPrObject[key];
-             if (propValueArray && Array.isArray(propValueArray) && propValueArray.length > 0) {
-                const attributes = propValueArray[0][':@'] || {}; 
-                const hasValue = Object.keys(attributes).length > 0 || (propValueArray[0] && Object.keys(propValueArray[0]).length > 0 && !propValueArray[0][':@']);
-
-
-                if (key === 'w:b' && hasValue) properties.bold = true;
-                else if (key === 'w:i' && hasValue) properties.italic = true;
-                else if (key === 'w:u' && attributes['w:val']) properties.underline = attributes['w:val'];
-                else if (key === 'w:sz' && attributes['w:val']) properties.fontSize = String(attributes['w:val']);
-                else if (key === 'w:color' && attributes['w:val']) properties.color = attributes['w:val'];
-                else if (key === 'w:rFonts' && attributes['w:hint']) properties.fontHint = attributes['w:hint'];
-             }
-        }
-    }
-    return properties;
-}
-
-function processTextRun(rContentArray: any[], parentId: string, order: number, extraProps?: any): TextRunJson | null {
-    if (!rContentArray || !Array.isArray(rContentArray)) return null;
-
-    const runId = generateId('r', order, parentId);
-    const textRunJson: TextRunJson = {
-        id: runId, type: "textRun", order, parentId, text: "", properties: {}
-    };
-
-    rContentArray.forEach(childElement => {
-        if (childElement['w:rPr']) {
-            textRunJson.properties = processRunProperties(childElement['w:rPr']);
-        } else if (childElement['w:t']) {
-            textRunJson.text += getTextFromTElement(childElement['w:t']);
-        } else if (childElement['w:br']) {
-            textRunJson.text += '\n';
-        }
-    });
-
-    if (extraProps) {
-        textRunJson.properties = { ...textRunJson.properties, ...extraProps };
-    }
-    return textRunJson;
-}
-
-function processParagraph(pContainer: any, parentId?: string): ParagraphJson | null {
-    if (!pContainer || !Array.isArray(pContainer) || pContainer.length === 0) return null;
-
-    const pAttributes = pContainer[0][':@'] || {}; 
-    const pChildren = pContainer.slice(pContainer[0][':@'] ? 1 : 0); 
-
-    globalOrderCounter++;
-    const paraId = pAttributes['w14:paraId'] || generateId('p', globalOrderCounter, parentId);
-
-    const paragraphJson: ParagraphJson = {
-        id: paraId, type: "paragraph", order: globalOrderCounter, runs: [], properties: {}
-    };
-    if (parentId) paragraphJson.parentId = parentId;
-
-    let runOrder = 0;
-    pChildren.forEach((childElementObject: any) => { 
-        const elementName = Object.keys(childElementObject)[0]; 
-
-        if (elementName === 'w:pPr') {
-            paragraphJson.properties = processParagraphProperties(childElementObject['w:pPr']);
-        } else if (elementName === 'w:r') {
-            runOrder++;
-            const runJson = processTextRun(childElementObject['w:r'], paraId, runOrder);
-            if (runJson) paragraphJson.runs.push(runJson);
-        } else if (elementName === 'w:hyperlink') {
-            const hyperlinkContent = childElementObject['w:hyperlink']; 
-            if (hyperlinkContent && Array.isArray(hyperlinkContent)) {
-                const linkAttributes = hyperlinkContent.find(item => item[':@'])?.[':@'] || {};
-                hyperlinkContent.forEach(linkChild => {
-                    if (linkChild['w:r']) { 
-                         runOrder++;
-                         const runJson = processTextRun(linkChild['w:r'], paraId, runOrder, { isLink: true, linkId: linkAttributes['r:id'] });
-                         if (runJson) paragraphJson.runs.push(runJson);
-                    }
-                });
-            }
-        }
-    });
-    return paragraphJson;
-}
-
-function processTableCell(tcContainer: any, parentId: string, order: number): TableCellJson | null {
-    if (!tcContainer || !Array.isArray(tcContainer) || tcContainer.length === 0) return null;
-    const tcAttributes = tcContainer[0][':@'] || {};
-    const tcChildren = tcContainer.slice(tcContainer[0][':@'] ? 1: 0);
-
-    const cellId = generateId('tc', order, parentId);
-    const cellJson: TableCellJson = {
-        id: cellId, type: "tableCell", order, parentId, content: []
-    };
-
-    tcChildren.forEach((childElementObject: any) => {
-        const elementName = Object.keys(childElementObject)[0];
-        if (elementName === 'w:p') {
-            const paragraph = processParagraph(childElementObject['w:p'], cellId);
-            if (paragraph) cellJson.content.push(paragraph);
-        } else if (elementName === 'w:tbl') {
-            const table = processTable(childElementObject['w:tbl'], cellId);
-            if (table) cellJson.content.push(table);
-        }
-    });
-    return cellJson;
-}
-
-function processTableRow(trContainer: any, parentId: string, order: number): TableRowJson | null {
-    if (!trContainer || !Array.isArray(trContainer) || trContainer.length === 0) return null;
-    const trAttributes = trContainer[0][':@'] || {};
-    const trChildren = trContainer.slice(trContainer[0][':@'] ? 1 : 0);
-
-    const rowId = generateId('tr', order, parentId);
-    const rowJson: TableRowJson = {
-        id: rowId, type: "tableRow", order, parentId, cells: []
-    };
-    
-    let cellOrder = 0;
-    trChildren.forEach((childElementObject: any) => {
-        const elementName = Object.keys(childElementObject)[0];
-        if (elementName === 'w:tc') {
-            cellOrder++;
-            const cellJson = processTableCell(childElementObject['w:tc'], rowId, cellOrder);
-            if (cellJson) rowJson.cells.push(cellJson);
-        }
-    });
-    return rowJson;
-}
-
-function processTable(tblContainer: any, parentId?: string): TableJson | null {
-    if (!tblContainer || !Array.isArray(tblContainer) || tblContainer.length === 0) return null;
-    const tblAttributes = tblContainer[0][':@'] || {};
-    const tblChildren = tblContainer.slice(tblContainer[0][':@'] ? 1 : 0);
-
-    globalOrderCounter++;
-    const tableId = generateId('tbl', globalOrderCounter, parentId);
-    const tableJson: TableJson = {
-        id: tableId, type: "table", order: globalOrderCounter, rows: []
-    };
-    if (parentId) tableJson.parentId = parentId;
-
-    let rowOrder = 0;
-    tblChildren.forEach((childElementObject: any) => {
-        const elementName = Object.keys(childElementObject)[0];
-        if (elementName === 'w:tr') {
-            rowOrder++;
-            const rowJson = processTableRow(childElementObject['w:tr'], tableId, rowOrder);
-            if (rowJson) tableJson.rows.push(rowJson);
-        }
-    });
-    return tableJson;
-}
-
-export function convertOoxmlToJson(xmlString: string): DocumentJson {
-  const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: "",
-    attributesGroupName: ":@",
-    removeNSPrefix: false,
-    parseTagValue: false,     
-    trimValues: false,         
-    textNodeName: "#text",
-    preserveOrder: true,      
-  });
-
-  let parsedXmlArray;
-  try {
-    parsedXmlArray = parser.parse(xmlString);
-    console.log("--- XML 파싱 성공 (preserveOrder:true) ---");
-  } catch (parseError) {
-    console.error("!!! XML 파싱 중 오류 발생 !!!", parseError);
-    return { blocks: [] };
+function getOrCreatePath(base:any, path:string[]):any{
+  let cur=base;
+  for(const tg of path){
+    let arr = content(cur,tg);
+    if(!arr.length) arr.push({});
+    cur = arr[0];
   }
+  return cur;
+}
 
-  const documentJson: DocumentJson = { blocks: [] };
-  globalOrderCounter = 0;
+/* ---------- mc:Ignorable / 네임스페이스 보장 ---------- */
+function ensureNamespaceOnDocument(docObj:any){
+  const arr = content(docObj,'w:document');
+  if(!arr.length) arr.push({});
+  const attrs = attrNode(arr[0]);
+  if(!attrs[`xmlns:${CUST_PREFIX}`]) attrs[`xmlns:${CUST_PREFIX}`] = CUST_NS_URI;
+  const prev = attrs['mc:Ignorable'];
+  if(!prev)      attrs['mc:Ignorable'] = IGNORABLE_VAL;
+  else if(!prev.split(/\s+/).includes(IGNORABLE_VAL)) attrs['mc:Ignorable'] = prev+` ${IGNORABLE_VAL}`;
+}
 
-  const docEntry = parsedXmlArray.find((entry: any) => entry['w:document']);
-  if (!docEntry || !Array.isArray(docEntry['w:document']) || docEntry['w:document'].length === 0) {
-    console.error("오류: <w:document> 요소를 찾을 수 없습니다.");
-    return documentJson;
-  }
-
-  const docElementContent = docEntry['w:document'];
-  const docAttributes = docElementContent[0][':@'] || {}; 
-  const bodyEntry = docElementContent.find((entry: any) => entry['w:body']);
-
-  if (!bodyEntry || !Array.isArray(bodyEntry['w:body']) || bodyEntry['w:body'].length === 0) {
-    console.error("오류: <w:body> 요소를 찾을 수 없습니다.");
-    return documentJson;
-  }
-
-  const bodyContent = bodyEntry['w:body'];
-  const bodyAttributes = bodyContent[0][':@'] || {}; 
-  const bodyChildren = bodyContent.slice(bodyContent[0][':@'] ? 1 : 0);
-
-  console.log(`<w:body> 내부의 자식 요소(그룹) 개수: ${bodyChildren.length}`);
-
-  if (bodyChildren.length > 0) {
-    bodyChildren.forEach((childElementObject: any) => { 
-      const elementName = Object.keys(childElementObject)[0];
-      const elementContent = childElementObject[elementName]; 
-
-      if (elementName === 'w:p') {
-        const paragraph = processParagraph(elementContent, undefined);
-        if (paragraph) documentJson.blocks.push(paragraph);
-      } else if (elementName === 'w:tbl') {
-        const table = processTable(elementContent, undefined);
-        if (table) documentJson.blocks.push(table);
-      } else if (elementName === 'w:sectPr') {
-         console.log(`  - 섹션 속성(w:sectPr)은 현재 처리 로직에서 건너뜁니다.`);
-      } else if (elementName.startsWith('w:')) {
-         console.log(`  - 처리되지 않은 WordprocessingML 요소 타입 (body 자식): ${elementName}`);
+/* ---------- 화이트리스트 속성 shortId 주입 ---------- */
+function ensureWhitelistIds(propsObj:any, whitelist:string[]){
+  if(!propsObj || typeof propsObj!=='object') return;
+  for(const key of Object.keys(propsObj)){
+    if(!whitelist.includes(key)) continue;
+    const propArr = propsObj[key];
+    if(Array.isArray(propArr) && propArr.length){
+      const at = attrNode(propArr[0]);
+      if(!at[`${CUST_PREFIX}:id`]){
+        const newId = genId();
+        at[`${CUST_PREFIX}:id`] = newId;
+        console.debug(`    + whitelist ${key} ⇒ ${newId}`);
       }
-    });
-  } else {
-    console.warn("경고: <w:body> 요소 내부에 처리할 자식 요소가 없습니다.");
+    }
   }
-
-  console.log(`최종 블록 개수: ${documentJson.blocks.length}`);
-  return documentJson;
 }
 
-export function pickDocumentPart(flatXml: string): string {
-    if (flatXml.indexOf('<pkg:package') === -1) {
-      return flatXml.trim();
+/* ---------- ID 주입 ---------- */
+function injectId(tagObj:any, blockType:keyof typeof ID_TARGET_MAP, id:string){
+  const map = ID_TARGET_MAP[blockType];
+  const target = getOrCreatePath(tagObj, map.path);
+  const at = attrNode(target);
+  if(at[map.attr]) console.debug(`  ↻ 덮어쓰기 ${map.attr}=${at[map.attr]} → ${id}`);
+  at[map.attr] = id;
+  console.debug(`  ↻ ${map.attr}=${id}`);
+}
+
+/* ---------- 파서 ---------- */
+function parseParagraph(pObj:any,parent?:string){
+  if(tagOf(pObj)!=='w:p')return null;
+  orderCnt++;
+  const id=genId();
+  injectId(pObj,'paragraph',id);
+  const pPr     = pObj['w:p']?.[0]?.['w:pPr']?.[0];
+  const pPrAttr = pPr?.[':@'] ?? {};
+  console.debug('[w:pPr attr] ', pPrAttr); 
+  /* 화이트리스트 속성 처리 */
+  const pChildren = content(pObj,'w:p');
+  for(const child of kids(pChildren)){
+    const tg = tagOf(child);
+    if(tg==='w:pPr'){
+      const inner = child['w:pPr']?.[0] || {};
+      ensureWhitelistIds(inner, WHITELISTED_PARA_PROPS);
     }
-  
-    const partMatch = flatXml.match(
-      /<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>[\s\S]*?<\/pkg:part>/i
-    );
-    if (!partMatch) throw new Error('document.xml part not found in Flat-OPC');
-    const part: string = partMatch[0];
-  
-    const xmlMatch = part.match(
-      /<pkg:xmlData[^>]*>([\s\S]*?)<\/pkg:xmlData>/i
-    );
-    if (!xmlMatch) throw new Error('pkg:xmlData section missing');
-  
-    return xmlMatch[1].trim();
+    else if(tg==='w:r'){
+      const rArr = child['w:r'];
+      if(Array.isArray(rArr)){
+        for(const runChild of rArr){
+          if(runChild['w:rPr']){
+            const rInner = runChild['w:rPr'][0] || {};
+            ensureWhitelistIds(rInner, WHITELISTED_RUN_PROPS);
+          }
+        }
+      }
+    }
   }
-  
+
+  const para:ParagraphJson={type:'paragraph',order:orderCnt,parentId:parent,properties:{}};
+  return {[id]:para};
+}
+
+function parseTable(tblObj:any,parent?:string){
+  if(tagOf(tblObj)!=='w:tbl')return null;
+  orderCnt++;
+  const id=genId();
+  injectId(tblObj,'table',id);
+  const tbl:TableJson={type:'table',order:orderCnt,parentId:parent};
+  return {[id]:tbl};
+}
+
+/* ---------- 메인 ---------- */
+export function convertOoxmlToJson(xml:string):DocumentJson{
+  console.debug('=== OOXML → JSON (cust:id + whitelist) ===');
+  const parser=new XMLParser({preserveOrder:true,ignoreAttributes:false,attributesGroupName:ATTR_GROUP,attributeNamePrefix:ATTR_PREFIX});
+  const tree:any[]=parser.parse(xml);
+
+  const doc=tree.find(e=>tagOf(e)==='w:document'); if(!doc) throw new Error('w:document not found');
+  ensureNamespaceOnDocument(doc);
+
+  const body=content(doc,'w:document').find(e=>tagOf(e)==='w:body'); if(!body) throw new Error('w:body not found');
+
+  orderCnt=0; const json:DocumentJson={};
+  for(const child of kids(content(body,'w:body'))){
+    const tg=tagOf(child);
+    if(tg==='w:p')  Object.assign(json, parseParagraph(child));
+    else if(tg==='w:tbl') Object.assign(json, parseTable(child));
+  }
+
+  console.debug(`=== 완료 (${Object.keys(json).length} blocks, ${orderCnt} ids) ===`);
+
+  try{
+    const builder=new XMLBuilder({preserveOrder:true,ignoreAttributes:false,attributesGroupName:ATTR_GROUP,attributeNamePrefix:ATTR_PREFIX,format:true,indentBy:'  '});
+    console.debug('\n— XML preview —\n'+builder.build(tree).slice(0,1600)+'\n…');
+  }catch(e){ console.warn('XML 직렬화 실패',e);}  
+
+  return json;
+}
+
+/* ---------- Flat-OPC helper (변경 없음) ---------- */
+export const pickDocumentPart=(flat:string)=>{
+  if(flat.indexOf('<pkg:package')===-1) return flat.trim();
+  const part=flat.match(/<pkg:part[^>]*pkg:name="\/word\/document\.xml"[\s\S]*?<\/pkg:part>/i)?.[0];
+  if(!part) throw new Error('document.xml part not found');
+  const xml=part.match(/<pkg:xmlData[^>]*>([\s\S]*?)<\/pkg:xmlData>/i)?.[1];
+  if(!xml) throw new Error('pkg:xmlData section missing');
+  return xml.trim();
+};

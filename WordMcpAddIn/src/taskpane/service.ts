@@ -1,118 +1,130 @@
-import {
-  exportDocumentStructureJson,
-  importDocumentStructureJson,
-} from './document';
-import type { DocumentBlock, ParagraphJson, TableJson } from './types';
+import { exportDocumentStructureJson, importDocumentWithPatch } from './document';
+import type { DocumentBlock, ParagraphJson, TableJson, TextRunJson } from './types';
+import type { Operation as JsonPatchOperation } from 'fast-json-patch';
 
-function blockToPlain(b: DocumentBlock): string {
-  if (b.type === 'paragraph') {
-    // runs[].text 이어 붙이기
-    return (b as ParagraphJson).runs.map(r => r.text).join('');
+// 캐시된 블록 리스트
+let _buffer: DocumentBlock[] | undefined;
+
+/**
+ * converter의 JSON 맵핑 객체를 받아서
+ * 순서대로 블록 배열로 변환합니다.
+ */
+function mapToBlocks(mapping: Record<string, any>): DocumentBlock[] {
+  const blocks: DocumentBlock[] = [];
+  for (const id in mapping) {
+    const obj = mapping[id];
+    if (!obj || typeof obj !== 'object' || typeof obj.type !== 'string') continue;
+    if (obj.type === 'paragraph') {
+      // 개별 key를 순회하면서 textRun 타입만 선별
+      const runs: TextRunJson[] = [];
+      for (const key in obj) {
+        const val = obj[key];
+        if (val && typeof val === 'object' && (val as any).type === 'textRun') {
+          const v = val as TextRunJson;
+          runs.push({ ...v, id: key });
+        }
+      }
+      // 순서대로 정렬
+      runs.sort((a, b) => a.order - b.order);
+      const para: ParagraphJson = {
+        id,
+        type: 'paragraph',
+        order: (obj as any).order,
+        properties: (obj as any).properties || {},
+        runs,
+      };
+      blocks.push(para);
+    } else if (obj.type === 'table') {
+      const tbl = obj as TableJson;
+      blocks.push({ ...tbl, id });
+    }
   }
-  if (b.type === 'table') {
-    const tbl = b as TableJson;
-    return tbl.rows
-      .flatMap(row => row.cells)
-      .flatMap(cell => cell.content)
-      .filter(c => c.type === 'paragraph')
-      .map(p => (p as ParagraphJson).runs.map(r => r.text).join(''))
-      .join(' ');
-  }
-  return '';
+  return blocks.sort((a, b) => a.order - b.order);((a, b) => a.order - b.order);
 }
 
-let _buffer: DocumentBlock[] = [];
-
-// 문서 읽기 캐시
-async function ensureBuffer() {
-  _buffer = await exportDocumentStructureJson() as (ParagraphJson | TableJson)[];
+async function ensureBuffer(): Promise<DocumentBlock[]> {
+  if (!_buffer) {
+    // converter JSON 맵핑 객체를 직접 가져오도록 export 수정 필요
+    const mapping = await exportDocumentStructureJson() as unknown as Record<string, any>;
+    // console.log('Mapping:', mapping);
+    _buffer = mapToBlocks(mapping);
+  }
+  console.log('Buffer:', _buffer);
   return _buffer;
 }
 
-function plainText(b: DocumentBlock): string {
-  if (b.type === 'paragraph') {
-    if (Array.isArray((b as ParagraphJson).runs)) {
-      return (b as ParagraphJson).runs.map((r:any)=> r.text).join('');
-    }
-    return '';
-  }
-  if (b.type === 'table') {
-    return ((b as TableJson).rows || [])
-           .flat().join(' ');
-  }
-  return '';    
+/**
+ * id로 블록(단락 또는 표) 하나를 찾아 반환합니다.
+ */
+export async function readBlockById(id: string): Promise<DocumentBlock | null> {
+  const buffer = await ensureBuffer();
+  return buffer.find(b => b.id === id) ?? null;
 }
 
-export async function readBlockById(id: string) {
-  await ensureBuffer();
-  return _buffer.find(b => b.id === id) ?? null;
-}
-
-function paraPlainText(p: ParagraphJson){
-  return p.runs.map(r=>r.text).join('');
-}
-
-export async function searchBlocks(keyword: string){
-  if (!_buffer.length) await ensureBuffer();
+/**
+ * 키워드로 문서에서 블록들을 검색해 id와 타입 목록을 반환합니다.
+ */
+export async function searchBlocks(keyword: string): Promise<{ id: string; type: string }[]> {
+  const buffer = await ensureBuffer();
   const kw = keyword.toLowerCase();
-  return _buffer
-    .filter(b => {
-      if (b.type === 'paragraph')
-        return paraPlainText(b as ParagraphJson).toLowerCase().includes(kw);
-      if (b.type === 'table')
-        return (b as TableJson).rows.flatMap(r=>r.cells)
-                .some(c => c.content
-                           .filter(x=>x.type==='paragraph')
-                           .some(p => paraPlainText(p as ParagraphJson)
-                                      .toLowerCase().includes(kw)));
-      return false;
-    })
+  return buffer
+    .filter(b => b.type === 'paragraph')
+    .filter((p: ParagraphJson) => 
+      p.runs.some(r => r.text.toLowerCase().includes(kw))
+    )
     .map(b => ({ id: b.id, type: b.type }));
 }
 
+/**
+ * 단락 전체를 새로운 텍스트 한 줄로 교체합니다.
+ */
+export async function editBlockParagraph(id: string, newText: string): Promise<boolean> {
+  const buffer = await ensureBuffer();
+  const para = buffer.find(b => b.id === id && b.type === 'paragraph') as ParagraphJson | undefined;
+  if (!para) return false;
+  // 문서 내 단락 인덱스
+  const docIdx = buffer.indexOf(para);
 
-export async function editBlockParagraph(id: string, newText: string) {
-  await ensureBuffer();
+  // 텍스트 run 요소 수 만큼 patch 생성
+  const patch: JsonPatchOperation[] = para.runs.map((run, i) => ({
+    op: 'replace' as const,
+    path: `/w:document/w:body/w:p/${docIdx}/w:r/${i}/w:t`,
+    value: i === 0 ? newText : '',
+  }));
 
-  let para = _buffer.find(b => b.id === id && b.type === 'paragraph') as ParagraphJson | undefined;
-  if (para) {
-    para.runs = [{
-      id: `${para.id}_r1`,
-      type:'textRun', order:1, parentId: para.id,
-      text: newText, properties:{}
-    }];
-  } else {
-    const m = id.match(/^(p_\d+)_r_\d+$/);
-    if (!m) return false;
-    const pId = m[1];
-    para = _buffer.find(b => b.id === pId) as ParagraphJson | undefined;
-    if (!para) return false;
-    const run = para.runs.find(r => r.id === id);
-    if (!run) return false;
-    run.text = newText;
-  }
-
-  await importDocumentStructureJson(_buffer);
-  _buffer = [];         
+  await importDocumentWithPatch(patch);
+  _buffer = undefined;
   return true;
 }
 
-export async function editRunText(runId: string, newText: string) {
-  await ensureBuffer();                      
+/**
+ * 특정 텍스트 run 하나의 텍스트만 교체합니다.
+ */
+export async function editRunText(runId: string, newText: string): Promise<boolean> {
+  const buffer = await ensureBuffer();
+  // runId 형식: '<blockId>_<runId>' → blockId와 runs 배열에서 찾기
+  let targetPara: ParagraphJson | undefined;
+  let runIndex = -1;
+  buffer.forEach(b => {
+    if (b.type === 'paragraph') {
+      const p = b as ParagraphJson;
+      const idx = p.runs.findIndex(r => r.id === runId);
+      if (idx >= 0) {
+        targetPara = p;
+        runIndex = idx;
+      }
+    }
+  });
+  if (!targetPara || runIndex < 0) return false;
+  const docIdx = buffer.indexOf(targetPara);
 
-  const m = runId.match(/^(.+_p_\d+)_r_\d+$/);
-  if (!m) return false;                  
-  const paraId = m[1];
+  const patch: JsonPatchOperation[] = [{
+    op: 'replace' as const,
+    path: `/w:document/w:body/w:p/${docIdx}/w:r/${runIndex}/w:t`,
+    value: newText,
+  }];
 
-  const para = _buffer.find(b => b.id === paraId) as ParagraphJson | undefined;
-  if (!para) return false;
-
-  const run = para.runs.find(r => r.id === runId);
-  if (!run) return false;
-
-  run.text = newText;                        
-
-  await importDocumentStructureJson(_buffer); 
-  _buffer = [];                               
+  await importDocumentWithPatch(patch);
+  _buffer = undefined;
   return true;
 }

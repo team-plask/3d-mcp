@@ -36,7 +36,7 @@ export class RpcWebSocket {
     this.ws.onopen = async () => {
       this.onOpen();
 
-      let snapshot: unknown[] = [];
+      let snapshot: unknown = [];
       try { snapshot = await exportDocumentStructureJson(); }
       catch { }
 
