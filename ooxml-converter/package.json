@@ -1,8 +1,13 @@
 {
   "name": "ooxml-converter",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "compile-xsl-sef": "npx xslt3 -xsl:normalize-runs.xsl -export:normalize-runs.sef.json -nogo",
+    "build": "npm run compile-xsl-sef && tsc && npm run copy-assets",
+    "copy-assets": "cp normalize-runs.sef.json dist/",
+    "start": "node dist/index.js",
+    "dev": "npm run build && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,11 +16,13 @@
   "description": "",
   "dependencies": {
     "fast-xml-parser": "^5.2.2",
+    "saxon-js": "^2.7.0",
     "shortid": "^2.2.17"
   },
   "devDependencies": {
     "@types/node": "^22.15.16",
     "@types/shortid": "^2.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "xslt3-he": "^2.6.0"
   }
 }

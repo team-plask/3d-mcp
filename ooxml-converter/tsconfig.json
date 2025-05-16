@@ -11,6 +11,9 @@
       "moduleResolution": "node", /* 모듈 해석 방식 설정 */
       "sourceMap": true           /* 소스맵 생성 활성화 */
     },
-    "include": ["*.ts"],          /* 컴파일할 TS 파일 패턴 */
+    "include": [
+      "*.ts",
+      "*.d.ts"
+    ],
     "exclude": ["node_modules", "dist"]   /* 컴파일에서 제외할 폴더 */
   }
