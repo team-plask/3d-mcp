@@ -5,7 +5,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const findFreePort = require("find-free-port");
 
-const urlProd = "https://www.oppice.com/"; // 배포용 URL
+const urlProd = "https://localhost:3001"; // 배포용 URL
 
 async function getHttpsOptions() {
   return await devCerts.getHttpsServerOptions();

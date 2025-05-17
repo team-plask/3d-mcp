@@ -1,4 +1,12 @@
-import { convertOoxmlToJson, pickDocumentPart } from './converter';
+import { 
+  processDocument, 
+  replaceOriginalWithUpdated, 
+  applyJsonChangesToXml,
+  DocumentJson,
+  ParagraphJson,
+  TextRunJson,
+  ConversionResult
+} from './converter';
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import { applyPatch, Operation } from 'fast-json-patch';
 
@@ -10,9 +18,9 @@ const docPartRegex = /(<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>\s*<p
 /**
  * OOXML 문자열에서 document.xml 파트만 추출합니다.
  */
-function extractDocumentXml(flatXml: string): string {
-  return pickDocumentPart(flatXml);
-}
+// function extractDocumentXml(flatXml: string): string {
+//   return pickDocumentPart(flatXml);
+// }
 
 /**
  * 콘텐츠 컨트롤(<w:sdt>)로 wrapper를 만들고, 태그를 id 값으로 설정합니다.
@@ -54,8 +62,119 @@ function applyJsonPatchToOoxml(xml: string, patch: Operation[]): string {
   return builder.build(obj);
 }
 
+function extractDocumentXml(flatXml: string): string {
+  if (flatXml.indexOf('<pkg:package') === -1) {
+    return flatXml.trim();
+  }
+
+  const partMatch = flatXml.match(
+    /<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>[\s\S]*?<\/pkg:part>/i
+  );
+  if (!partMatch) throw new Error('document.xml part not found in Flat-OPC');
+  const part: string = partMatch[0];
+
+  const xmlMatch = part.match(
+    /<pkg:xmlData[^>]*>([\s\S]*?)<\/pkg:xmlData>/i
+  );
+  if (!xmlMatch) throw new Error('pkg:xmlData section missing');
+
+  return xmlMatch[1].trim();
+}
+
 /**
- * 문서 내 converter에서 ID를 부여한 요소만 콘텐츠 컨트롤로 래핑하고, 매핑을 반환합니다.
+ * 문서 구조 추출, 수정 및 업데이트 함수
+ */
+export async function updateDocumentStructure(): Promise<Record<string, any>> {
+  return Word.run(async ctx => {
+    try {
+      console.log("=== 문서 구조 처리 시작 ===");
+      
+      // 1) 원본 OOXML 가져오기
+      const flat = ctx.document.body.getOoxml();
+      await ctx.sync();
+      const fullFlatXml = flat.value;
+      console.log("원본 Flat OPC 로드 완료");
+
+      // 2) document.xml 파트 추출
+      const docXml = extractDocumentXml(fullFlatXml);
+      console.log("Document XML 추출 완료");
+
+      // 3) OOXML을 JSON으로 변환 (ID 주입 포함)
+      const { json: originalJson, xml: updatedXmlWithIds } = processDocument(docXml);
+      
+      // 로깅
+      const mappingString = JSON.stringify(originalJson, null, 2);
+      console.log('Mapping JSON (string):\n', mappingString);
+      console.log('Updated Document XML with IDs:\n', updatedXmlWithIds);
+      console.log("Document 구조 변환 및 ID 주입 완료");
+      
+      // 4) JSON 구조 수정 (원하는 수정 로직 구현)
+      const modifiedJson = { ...originalJson };
+      
+      // 첫 번째 문단 찾기
+      const paragraphKeys = Object.keys(modifiedJson).filter(
+        key => typeof modifiedJson[key] === 'object' && 
+               (modifiedJson[key] as any).type === 'paragraph'
+      );
+      
+      if (paragraphKeys.length > 0) {
+        const firstParagraphKey = paragraphKeys[0];
+        const paragraph = modifiedJson[firstParagraphKey] as ParagraphJson;
+        
+        // 문단의 모든 텍스트 실행 중 첫 번째 찾기
+        const runKeys = Object.keys(paragraph).filter(
+          key => typeof paragraph[key] === 'object' && 
+                (paragraph[key] as any).type === 'textRun'
+        );
+        
+        // 텍스트 수정
+        if (runKeys.length > 0) {
+          const firstRunKey = runKeys[0];
+          const textRun = paragraph[firstRunKey] as TextRunJson;
+          const originalText = textRun.text;
+          textRun.text = originalText + " (수정됨)";
+          console.log(`텍스트 수정: "${originalText}" → "${textRun.text}"`);
+        }
+      }
+      
+      console.log("JSON 구조 수정 완료");
+      
+      // 5) 수정된 JSON을 기반으로 XML 업데이트
+      const finalXml = applyJsonChangesToXml(updatedXmlWithIds, originalJson, modifiedJson);
+      console.log("수정된 JSON 기반으로 XML 업데이트 완료");
+      
+      // 6) 전체 Flat OPC에 업데이트된 XML 적용
+      const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, finalXml);
+      console.log("Flat OPC에 업데이트된 XML 적용 완료");
+      
+      // 7) 문서에 적용
+      ctx.document.body.insertOoxml(updatedFlatOpc, Word.InsertLocation.replace);
+      await ctx.sync();
+      console.log("문서에 수정 내용 적용 완료");
+      
+      // 8) 적용 후 다시 OOXML 가져와서 확인
+      const updatedFlat = ctx.document.body.getOoxml();
+      await ctx.sync();
+      
+      // 9) 최종 적용된 document.xml 확인
+      const finalDocXml = extractDocumentXml(updatedFlat.value);
+      console.log("최종 적용된 Document XML:\n", finalDocXml);
+      
+      console.log("=== 문서 구조 수정 및 적용 완료 ===");
+      
+      // 수정된 JSON 반환
+      return modifiedJson;
+      
+    } catch (error) {
+      console.error("문서 구조 처리 중 오류 발생:", error);
+      throw error;
+    }
+  });
+}
+
+/**
+ * 원본 문서 구조 JSON 추출 함수
+ * 문서 수정 없이 JSON 구조만 반환
  */
 export async function exportDocumentStructureJson(): Promise<Record<string, any>> {
   return Word.run(async ctx => {
@@ -67,31 +186,74 @@ export async function exportDocumentStructureJson(): Promise<Record<string, any>
     // 2) document.xml 파트 추출
     const docXml = extractDocumentXml(fullFlatXml);
 
-    // --- 구조화된 Original XML 출력 ---
-    const logParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
-    const originalObj = logParser.parse(docXml);
-    // const logBuilder = new XMLBuilder({
-    //   ignoreAttributes: false,
-    //   attributeNamePrefix: '@_',
-    //   suppressEmptyNode: true,
-    //   format: true,
-    //   indentBy: '  '
-    // });
-    // const formattedOriginal = logBuilder.build(originalObj);
-    // console.log('Original Document XML (structured):\n', formattedOriginal);
-    // // 선택적으로 새 창에 출력
-    // const origWin = window.open('', '_blank');
-    // if (origWin) {
-    //   origWin.document.write('<pre>' + formattedOriginal.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>');
-    // }
-
     // 3) OOXML을 JSON으로 변환
-    const json = convertOoxmlToJson(docXml);
+    const { json, xml } = processDocument(docXml);
     const mappingString = JSON.stringify(json, null, 2);
     console.log('Mapping JSON (string):\n', mappingString);
-    // console.log('Updated Document XML:\n', updatedXml);
+    console.log('Updated Document XML:\n', xml);
 
     return json;
+  });
+}
+
+/**
+ * 특정 문단의 텍스트 수정하기 (유틸리티 함수)
+ * @param paragraphIndex 수정할 문단의 인덱스 (0부터 시작)
+ * @param newText 새로 설정할 텍스트
+ */
+export async function updateParagraphText(paragraphIndex: number, newText: string): Promise<void> {
+  return Word.run(async ctx => {
+    try {
+      // 1) 원본 OOXML 가져오기
+      const flat = ctx.document.body.getOoxml();
+      await ctx.sync();
+      const fullFlatXml = flat.value;
+      
+      // 2) document.xml 파트 추출 및 JSON 변환
+      const docXml = extractDocumentXml(fullFlatXml);
+      const { json: originalJson, xml: updatedXmlWithIds } = processDocument(docXml);
+      
+      // 3) 문단 찾기
+      const paragraphKeys = Object.keys(originalJson).filter(
+        key => typeof originalJson[key] === 'object' && 
+               (originalJson[key] as any).type === 'paragraph'
+      );
+      
+      if (paragraphIndex >= paragraphKeys.length) {
+        throw new Error(`문단 인덱스 범위 초과: ${paragraphIndex}, 전체 문단 수: ${paragraphKeys.length}`);
+      }
+      
+      const targetParagraphKey = paragraphKeys[paragraphIndex];
+      
+      // 4) JSON 수정
+      const modifiedJson = { ...originalJson };
+      const paragraph = modifiedJson[targetParagraphKey] as ParagraphJson;
+      
+      // 모든 텍스트 실행을 찾아서 첫 번째 실행의 텍스트 수정
+      const textRunKeys = Object.keys(paragraph).filter(
+        key => typeof paragraph[key] === 'object' && 
+              (paragraph[key] as any).type === 'textRun'
+      );
+      
+      if (textRunKeys.length > 0) {
+        const firstRunKey = textRunKeys[0];
+        (paragraph[firstRunKey] as TextRunJson).text = newText;
+        console.log(`문단 ${paragraphIndex+1}의 텍스트를 "${newText}"로 수정했습니다.`);
+      } else {
+        console.log(`문단 ${paragraphIndex+1}에 텍스트 실행이 없습니다.`);
+      }
+      
+      // 5) XML 업데이트 및 적용
+      const finalXml = applyJsonChangesToXml(updatedXmlWithIds, originalJson, modifiedJson);
+      const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, finalXml);
+      
+      ctx.document.body.insertOoxml(updatedFlatOpc, Word.InsertLocation.replace);
+      await ctx.sync();
+      
+    } catch (error) {
+      console.error("문단 텍스트 수정 중 오류 발생:", error);
+      throw error;
+    }
   });
 }
 

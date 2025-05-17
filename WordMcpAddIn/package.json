@@ -26,6 +26,7 @@
     "@types/shortid": "^2.2.0",
     "core-js": "^3.36.0",
     "fast-json-patch": "^3.1.1",
+    "fast-xml-parser": "^5.2.3",
     "regenerator-runtime": "^0.14.1",
     "shortid": "^2.2.17"
   },

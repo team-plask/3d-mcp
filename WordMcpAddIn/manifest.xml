@@ -8,9 +8,9 @@
   <Description DefaultValue="Boost your productivity with Oppice AI — an intelligent agent that edits Office documents for you."/>
   <IconUrl DefaultValue="https://wugypesggextuwltuyjh.supabase.co/storage/v1/object/public/asset/logo/torrus%20eye.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3001/assets/icon-64.png"/>
-  <SupportUrl DefaultValue="https://www.oppice.com/docs"/>
+  <SupportUrl DefaultValue="https://www.plask.ai/docs"/>
   <AppDomains>
-    <AppDomain>https://www.oppice.com</AppDomain>
+    <AppDomain>https://localhost:3001</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Document"/>

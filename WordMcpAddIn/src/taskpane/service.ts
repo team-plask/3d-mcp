@@ -1,4 +1,4 @@
-import { exportDocumentStructureJson, importDocumentWithPatch } from './document';
+import { updateDocumentStructure, importDocumentWithPatch } from './document';
 import type { DocumentBlock, ParagraphJson, TableJson, TextRunJson } from './types';
 import type { Operation as JsonPatchOperation } from 'fast-json-patch';
 
@@ -45,7 +45,7 @@ function mapToBlocks(mapping: Record<string, any>): DocumentBlock[] {
 async function ensureBuffer(): Promise<DocumentBlock[]> {
   if (!_buffer) {
     // converter JSON 맵핑 객체를 직접 가져오도록 export 수정 필요
-    const mapping = await exportDocumentStructureJson() as unknown as Record<string, any>;
+    const mapping = await updateDocumentStructure() as unknown as Record<string, any>;
     // console.log('Mapping:', mapping);
     _buffer = mapToBlocks(mapping);
   }
