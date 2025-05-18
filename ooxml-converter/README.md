@@ -40,7 +40,7 @@ Word 문서 파일(.docx) `ooxml-converter/document.xml` 파일을 JSON 형식�
 ## 스크립트 개요
 
 *   `converter.ts`: 핵심 변환 로직을 담고 있는 TypeScript 파일입니다. OOXML 태그를 파싱하고 지정된 JSON 구조로 매핑합니다.
-*   `index.ts`: `document.xml` 파일을 읽어 `converter.ts`의 변환 함수를 호출하고, 결과를 `output.json` 파일로 저장하는 메인 실행 파일입니다.
+*   `taskpane.ts`: `document.xml` 파일을 읽어 `converter.ts`의 변환 함수를 호출하고, 결과를 `output.json` 파일로 저장하는 메인 실행 파일입니다.
 *   `tsconfig.json`: TypeScript 컴파일러 옵션 설정 파일입니다.
 
 ## 참고 사항

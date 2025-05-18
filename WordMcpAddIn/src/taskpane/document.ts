@@ -12,20 +12,8 @@ import { applyPatch, Operation } from 'fast-json-patch';
 
 const wNs = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
-// Regex to locate the document.xml part in the flat OOXML
 const docPartRegex = /(<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>\s*<pkg:xmlData>)[\s\S]*?(<\/pkg:xmlData>\s*<\/pkg:part>)/;
 
-/**
- * OOXML 문자열에서 document.xml 파트만 추출합니다.
- */
-// function extractDocumentXml(flatXml: string): string {
-//   return pickDocumentPart(flatXml);
-// }
-
-/**
- * 콘텐츠 컨트롤(<w:sdt>)로 wrapper를 만들고, 태그를 id 값으로 설정합니다.
- * 이미 래핑된 요소는 건너뜁니다.
- */
 function wrapWithContentControl(element: any, tagId: string, tagName: string) {
   if (element['w:sdt']) {
     return element;
@@ -38,16 +26,10 @@ function wrapWithContentControl(element: any, tagId: string, tagName: string) {
   };
 }
 
-/**
- * OOXML 객체 트리에 JSON-Patch를 적용합니다.
- */
 function applyJsonPatchToOoxmlObject(obj: any, patch: Operation[]): void {
   patch.forEach(op => applyPatch(obj, [op], true, true));
 }
 
-/**
- * OOXML 문자열에 JSON-Patch를 적용하고 수정된 OOXML 문자열을 반환합니다.
- */
 function applyJsonPatchToOoxml(xml: string, patch: Operation[]): string {
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
   const obj = parser.parse(xml);
@@ -81,19 +63,15 @@ function extractDocumentXml(flatXml: string): string {
   return xmlMatch[1].trim();
 }
 
-/**
- * 문서 구조 추출, 수정 및 업데이트 함수
- */
 export async function updateDocumentStructure(): Promise<Record<string, any>> {
   return Word.run(async ctx => {
     try {
-      console.log("=== 문서 구조 처리 시작 ===");
+      console.log("=== Starting document structure update ===");
       
-      // 1) 원본 OOXML 가져오기
       const flat = ctx.document.body.getOoxml();
       await ctx.sync();
       const fullFlatXml = flat.value;
-      console.log("원본 Flat OPC 로드 완료");
+      console.log("원본 Flat OPC 로드");
 
       // 2) document.xml 파트 추출
       const docXml = extractDocumentXml(fullFlatXml);

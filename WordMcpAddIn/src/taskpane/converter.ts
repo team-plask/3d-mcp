@@ -558,7 +558,7 @@ export function convertOoxmlToJson(xmlString: string): ConversionResult {
   const builder = new XMLBuilder({
     ignoreAttributes: false,
     attributeNamePrefix: "",
-    attributesGroupName: ":@",
+    // attributesGroupName: ":@",
     format: true,
     suppressEmptyNode: false,
     preserveOrder: true,

@@ -48,12 +48,27 @@ function connectWS() {
   rpc.connect();
 }
 
-Office.onReady(() => {
-  $('readBtn')    .addEventListener('click', readById);
-  $('searchBtn')  .addEventListener('click', searchKeyword);
-  $('editBtn')    .addEventListener('click', editParagraph);
-
-  $('reconnectBtn').addEventListener('click', connectWS);
-
-  connectWS();    
+// taskpane.ts에서 수정
+Office.onReady((info) => {
+  console.log('Office.onReady fired with host:', info.host);
+  
+  // 초기 UI 상태 처리
+  updateStatus('Office.js 초기화 됨', false);
+  
+  // WebSocket 연결 시도 전에 지연시간 추가
+  setTimeout(() => {
+    try {
+      // 이벤트 리스너 등록
+      $('readBtn')?.addEventListener('click', readById);
+      $('searchBtn')?.addEventListener('click', searchKeyword);
+      $('editBtn')?.addEventListener('click', editParagraph);
+      $('reconnectBtn')?.addEventListener('click', connectWS);
+      
+      // WebSocket 연결
+      connectWS();
+    } catch (error) {
+      console.error('Error during initialization:', error);
+      updateStatus('초기화 실패: ' + error.message, true);
+    }
+  }, 1000); // 1초 지연
 });

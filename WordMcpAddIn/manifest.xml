@@ -11,6 +11,7 @@
   <SupportUrl DefaultValue="https://www.plask.ai/docs"/>
   <AppDomains>
     <AppDomain>https://localhost:3001</AppDomain>
+    <AppDomain>https://wugypesggextuwltuyjh.supabase.co</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Document"/>

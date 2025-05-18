@@ -1,6 +1,6 @@
 import { v4 as uuid }                     from 'uuid';
 import * as svc                           from './service';
-import { exportDocumentStructureJson }    from './document';
+import { updateDocumentStructure }    from './document';
 
 type Action = 'init' | 'read' | 'search' | 'edit';
 
@@ -37,7 +37,7 @@ export class RpcWebSocket {
       this.onOpen();
 
       let snapshot: unknown = [];
-      try { snapshot = await exportDocumentStructureJson(); }
+      try { snapshot = await updateDocumentStructure(); }
       catch { }
 
       this.sendReq('init', {
@@ -49,7 +49,7 @@ export class RpcWebSocket {
         document:     snapshot
       });
 
-      this.sendReq('search', { keyword: '소프트웨어' });
+      this.sendReq('search', { keyword: 'ff' });
     };
 
     this.ws.onclose = ()  => this.onClose();

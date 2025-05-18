@@ -24,10 +24,10 @@ module.exports = async (env, options) => {
     devtool: "source-map",
     entry: {
       polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
-      taskpane: ["./src/taskpane/index.ts", "./src/taskpane/taskpane.html"],
+      taskpane: ["./src/taskpane/taskpane.ts", "./src/taskpane/taskpane.html"],
       commands: "./src/commands/commands.ts"
-    },    
-    output: { clean: true },
+    },
+    output: { clean: true, publicPath: "/" },
     resolve: { extensions: [".ts", ".js", ".html"]},
     module: {
       rules: [
@@ -82,11 +82,14 @@ module.exports = async (env, options) => {
     ],
     devServer: {
       port: actualPort,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      server: {
-        type: "https",
-        options: await getHttpsOptions(),
+      headers: { 
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
       },
-    },
+      server: {
+        type: 'https',
+        options: await getHttpsOptions(), // SSL 인증서 설정
+      },    }
   };
 };
