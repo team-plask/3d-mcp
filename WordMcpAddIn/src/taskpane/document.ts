@@ -5,9 +5,9 @@ import {
   DocumentJson,
   ParagraphJson,
   TextRunJson,
-  ConversionResult
+  ConversionResult,
+  isValidXml
 } from './converter';
-import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import { applyPatch, Operation } from 'fast-json-patch';
 
 const wNs = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -24,24 +24,6 @@ function wrapWithContentControl(element: any, tagId: string, tagName: string) {
       'w:sdtContent': { [tagName]: element }
     }
   };
-}
-
-function applyJsonPatchToOoxmlObject(obj: any, patch: Operation[]): void {
-  patch.forEach(op => applyPatch(obj, [op], true, true));
-}
-
-function applyJsonPatchToOoxml(xml: string, patch: Operation[]): string {
-  const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
-  const obj = parser.parse(xml);
-  applyJsonPatchToOoxmlObject(obj, patch);
-  const builder = new XMLBuilder({
-    ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    suppressEmptyNode: true,
-    format: true,
-    indentBy: '  '
-  });
-  return builder.build(obj);
 }
 
 function extractDocumentXml(flatXml: string): string {
@@ -76,6 +58,7 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       // 2) document.xml 파트 추출
       const docXml = extractDocumentXml(fullFlatXml);
       console.log("Document XML 추출 완료");
+      console.log("Document XML:\n", docXml);
 
       // 3) OOXML을 JSON으로 변환 (ID 주입 포함)
       const { json: originalJson, xml: updatedXmlWithIds } = processDocument(docXml);
@@ -95,39 +78,19 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
                (modifiedJson[key] as any).type === 'paragraph'
       );
       
-      if (paragraphKeys.length > 0) {
-        const firstParagraphKey = paragraphKeys[0];
-        const paragraph = modifiedJson[firstParagraphKey] as ParagraphJson;
-        
-        // 문단의 모든 텍스트 실행 중 첫 번째 찾기
-        const runKeys = Object.keys(paragraph).filter(
-          key => typeof paragraph[key] === 'object' && 
-                (paragraph[key] as any).type === 'textRun'
-        );
-        
-        // 텍스트 수정
-        if (runKeys.length > 0) {
-          const firstRunKey = runKeys[0];
-          const textRun = paragraph[firstRunKey] as TextRunJson;
-          const originalText = textRun.text;
-          textRun.text = originalText + " (수정됨)";
-          console.log(`텍스트 수정: "${originalText}" → "${textRun.text}"`);
-        }
-      }
-      
-      console.log("JSON 구조 수정 완료");
-      
-      // 5) 수정된 JSON을 기반으로 XML 업데이트
-      const finalXml = applyJsonChangesToXml(updatedXmlWithIds, originalJson, modifiedJson);
-      console.log("수정된 JSON 기반으로 XML 업데이트 완료");
-      
       // 6) 전체 Flat OPC에 업데이트된 XML 적용
-      const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, finalXml);
+      const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, updatedXmlWithIds);
       console.log("Flat OPC에 업데이트된 XML 적용 완료");
-      
+      isValidXml(updatedFlatOpc);
       // 7) 문서에 적용
-      ctx.document.body.insertOoxml(updatedFlatOpc, Word.InsertLocation.replace);
-      await ctx.sync();
+      try {
+        await ctx.document.body.insertOoxml(updatedFlatOpc, Word.InsertLocation.replace);
+        await ctx.sync();
+        console.log("기본 OOXML 삽입 성공");
+      } catch (error) {
+        console.error("기본 OOXML 삽입 실패:", error);
+      }
+
       console.log("문서에 수정 내용 적용 완료");
       
       // 8) 적용 후 다시 OOXML 가져와서 확인

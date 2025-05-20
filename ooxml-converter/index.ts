@@ -3,7 +3,7 @@ import * as path from 'path'; // Node.js 경로 모듈
 import { convertOoxmlToJson } from './converter'; // converter.ts 에서 함수 가져오기
 
 // 변환할 XML 파일 경로 (이 스크립트와 같은 폴더에 있다고 가정)
-const xmlFilePath = path.join(__dirname, 'document.xml');
+const xmlFilePath = path.join(__dirname, 'document_normalized.xml');
 // 변환된 JSON을 저장할 파일 경로
 const jsonOutputPath = path.join(__dirname, 'output.json');
 
