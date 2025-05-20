@@ -6,8 +6,9 @@
       "type": "msedge",
       "request": "attach",
       "port": 9229,
+      "useWebView": true,
       "timeout": 600000,
-      "webRoot": "${workspaceRoot}",
+      "webRoot": "${workspaceFolder}",
       "preLaunchTask": "Debug: Word Desktop",
       "postDebugTask": "Stop Debug"
     },
@@ -18,7 +19,7 @@
       "url": "https://localhost:3001/taskpane.html?_host_Info=Word$Win32$16.01$en-US$$$$0",
       "port": 9222,
       "timeout": 600000,
-      "webRoot": "${workspaceRoot}",
+      "webRoot": "${workspaceFolder}",
       "preLaunchTask": "Debug: Word Desktop",
       "postDebugTask": "Stop Debug"
     }
