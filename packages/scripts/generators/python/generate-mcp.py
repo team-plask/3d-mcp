@@ -1,0 +1,96 @@
+import re
+
+tool_white_list = [
+    "GeometryNodeMeshCube",
+    "GeometryNodeMeshSphere",
+    "GeometryNodeMeshCylinder",
+    "GeometryNodeMeshCone",
+    "ShaderNodeVectorMath",
+    "ShaderNodeMath",
+    "ShaderNodeCombineXYZ",
+    "ShaderNodeSeparateXYZ",
+    "ShaderNodeVectorRotate",
+    "ShaderNodeValue",
+    "ShaderNodeMapRange",
+    "GeometryNodeInputPosition",
+    "GeometryNodeSetPosition",
+]
+
+
+def parse_zod_union(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+
+    # Extract all objects in the zod union
+    pattern = re.compile(
+        r'^z\.object\(\{.*?\btype: z\.literal\("([^"]+)"\).*?inputs: z\.object\((\{.*?\})\).*?outputs: z\.object\((\{.*?\})\).*?\}\)\.describe\("([^"]+)"\)',
+        re.DOTALL | re.MULTILINE
+    )
+    matches = pattern.findall(content)
+
+    tools = []
+
+    for match in matches:
+        tool_name = match[0]
+        inputs = match[1]
+        outputs = match[2]
+        description = match[3]
+
+        # Combine inputs and outputs
+        stripped_inputs = inputs.replace("\n", "").replace(" ", "")
+        stripped_outputs = outputs.replace("\n", "").replace(" ", "")
+        combined_parameters = f"{inputs[:-1]}, {outputs[1:]}" if stripped_inputs != "{}" and stripped_outputs != "{}" else (
+            inputs if stripped_outputs == "{}" else outputs)
+
+        use_white_list = False
+        if use_white_list and tool_name not in tool_white_list:
+            print(f"Tool {tool_name} is not in the white list, skipping.")
+            continue
+        tools.append({
+            "toolName": tool_name,
+            "description": f"Adds a {tool_name} node to the graph. {description}",
+            "parameters": combined_parameters,
+            "returns": "_OperationResponse.extend({"
+            "nodeId: z.string(),"
+            "inputs: z.object({"
+            "name: z.string(),"
+            "type: z.string(),"
+            "can_accept_default_value: z.boolean(),"
+            "}).describe(\"Node inputs\"),"
+            "outputs: z.object({"
+            "name: z.string(),"
+            "type: z.string(),"
+            "}).describe(\"Node outputs\")"
+            "})",
+        })
+
+    return tools
+
+
+def generate_mcp_tools(tools, output_file):
+    with open(output_file, 'w') as file:
+        file.write("// Auto-generated file. Do not edit manually.\n\n")
+        file.write("import { z } from 'zod';\n")
+        file.write(
+            "import { _OperationResponse } from '../core';\n")
+        file.write("\n")
+        file.write("export default {\n")
+        file.write("  // Auto-generated tools\n")
+        for tool in tools:
+            file.write(f"add{tool['toolName']}: {{\n")
+            file.write(
+                f"  description: '{tool['description'].replace("\'", "\\\'")}',\n")
+            file.write(f"  parameters: z.object({tool['parameters']}),\n")
+            file.write(f"  returns: {tool['returns']},\n")
+            file.write("},\n\n")
+        file.write("};\n\n")
+
+
+if __name__ == "__main__":
+    input_file = r"./geo-node-types.generated.ts"
+    output_file = r"../../../src/tool/geometry/generated_mcp_tools.ts"
+
+    tools = parse_zod_union(input_file)
+    generate_mcp_tools(tools, output_file)
+
+    print(f"MCP tools generated in {output_file}")

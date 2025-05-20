@@ -1,6 +1,27 @@
 # Generated blender MCP server
 # This file is generated - DO NOT EDIT DIRECTLY
 
+from .rig import rig_atomic
+from .render import render_atomic
+from .monitor import monitor_atomic
+from .model import model_atomic
+from .geometry import geometry_atomic
+from .core import core_atomic
+from .animation import animation_atomic
+from .tools_dict import node_tools, node_add
+
+import queue
+import uuid
+import time
+import traceback
+import threading
+from typing import Dict, Any, Callable, List, Union, Optional, Literal, TypedDict, Tuple
+import argparse
+import os
+import sys
+import socket
+import inspect
+import json
 bl_info = {
     "name": "3D MCP",
     "author": "Plask",
@@ -18,28 +39,6 @@ except ImportError:
     print(f"Warning: Could not import bpy. Running in mock mode.")
     HAS_APP_LIBS = False
 
-import json
-import inspect
-import socket
-import sys
-import os
-import argparse
-from typing import Dict, Any, Callable, List, Union, Optional, Literal, TypedDict, Tuple
-import threading
-import traceback
-
-import time
-import uuid
-import queue
-
-from .animation import animation_atomic
-from .core import core_atomic
-from .geometry import geometry_atomic
-from .model import model_atomic
-from .monitor import monitor_atomic
-from .render import render_atomic
-from .rig import rig_atomic
-
 
 # Global variables - this will store tools
 tools = {}
@@ -52,7 +51,8 @@ results_store = {}  # Store task results by ID
 def execute_on_main_thread(tool_name, params):
     """Schedule a tool execution on the main thread and wait for result"""
     task_id = str(uuid.uuid4())
-    task = {"id": task_id, "tool": tool_name, "params": params, "completed": False}
+    task = {"id": task_id, "tool": tool_name,
+            "params": params, "completed": False}
     results_store[task_id] = {
         "completed": False,
         "result": None,
@@ -92,6 +92,8 @@ def process_task_queue():
     try:
         if tool_name in tools:
             result = tools[tool_name](**params)
+        elif tool_name[3:] in node_tools:
+            result = node_add(tool_name, **params)
         else:
             result = {"success": False, "error": f"Unknown tool: {tool_name}"}
     except Exception as e:
@@ -156,7 +158,8 @@ def server_loop():
     try:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.bind((bpy.context.scene.mcp_host, bpy.context.scene.mcp_port))
+        server_socket.bind((bpy.context.scene.mcp_host,
+                           bpy.context.scene.mcp_port))
         server_socket.listen(5)
 
         # Store socket in bpy.types for access from other functions
@@ -427,4 +430,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-  
