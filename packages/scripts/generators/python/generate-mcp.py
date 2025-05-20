@@ -35,14 +35,14 @@ def parse_zod_union(file_path):
         inputs = match[1]
         outputs = match[2]
         description = match[3]
-        
+
         # Combine inputs and outputs
-        stripped_inputs =  inputs.replace("\n", "").replace(" ", "")
+        stripped_inputs = inputs.replace("\n", "").replace(" ", "")
         stripped_outputs = outputs.replace("\n", "").replace(" ", "")
         combined_parameters = f"{inputs[:-1]}, {outputs[1:]}" if stripped_inputs != "{}" and stripped_outputs != "{}" else (
             inputs if stripped_outputs == "{}" else outputs)
 
-        use_white_list = True
+        use_white_list = False
         if use_white_list and tool_name not in tool_white_list:
             print(f"Tool {tool_name} is not in the white list, skipping.")
             continue
@@ -50,7 +50,18 @@ def parse_zod_union(file_path):
             "toolName": tool_name,
             "description": f"Adds a {tool_name} node to the graph. {description}",
             "parameters": combined_parameters,
-            "returns": "_OperationResponse.extend({ nodeId: z.string() })",
+            "returns": "_OperationResponse.extend({"
+            "nodeId: z.string(),"
+            "inputs: z.object({"
+            "name: z.string(),"
+            "type: z.string(),"
+            "can_accept_default_value: z.boolean(),"
+            "}).describe(\"Node inputs\"),"
+            "outputs: z.object({"
+            "name: z.string(),"
+            "type: z.string(),"
+            "}).describe(\"Node outputs\")"
+            "})",
         })
 
     return tools
@@ -67,7 +78,8 @@ def generate_mcp_tools(tools, output_file):
         file.write("  // Auto-generated tools\n")
         for tool in tools:
             file.write(f"add{tool['toolName']}: {{\n")
-            file.write(f"  description: '{tool['description']}',\n")
+            file.write(
+                f"  description: '{tool['description'].replace("\'", "\\\'")}',\n")
             file.write(f"  parameters: z.object({tool['parameters']}),\n")
             file.write(f"  returns: {tool['returns']},\n")
             file.write("},\n\n")

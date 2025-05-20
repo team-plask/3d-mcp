@@ -418,18 +418,18 @@ const geometryAtomicTools = {
   //       .describe("Node outputs"),
   //   }),
   // },
-  setNodePropertyByIndex: {
-    description:
-      "Sets an input default value of a node. For the available inputs and their type, use 'getNode'. Note that vectors are written Vector(x, y, z)",
-    parameters: z.object({
-      nodeId: z.string().describe("Node identifier"),
-      propertyIndex: z
-        .number()
-        .describe("Index of the property in the list of inputs"),
-      value: z.string().describe("Property value"),
-    }),
-    returns: _OperationResponse,
-  },
+  // setNodePropertyByIndex: {
+  //   description:
+  //     "Sets an input default value of a node. For the available inputs and their type, use 'getNode'. Note that vectors are written Vector(x, y, z)",
+  //   parameters: z.object({
+  //     nodeId: z.string().describe("Node identifier"),
+  //     propertyIndex: z
+  //       .number()
+  //       .describe("Index of the property in the list of inputs"),
+  //     value: z.string().describe("Property value"),
+  //   }),
+  //   returns: _OperationResponse,
+  // },
   // getNodeTypes: {
   //   description:
   //     "Returns all available node types that can be added to a geometry",

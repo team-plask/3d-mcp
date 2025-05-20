@@ -753,7 +753,7 @@ def node_add(tool: str, **kwargs):
     print(f"Adding node of type: {type} with parameters: {kwargs}")
     try:
         result = addNodeType(type=tool[3:], params=kwargs)
-        return {"success": True, "nodeId": result["nodeId"]}
+        return {"success": True, "nodeId": result["nodeId"], "inputs": result["inputs"], "outputs": result["outputs"]}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -785,14 +785,14 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
     # No parameters to validate
     new_node = node_tree.nodes.new(type=type)
     node_tree.nodes.update()
-    if hasattr(bpy.ops.node, "na_batch_arrange"):
-        # Ensure the Node Editor is active
-        for area in bpy.context.screen.areas:
-            if area.type == 'NODE_EDITOR':
-                for region in area.regions:
-                    if region.type == 'WINDOW':
-                        with bpy.context.temp_override(area=area, region=region):
-                            bpy.ops.node.na_batch_arrange()
+    # if hasattr(bpy.ops.node, "na_batch_arrange"):
+    #     # Ensure the Node Editor is active
+    #     for area in bpy.context.screen.areas:
+    #         if area.type == 'NODE_EDITOR':
+    #             for region in area.regions:
+    #                 if region.type == 'WINDOW':
+    #                     with bpy.context.temp_override(area=area, region=region):
+    #                         bpy.ops.node.na_batch_arrange()
     # result = getNodeInputsOutputs(new_node.name)
     # inputs, outputs = result["inputs"], result["outputs"]
 
@@ -834,4 +834,20 @@ def addNodeType(type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str,
                     pass
             raise ValueError(
                 f"Input named '{property}' not found on node '{new_node.name}'.")
-    return {"nodeId": new_node.name, "node": new_node, "success": True}
+    # Retrieve input sockets
+    inputs = []
+    for input_socket in new_node.inputs:
+        inputs.append({
+            "name": input_socket.identifier,
+            "type": input_socket.bl_label,
+            "can_accept_default_value": hasattr(input_socket, "default_value")
+        })
+
+    # Retrieve output sockets
+    outputs = []
+    for output_socket in new_node.outputs:
+        outputs.append({
+            "name": output_socket.identifier,
+            "type": output_socket.bl_label
+        })
+    return {"nodeId": new_node.name, "node": new_node, "success": True, "inputs": inputs, "outputs": outputs}
