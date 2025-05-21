@@ -49,7 +49,7 @@ export class RpcWebSocket {
         document:     snapshot
       });
 
-      this.sendReq('search', { keyword: 'ff' });
+      // this.sendReq('search', { keyword: 'ff' });
     };
 
     this.ws.onclose = ()  => this.onClose();

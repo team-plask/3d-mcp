@@ -1,12 +1,119 @@
 import { 
   processDocument as processDocumentOriginal,
-  addContentControlsWithWordApi,
-  replaceOriginalWithUpdated,
-  applyJsonChangesToXml,
-  isValidXml
 } from './converter';
 import { applyPatch, Operation } from 'fast-json-patch';
 import { normalizeOoxml } from '../xml-converter/normalizer';
+
+
+/**
+ * XML 유효성 검사
+ * @param xmlString XML 문자열
+ * @returns 유효성 여부
+ */
+export function isValidXml(xmlString: string): boolean {
+  try {
+    // DOMParser를 사용해 XML 파싱
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+
+    // 파싱 오류 확인
+    const parserError = xmlDoc.querySelector("parsererror");
+    if (parserError) {
+      console.error("XML 파싱 오류:", parserError.textContent);
+      return false;
+    }
+
+    // Flat OPC 형식인 경우 document.xml 부분 추가 검사
+    if (xmlString.indexOf('<pkg:package') !== -1) {
+      // document.xml 부분 추출
+      const documentPart = xmlString.match(
+        /<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>[\s\S]*?<\/pkg:part>/i
+      );
+      if (documentPart) {
+        const xmlDataMatch = documentPart[0].match(
+          /<pkg:xmlData[^>]*>([\s\S]*?)<\/pkg:xmlData>/i
+        );
+        if (xmlDataMatch && xmlDataMatch[1]) {
+          // 개별 XML 부분 검사
+          const docXml = xmlDataMatch[1];
+          const docXmlDoc = parser.parseFromString(docXml, "text/xml");
+          const docXmlError = docXmlDoc.querySelector("parsererror");
+          if (docXmlError) {
+            console.error("document.xml 파싱 오류:", docXmlError.textContent);
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("XML 유효성 검사 오류:", error);
+    return false;
+  }
+}
+
+/**
+ * 원본 XML에서 업데이트된 XML 부분만 교체
+ * @param originalXml 원본 XML 문자열
+ * @param updatedXml 업데이트된 XML 문자열
+ * @returns 병합된 XML 문자열
+ */
+export function replaceOriginalWithUpdated(originalXml: string, updatedXml: string): string {
+  try {
+    // Flat OPC 형식인 경우 document.xml 부분만 교체
+    if (originalXml.indexOf('<pkg:package') !== -1) {
+      // '/word/document.xml' 파트 찾기
+      const partMatch = originalXml.match(
+        /<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>[\s\S]*?<\/pkg:part>/i
+      );
+      if (!partMatch) {
+        throw new Error('document.xml part not found in Flat-OPC');
+      }
+
+      // XML 데이터 부분 찾기
+      const xmlDataMatch = partMatch[0].match(
+        /(<pkg:xmlData[^>]*>)([\s\S]*?)(<\/pkg:xmlData>)/i
+      );
+      if (!xmlDataMatch) {
+        throw new Error('pkg:xmlData section missing');
+      }
+
+      // xmlData 내용만 업데이트 (네임스페이스 보존)
+      const originalDocXml = xmlDataMatch[2];
+      let processedXml = updatedXml;
+
+      // 원본 XML의 루트 요소와 속성 찾기
+      const rootElemMatch = originalDocXml.match(/<w:document([^>]*)>/);
+      if (rootElemMatch && rootElemMatch[1]) {
+        // 업데이트된 XML의 루트 요소 찾기
+        const newRootMatch = processedXml.match(/<w:document[^>]*>/);
+        if (newRootMatch) {
+          // 원본 네임스페이스 및 속성 보존
+          processedXml = processedXml.replace(
+            newRootMatch[0],
+            `<w:document${rootElemMatch[1]}>`
+          );
+        }
+      }
+
+      const updatedPart = partMatch[0].replace(
+        xmlDataMatch[0],
+        `${xmlDataMatch[1]}${processedXml}${xmlDataMatch[3]}`
+      );
+
+      // 전체 문서에서 해당 부분 교체
+      return originalXml.replace(partMatch[0], updatedPart);
+    }
+
+    // 이미 document 부분만 있는 경우 직접 교체
+    return updatedXml;
+  } catch (error) {
+    console.error("XML 교체 중 오류 발생:", error);
+    // 오류 발생 시 원본 반환
+    return originalXml;
+  }
+}
 
 /**
  * document.xml 파트 추출 함수
@@ -88,7 +195,7 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       
       // 로깅
       const mappingString = JSON.stringify(originalJson, null, 2);
-      console.log('문서 구조 JSON:\n', mappingString);
+      console.log('문서 구조 JSON\n', mappingString);
       console.log('업데이트된 Document XML:\n', formatXML(updatedXmlWithIds));
       console.log("문서 구조 분석 및 매핑 완료");
       
@@ -107,20 +214,15 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
         await ctx.document.body.insertOoxml(updatedFlatOpc, Word.InsertLocation.replace);
         await ctx.sync();
         console.log("OOXML 삽입 성공");
-      } catch (error) {
-        console.error("OOXML 삽입 실패:", error);
         
-        // 8. 대안 방법: Word API를 사용하여 콘텐츠 컨트롤 추가
-        console.log("Word API를 사용하여 콘텐츠 컨트롤 추가 시도");
-        try {
-          await addContentControlsWithWordApi(originalJson);
-          console.log("Word API를 통한 콘텐츠 컨트롤 추가 성공");
-        } catch (apiError) {
-          console.error("Word API를 통한 콘텐츠 컨트롤 추가 실패:", apiError);
-        }
+        // 7.1 모든 ContentControl 숨김 처리
+        await hideAllContentControls(ctx);
+        console.log("모든 ContentControl 숨김 처리 완료");
+      } catch (error) {
+        console.error("OOXML 삽입 또는 ContentControl 숨김 처리 실패:", error);
       }
 
-      // 9. 최종 적용된 상태 확인
+      // 8. 최종 적용된 상태 확인
       const updatedFlat = ctx.document.body.getOoxml();
       await ctx.sync();
       const finalDocXml = extractDocumentXml(updatedFlat.value);
@@ -173,239 +275,6 @@ export async function exportDocumentStructureJson(): Promise<Record<string, any>
 }
 
 /**
- * 특정 요소의 텍스트 업데이트 함수
- * @param elementId 업데이트할 요소의 ID
- * @param newText 새로운 텍스트
- */
-export async function updateElementText(elementId: string, newText: string): Promise<boolean> {
-  return Word.run(async ctx => {
-    try {
-      // 1. 콘텐츠 컨트롤 검색
-      const contentControls = ctx.document.contentControls;
-      contentControls.load("items");
-      await ctx.sync();
-      
-      // 2. 콘텐츠 컨트롤 ID로 찾기
-      let targetControl = null;
-      for (let i = 0; i < contentControls.items.length; i++) {
-        const control = contentControls.items[i];
-        control.load("tag");
-        await ctx.sync();
-        
-        if (control.tag === elementId) {
-          targetControl = control;
-          break;
-        }
-      }
-      
-      // 3. 콘텐츠 컨트롤을 찾지 못한 경우
-      if (!targetControl) {
-        console.error(`ID '${elementId}'를 가진 콘텐츠 컨트롤을 찾을 수 없습니다.`);
-        return false;
-      }
-      
-      // 4. 텍스트 업데이트
-      targetControl.insertText(newText, Word.InsertLocation.replace);
-      await ctx.sync();
-      
-      console.log(`요소 '${elementId}'의 텍스트를 '${newText}'로 업데이트했습니다.`);
-      return true;
-      
-    } catch (error) {
-      console.error("요소 텍스트 업데이트 중 오류 발생:", error);
-      return false;
-    }
-  });
-}
-
-/**
- * 특정 문단의 텍스트 수정 함수
- * @param paragraphIndex 수정할 문단의 인덱스 (0부터 시작)
- * @param newText 새로 설정할 텍스트
- */
-export async function updateParagraphText(paragraphIndex: number, newText: string): Promise<void> {
-  return Word.run(async ctx => {
-    try {
-      // 1. 문단 목록 가져오기
-      const paragraphs = ctx.document.body.paragraphs;
-      paragraphs.load("items");
-      await ctx.sync();
-      
-      // 2. 인덱스 범위 확인
-      if (paragraphIndex < 0 || paragraphIndex >= paragraphs.items.length) {
-        throw new Error(`문단 인덱스 범위 초과: ${paragraphIndex}, 전체 문단 수: ${paragraphs.items.length}`);
-      }
-      
-      // 3. 문단 텍스트 업데이트
-      paragraphs.items[paragraphIndex].insertText(newText, Word.InsertLocation.replace);
-      await ctx.sync();
-      
-      console.log(`문단 ${paragraphIndex+1}의 텍스트를 "${newText}"로 수정했습니다.`);
-    } catch (error) {
-      console.error("문단 텍스트 수정 중 오류 발생:", error);
-      throw error;
-    }
-  });
-}
-
-/**
- * 콘텐츠 컨트롤 목록 반환 함수
- */
-export async function listContentControls(): Promise<any[]> {
-  return Word.run(async ctx => {
-    const contentControls = ctx.document.contentControls;
-    contentControls.load("items, tag, title, id, text");
-    await ctx.sync();
-    
-    const results = [];
-    for (let i = 0; i < contentControls.items.length; i++) {
-      const control = contentControls.items[i];
-      results.push({
-        id: control.id,
-        tag: control.tag,
-        title: control.title,
-        text: control.text
-      });
-    }
-    
-    return results;
-  });
-}
-
-/**
- * 특정 ID를 가진 요소 업데이트 함수
- * @param elementId 요소 ID
- * @param updates 업데이트할 속성 (텍스트, 스타일 등)
- */
-export async function updateDocumentElement(elementId: string, updates: any): Promise<boolean> {
-  return Word.run(async ctx => {
-    try {
-      // 1. 콘텐츠 컨트롤 검색
-      const contentControls = ctx.document.contentControls;
-      contentControls.load("items");
-      await ctx.sync();
-      
-      // 2. 콘텐츠 컨트롤 ID로 찾기
-      let targetControl = null;
-      for (let i = 0; i < contentControls.items.length; i++) {
-        const control = contentControls.items[i];
-        control.load("tag");
-        await ctx.sync();
-        
-        if (control.tag === elementId) {
-          targetControl = control;
-          break;
-        }
-      }
-      
-      // 3. 콘텐츠 컨트롤을 찾지 못한 경우
-      if (!targetControl) {
-        console.error(`ID '${elementId}'를 가진 콘텐츠 컨트롤을 찾을 수 없습니다.`);
-        return false;
-      }
-      
-      // 4. 업데이트 적용
-      if (updates.text) {
-        targetControl.insertText(updates.text, Word.InsertLocation.replace);
-      }
-      
-      // 문단 속성 업데이트
-      if (elementId.startsWith('p_') && updates.properties) {
-        const paragraph = targetControl.paragraphs.getFirst();
-        
-        if (updates.properties.style) {
-          paragraph.style = updates.properties.style;
-        }
-        
-        if (updates.properties.alignment) {
-          paragraph.alignment = updates.properties.alignment;
-        }
-      }
-      
-      // 테이블 속성 업데이트 (제한적으로 지원)
-      if (elementId.startsWith('t_') && updates.properties) {
-        console.log("테이블 속성 업데이트는 제한적으로 지원됩니다.");
-      }
-      
-      await ctx.sync();
-      console.log(`요소 '${elementId}' 업데이트 완료`);
-      return true;
-      
-    } catch (error) {
-      console.error("요소 업데이트 중 오류 발생:", error);
-      return false;
-    }
-  });
-}
-
-/**
- * ID로 요소 찾기 함수
- * @param elementId 찾을 요소의 ID
- */
-export async function findElementById(elementId: string): Promise<any> {
-  return Word.run(async ctx => {
-    try {
-      // 콘텐츠 컨트롤 검색
-      const contentControls = ctx.document.contentControls;
-      contentControls.load("items");
-      await ctx.sync();
-      
-      for (let i = 0; i < contentControls.items.length; i++) {
-        const control = contentControls.items[i];
-        control.load("tag, text, id");
-        await ctx.sync();
-        
-        if (control.tag === elementId) {
-          // 요소 유형에 따른 추가 정보 로드
-          if (elementId.startsWith('p_')) {
-            const paragraph = control.paragraphs.getFirst();
-            paragraph.load("style, alignment, text");
-            await ctx.sync();
-            
-            return {
-              id: elementId,
-              type: 'paragraph',
-              text: paragraph.text,
-              style: paragraph.style,
-              alignment: paragraph.alignment
-            };
-          }
-          
-          if (elementId.startsWith('t_')) {
-            const table = control.tables.getFirst();
-            table.load("rowCount");
-            
-            // 테이블의 첫 번째 행을 로드하여 셀 수(열 수) 확인
-            const firstRow = table.rows.getFirst();
-            firstRow.load("cellCount");
-            
-            await ctx.sync();
-            
-            return {
-              id: elementId,
-              type: 'table',
-              rowCount: table.rowCount,
-              columnCount: firstRow.cellCount // 첫 번째 행의 셀 수로 열 수 대체
-            };
-          }
-          
-          // 기본 정보 반환
-          return {
-            id: elementId,
-            text: control.text
-          };
-        }
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("요소 찾기 중 오류 발생:", error);
-      return null;
-    }
-  });
-}
-
-/**
  * JSON-Patch 배열을 받아, id 기반으로 콘텐츠 컨트롤 내부 요소를 수정 후 문서에 반영합니다.
  */
 export async function importDocumentWithPatch(patch: Operation[]): Promise<void> {
@@ -416,5 +285,49 @@ export async function importDocumentWithPatch(patch: Operation[]): Promise<void>
 
     const docXml = extractDocumentXml(fullFlatXml);
 
+  });
+}
+
+/**
+ * 모든 ContentControl을's appearance 속성을 Hidden으로 설정
+ * @param context Word 실행 컨텍스트
+ */
+async function hideAllContentControls(context: Word.RequestContext): Promise<void> {
+  try {
+    // 모든 ContentControl 가져오기
+    const contentControls = context.document.contentControls;
+    contentControls.load("items");
+    await context.sync();
+    
+    console.log(`총 ${contentControls.items.length}개의 ContentControl을 발견했습니다.`);
+    
+    // 각 ContentControl의 appearance 속성을 hidden으로 설정
+    for (let i = 0; i < contentControls.items.length; i++) {
+      const control = contentControls.items[i];
+      control.appearance = Word.ContentControlAppearance.boundingBox;
+    }
+    
+    // 변경사항 동기화
+    await context.sync();
+    
+    console.log(`${contentControls.items.length}개의 ContentControl을 hidden으로 설정했습니다.`);
+  } catch (error) {
+    console.error("ContentControl 숨김 처리 중 오류 발생:", error);
+    throw error;
+  }
+}
+
+/**
+ * 모든 ContentControl 숨김 처리 함수 (단독 실행용)
+ */
+export async function hideAllContentControlsInDocument(): Promise<void> {
+  return Word.run(async context => {
+    try {
+      await hideAllContentControls(context);
+      console.log("모든 ContentControl 숨김 처리 완료");
+    } catch (error) {
+      console.error("ContentControl 숨김 처리 중 오류 발생:", error);
+      throw error;
+    }
   });
 }
