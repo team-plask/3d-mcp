@@ -11,7 +11,7 @@ interface DocumentJson {
 // BaseBlockData는 각 블록/요소의 공통 속성을 정의 (id는 키로 사용되므로 제외)
 interface BaseBlockData {
   type: string;
-  order: number; // 문서 전체 또는 상위 요소 내에서의 순서
+  order?: string; // 문서 전체 또는 상위 요소 내에서의 순서
   parentId?: string; // 상위 요소의 ID (TextRun, TableRow, TableCell 등에 사용)
 }
 
@@ -32,7 +32,7 @@ interface ParagraphJson extends BaseBlockData {
   type: "paragraph";
   properties: ParagraphProperties;
   // TextRunJson 객체들이 runId를 키로 하여 여기에 직접 추가됨
-  [runId: string]: TextRunJson | ParagraphProperties | string | number | undefined;
+  [runId: string]: TextRunJson | ParagraphProperties | string | undefined;
 }
 
 // TableCell 내용. DocumentJson과 유사하게 중첩된 블록을 가짐
@@ -50,7 +50,7 @@ interface TableRowJson extends BaseBlockData {
   type: "tableRow";
   // parentId: string; // 속한 Table의 ID (BaseBlockData에 포함)
   // TableCellJson 객체들이 cellId를 키로 하여 여기에 직접 추가됨
-  [cellId: string]: TableCellJson | string | number | undefined;
+  [cellId: string]: TableCellJson | string | undefined;
 }
 
 // Table 블록 데이터 (id는 DocumentJson의 키가 됨)
@@ -58,15 +58,18 @@ interface TableJson extends BaseBlockData {
   type: "table";
   // Table Properties (예: w:tblPr)는 여기에 추가 가능
   // TableRowJson 객체들이 rowId를 키로 하여 여기에 직접 추가됨
-  [rowId: string]: TableRowJson | string | number | undefined;
+  [rowId: string]: TableRowJson | string | undefined;
 }
 
 
 const WHITELISTED_PARA_PROPS = ['w:spacing', 'w:jc', 'w:rPr'];
 const WHITELISTED_RUN_PROPS = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts'];
-let globalOrderCounter = 0;
 
-function generateId(type: string, order: number, parentId?: string): string {
+function generateOrderArray(length: number): string[] {
+    return Array.from({ length }, (_, index) => String(index + 1));
+}
+
+function generateId(): string {
 
     // type 1: use ordered id
     //return parentId ? `${parentId}_${type}_${order}` : `${type}_${order}`;
@@ -203,16 +206,16 @@ function processRunProperties(rPrElementObject: any): TextRunProperties {
 }
 
 // processTextRun은 TextRunJson 객체와 해당 run의 id를 반환
-function processTextRun(rElementObject: any, paragraphId: string, order: number, extraProps?: any): { runId: string, runJson: TextRunJson } | null {
+function processTextRun(rElementObject: any, paragraphId: string, order?: string, extraProps?: any): { runId: string, runJson: TextRunJson } | null {
     const tagName = getTagName(rElementObject);
     if (!tagName || tagName !== 'w:r') return null;
     
     // const rTagAttributes = getAttributesFromElementObject(rElementObject); // 현재 사용 안 함
     const rContentArray = getContentArrayFromElementObject(rElementObject, tagName);
 
-    const runId = generateId('r', order, paragraphId); // runId는 parentId(paragraphId)를 기반으로 생성
+    const runId = generateId(); // runId는 parentId(paragraphId)를 기반으로 생성
     const textRunJson: TextRunJson = {
-        type: "textRun", order, parentId: paragraphId, text: "", properties: {}
+        type: "textRun", order, text: "", properties: {}
     };
 
     const rChildren = getActualChildElementObjects(rContentArray);
@@ -234,19 +237,18 @@ function processTextRun(rElementObject: any, paragraphId: string, order: number,
 }
 
 // processParagraph는 { [paragraphId]: ParagraphJson } 형태의 객체를 반환
-function processParagraph(pElementObject: any, parentBlockId?: string): { [id: string]: ParagraphJson } | null {
+function processParagraph(pElementObject: any, parentBlockId?: string, order?: string): { [id: string]: ParagraphJson } | null {
     const tagName = getTagName(pElementObject);
     if (!tagName || tagName !== 'w:p') return null;
 
     // const pTagAttributes = getAttributesFromElementObject(pElementObject); // w14:paraId 사용하지 않음
     const pContentArray = getContentArrayFromElementObject(pElementObject, tagName);
 
-    globalOrderCounter++;
-    const paraId = generateId('p', globalOrderCounter, parentBlockId); // 최상위 문단의 parentBlockId는 undefined
+    const paraId = generateId(); // 최상위 문단의 parentBlockId는 undefined
 
     const paragraphJson: ParagraphJson = {
         type: "paragraph",
-        order: globalOrderCounter,
+        order: order,
         properties: {}
         // runs는 여기에 동적으로 추가됨
     };
@@ -254,16 +256,16 @@ function processParagraph(pElementObject: any, parentBlockId?: string): { [id: s
 
 
     const pChildren = getActualChildElementObjects(pContentArray);
-    let runOrder = 0;
+    const runOrderArray = generateOrderArray(pChildren.length); // 자식 수 만큼 order 생성
 
     pChildren.forEach((childObject: any) => {
         const childTagName = getTagName(childObject);
+        const runOrder = runOrderArray.shift();
         if (!childTagName) return;
 
         if (childTagName === 'w:pPr') {
             paragraphJson.properties = processParagraphProperties(childObject);
         } else if (childTagName === 'w:r') {
-            runOrder++;
             const runResult = processTextRun(childObject, paraId, runOrder);
             if (runResult) {
                 paragraphJson[runResult.runId] = runResult.runJson;
@@ -276,7 +278,6 @@ function processParagraph(pElementObject: any, parentBlockId?: string): { [id: s
             hyperlinkChildren.forEach(linkChildNode => {
                 const linkChildTagName = getTagName(linkChildNode);
                 if (linkChildTagName === 'w:r') {
-                    runOrder++;
                     const runResult = processTextRun(
                         linkChildNode,
                         paraId,
@@ -294,28 +295,30 @@ function processParagraph(pElementObject: any, parentBlockId?: string): { [id: s
 }
 
 // processTableCell은 { [cellId]: TableCellJson } 형태의 객체를 반환
-function processTableCell(tcElementObject: any, tableRowId: string, order: number): { [id: string]: TableCellJson } | null {
+function processTableCell(tcElementObject: any, tableRowId: string, order?: string): { [id: string]: TableCellJson } | null {
     const tagName = getTagName(tcElementObject);
     if (!tagName || tagName !== 'w:tc') return null;
 
     // const tcTagAttributes = getAttributesFromElementObject(tcElementObject); // 현재 사용 안 함
     const tcContentArray = getContentArrayFromElementObject(tcElementObject, tagName);
 
-    const cellId = generateId('tc', order, tableRowId);
+    const cellId = generateId();
     const cellJson: TableCellJson = {
-        type: "tableCell", order, parentId: tableRowId, content: {}
+        type: "tableCell", order, content: {}
     };
 
     const tcChildren = getActualChildElementObjects(tcContentArray);
+    const cellOrderArray = generateOrderArray(tcChildren.length); // 자식 수 만큼 order 생성
     tcChildren.forEach(tcChild => {
         const childTagName = getTagName(tcChild);
+        const order = cellOrderArray.shift();
         if (!childTagName) return;
 
         if (childTagName === 'w:p') {
-            const paragraphResult = processParagraph(tcChild, cellId); // 셀 내 문단의 parentId는 cellId
+            const paragraphResult = processParagraph(tcChild, cellId, order); // 셀 내 문단의 parentId는 cellId
             if (paragraphResult) Object.assign(cellJson.content, paragraphResult);
         } else if (childTagName === 'w:tbl') {
-            const tableResult = processTable(tcChild, cellId); // 셀 내 테이블의 parentId는 cellId
+            const tableResult = processTable(tcChild, cellId, order); // 셀 내 테이블의 parentId는 cellId
             if (tableResult) Object.assign(cellJson.content, tableResult);
         }
     });
@@ -323,25 +326,25 @@ function processTableCell(tcElementObject: any, tableRowId: string, order: numbe
 }
 
 // processTableRow는 { [rowId]: TableRowJson } 형태의 객체를 반환
-function processTableRow(trElementObject: any, tableId: string, order: number): { [id: string]: TableRowJson } | null {
+function processTableRow(trElementObject: any, tableId: string, order?: string): { [id: string]: TableRowJson } | null {
     const tagName = getTagName(trElementObject);
     if (!tagName || tagName !== 'w:tr') return null;
 
     // const trTagAttributes = getAttributesFromElementObject(trElementObject); // 현재 사용 안 함
     const trContentArray = getContentArrayFromElementObject(trElementObject, tagName);
     
-    const rowId = generateId('tr', order, tableId);
+    const rowId = generateId();
     const rowJson: TableRowJson = {
-        type: "tableRow", order, parentId: tableId
+        type: "tableRow", order
         // cells는 여기에 동적으로 추가됨
     };
     
     const trChildren = getActualChildElementObjects(trContentArray);
-    let cellOrder = 0;
+    const cellOrderArray = generateOrderArray(trChildren.length); // 자식 수 만큼 order 생성
     trChildren.forEach((trChild: any) => {
         const childTagName = getTagName(trChild);
         if (childTagName === 'w:tc') {
-            cellOrder++;
+            const cellOrder = cellOrderArray.shift();
             const cellResult = processTableCell(trChild, rowId, cellOrder);
             if (cellResult) {
                 const cellKey = Object.keys(cellResult)[0];
@@ -353,28 +356,27 @@ function processTableRow(trElementObject: any, tableId: string, order: number): 
 }
 
 // processTable은 { [tableId]: TableJson } 형태의 객체를 반환
-function processTable(tblElementObject: any, parentBlockId?: string): { [id: string]: TableJson } | null {
+function processTable(tblElementObject: any, parentBlockId?: string, order?: string): { [id: string]: TableJson } | null {
     const tagName = getTagName(tblElementObject);
     if (!tagName || tagName !== 'w:tbl') return null;
 
     // const tblTagAttributes = getAttributesFromElementObject(tblElementObject); // 현재 사용 안 함
     const tblContentArray = getContentArrayFromElementObject(tblElementObject, tagName);
 
-    globalOrderCounter++;
-    const tableId = generateId('tbl', globalOrderCounter, parentBlockId);
+    const tableId = generateId();
     const tableJson: TableJson = {
-        type: "table", order: globalOrderCounter
+        type: "table", order: order
         // rows는 여기에 동적으로 추가됨
     };
     if (parentBlockId) tableJson.parentId = parentBlockId;
 
 
     const tblChildren = getActualChildElementObjects(tblContentArray);
-    let rowOrder = 0;
+    const rowOrderArray = generateOrderArray(tblChildren.length); // 자식 수 만큼 order 생성
     tblChildren.forEach((tblChild: any) => {
         const childTagName = getTagName(tblChild);
         if (childTagName === 'w:tr') {
-            rowOrder++;
+            const rowOrder = rowOrderArray.shift();
             const rowResult = processTableRow(tblChild, tableId, rowOrder);
             if (rowResult) {
                 const rowKey = Object.keys(rowResult)[0];
@@ -410,7 +412,6 @@ export function convertOoxmlToJson(xmlString: string): DocumentJson {
   }
 
   const documentJson: DocumentJson = {}; // DocumentJson을 객체로 초기화
-  globalOrderCounter = 0;
 
   const docEntry = parsedXmlArray.find((entry: any) => getTagName(entry) === 'w:document'); // getTagName 사용
   if (!docEntry) {
@@ -431,15 +432,18 @@ export function convertOoxmlToJson(xmlString: string): DocumentJson {
   
   console.log(`<w:body> 내부의 유효한 자식 요소(그룹) 개수: ${bodyChildren.length}`);
 
+  const orderArray = generateOrderArray(bodyChildren.length); // 자식 수 만큼 order 생성
+
   if (bodyChildren.length > 0) {
     bodyChildren.forEach((bodyChildElementObject: any) => { // 변수명 변경 bodyChild -> bodyChildElementObject
       const tagName = getTagName(bodyChildElementObject);
+      const order = orderArray.shift();
 
       if (tagName === 'w:p') {
-        const paragraphResult = processParagraph(bodyChildElementObject, undefined); // 최상위 문단이므로 parentId 없음
+        const paragraphResult = processParagraph(bodyChildElementObject, undefined, order); // 최상위 문단이므로 parentId 없음
         if (paragraphResult) Object.assign(documentJson, paragraphResult); // 결과 병합
       } else if (tagName === 'w:tbl') {
-        const tableResult = processTable(bodyChildElementObject, undefined); // 최상위 테이블이므로 parentId 없음
+        const tableResult = processTable(bodyChildElementObject, undefined, order); // 최상위 테이블이므로 parentId 없음
         if (tableResult) Object.assign(documentJson, tableResult); // 결과 병합
       } else if (tagName === 'w:sectPr') {
          // console.log(`  - 섹션 속성(w:sectPr)은 현재 처리 로직에서 건너뜁니다.`);
