@@ -2,6 +2,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import * as shortid from 'shortid';
+import { generateNKeysBetween } from 'fractional-indexing';
 
 // --- 인터페이스 정의 (새로운 구조에 맞게 수정) ---
 interface DocumentJson {
@@ -66,7 +67,13 @@ const WHITELISTED_PARA_PROPS = ['w:spacing', 'w:jc', 'w:rPr'];
 const WHITELISTED_RUN_PROPS = ['w:b', 'w:i', 'w:u', 'w:sz', 'w:color', 'w:rFonts'];
 
 function generateOrderArray(length: number): string[] {
-    return Array.from({ length }, (_, index) => String(index + 1));
+    if (length === 0) {
+        return [];
+    }
+    // fractional-indexing 라이브러리를 사용하여 length개의 정렬 가능한 문자열 키를 생성합니다.
+    // 첫 번째 인자와 두 번째 인자로 null, null을 전달하면, 리스트의 처음부터 순서대로 키가 생성됩니다.
+    // 예를 들어 length가 3이면 ["a0", "a1", "a2"] 와 유사한 (하지만 실제로는 더 복잡한) 배열이 반환될 수 있습니다.
+    return generateNKeysBetween(null, null, length);
 }
 
 function generateId(): string {
