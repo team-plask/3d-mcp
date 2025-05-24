@@ -8,8 +8,7 @@
   "license": "MIT",
   "config": {
     "app_to_debug": "word",
-    "app_type_to_debug": "desktop",
-    "dev_server_port": 3001
+    "app_type_to_debug": "desktop"
   },
   "scripts": {
     "build": "webpack --mode production",
@@ -19,8 +18,8 @@
     "start:dev": "concurrently \"npm:dev-server\" \"npm:sideload\"",
     "start": "office-addin-debugging start manifest.xml",
     "stop": "office-addin-debugging stop manifest.xml",
-    "stop:dev": "npm run unsideload && kill-port 3001",
-    "unsideload": "npx office-addin-dev-settings uninstall manifest.xml"
+    "stop:dev": "npm run unsideload",
+    "unsideload": "npx office-addin-dev-settings uninstall dist/manifest.xml"
   },
   "dependencies": {
     "@types/shortid": "^2.2.0",

@@ -16,6 +16,7 @@
   "description": "",
   "dependencies": {
     "fast-xml-parser": "^5.2.2",
+    "fractional-indexing": "^3.2.0",
     "saxon-js": "^2.7.0",
     "shortid": "^2.2.17"
   },
@@ -23,6 +24,6 @@
     "@types/node": "^22.15.16",
     "@types/shortid": "^2.2.0",
     "typescript": "^5.8.3",
-    "xslt3-he": "^2.6.0"
+    "xslt3-he": "^3.0.0-beta1"
   }
 }
