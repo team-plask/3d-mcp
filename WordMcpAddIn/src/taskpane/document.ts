@@ -1,9 +1,12 @@
 import { 
   processDocument as processDocumentOriginal,
+  extractJsonFromContentControls,
+  optimizeTableStructures
 } from './converter';
 import { applyPatch, Operation } from 'fast-json-patch';
 import { normalizeOoxml } from '../xml-converter/normalizer';
 
+let cachedDocumentJson: Record<string, any> = {};
 
 /**
  * XML 유효성 검사
@@ -137,7 +140,7 @@ function extractDocumentXml(flatXml: string): string {
   return xmlMatch[1].trim();
 }
 
-function formatXML(xml, tab = '  ') {
+export function formatXML(xml, tab = '  ') {
   let formatted = '';
   let indent = '';
   
@@ -181,17 +184,19 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
 
       // 3. XML 정규화 (옵션)
       let normalizedXml = docXml;
-      if (typeof normalizeOoxml === 'function') {
-        try {
-          normalizedXml = await normalizeOoxml(docXml, 'assets/normalize-runs.sef.json');
-          console.log("정규화된 Document XML:\n", formatXML(normalizedXml));
-        } catch (error) {
-          console.warn("XML 정규화 실패, 원본 XML 사용:", error);
-        }
-      }
+      // try {
+      //   normalizedXml = await normalizeOoxml(docXml, 'assets/normalize-runs.sef.json');
+      //   console.log("정규화된 Document XML:\n", formatXML(normalizedXml));
+      // } catch (error) {
+      //   console.warn("XML 정규화 실패, 원본 XML 사용:", error);
+      // }
 
       // 4. OOXML을 JSON으로 변환
-      const { json: originalJson, xml: updatedXmlWithIds } = processDocumentOriginal(normalizedXml);
+      const existingJson = loadDocumentState();
+      console.log("기존 문서 구조 JSON 로드 완료");
+      console.log("기존 문서 구조 JSON:\n", JSON.stringify(existingJson, null, 2));
+      
+      const { json: originalJson, xml: updatedXmlWithIds } = processDocumentOriginal(docXml, existingJson);
       
       // 로깅
       const mappingString = JSON.stringify(originalJson, null, 2);
@@ -199,6 +204,9 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       console.log('업데이트된 Document XML:\n', formatXML(updatedXmlWithIds));
       console.log("문서 구조 분석 및 매핑 완료");
       
+      const optimizedXml = optimizeTableStructures(updatedXmlWithIds);
+      console.log("테이블 구조 최적화 완료");
+
       // 5. 전체 Flat OPC에 업데이트된 XML 적용
       const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, updatedXmlWithIds);
       console.log("Flat OPC에 업데이트된 XML 적용 완료");
@@ -211,6 +219,7 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       
       // 7. 문서에 XML 적용 시도
       try {
+        // 문서에 XML 적용 부분 수정
         await ctx.document.body.insertOoxml(updatedFlatOpc, Word.InsertLocation.replace);
         await ctx.sync();
         console.log("OOXML 삽입 성공");
@@ -228,10 +237,14 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       const finalDocXml = extractDocumentXml(updatedFlat.value);
       console.log("최종 적용된 Document XML:\n", formatXML(finalDocXml));
       
+      // 9. 최종 XML에서 다시 JSON 구조 추출 (중요 변경점!)
+      const finalXmlDoc = new DOMParser().parseFromString(finalDocXml, "text/xml");
+      const finalJson = extractJsonFromContentControls(finalXmlDoc, originalJson);
+      console.log("최종 문서에서 추출한 JSON 구조:\n", JSON.stringify(finalJson, null, 2));
+      
       console.log("=== 문서 구조 업데이트 완료 ===");
-      
-      return originalJson;
-      
+      saveDocumentState(finalJson); // 최종 문서 상태 저장
+      return finalJson;
     } catch (error) {
       console.error("문서 구조 처리 중 오류 발생:", error);
       throw error;
@@ -299,7 +312,7 @@ async function hideAllContentControls(context: Word.RequestContext): Promise<voi
     contentControls.load("items");
     await context.sync();
     
-    console.log(`총 ${contentControls.items.length}개의 ContentControl을 발견했습니다.`);
+    // console.log(`총 ${contentControls.items.length}개의 ContentControl을 발견했습니다.`);
     
     // 각 ContentControl의 appearance 속성을 hidden으로 설정
     for (let i = 0; i < contentControls.items.length; i++) {
@@ -310,7 +323,7 @@ async function hideAllContentControls(context: Word.RequestContext): Promise<voi
     // 변경사항 동기화
     await context.sync();
     
-    console.log(`${contentControls.items.length}개의 ContentControl을 hidden으로 설정했습니다.`);
+    // console.log(`${contentControls.items.length}개의 ContentControl을 hidden으로 설정했습니다.`);
   } catch (error) {
     console.error("ContentControl 숨김 처리 중 오류 발생:", error);
     throw error;
@@ -330,4 +343,89 @@ export async function hideAllContentControlsInDocument(): Promise<void> {
       throw error;
     }
   });
+}
+
+// 문서 상태 저장 함수 개선
+/**
+ * 문서 JSON 상태 저장
+ * @param json 저장할 JSON 객체
+ */
+export function saveDocumentState(json: Record<string, any>): void {
+  try {
+    // 저장 전에 메타 정보 추가
+    // json._meta = {
+    //   version: "1.0",
+    //   timestamp: new Date().toISOString(),
+    //   documentUrl: Office.context.document.url || "unknown"
+    // };
+    
+    // _idMapping은 더 이상 필요하지 않으므로 제거
+    // Content Control의 w:tag 값이 직접 JSON의 키로 사용되므로 매핑이 불필요
+    if (json._idMapping) {
+      delete json._idMapping;
+    }
+    
+    console.log("문서 상태 저장 (요소 수):", Object.keys(json).filter(key => !key.startsWith('_')).length);
+    
+    // Office 문서 설정에 저장
+    Office.context.document.settings.set('documentJsonStructure', json);
+    Office.context.document.settings.saveAsync();
+    
+    // 백업용 로컬 스토리지 저장
+    const documentId = Office.context.document.url || 'current-document';
+    localStorage.setItem(`document-${documentId}-json`, JSON.stringify(json));
+  } catch (error) {
+    console.error("문서 상태 저장 중 오류:", error);
+  }
+}
+
+// 문서 상태 불러오기
+export function loadDocumentState(): Record<string, any> {
+  try {
+    // 먼저 Office 설정에서 불러오기 시도
+    const savedJson = Office.context.document.settings.get('documentJsonStructure');
+    if (savedJson) {
+      cachedDocumentJson = savedJson;
+      return savedJson;
+    }
+    
+    // 실패하면 로컬 스토리지 백업 시도
+    const documentId = Office.context.document.url || 'current-document';
+    const backupJson = localStorage.getItem(`document-${documentId}-backup`);
+    if (backupJson) {
+      const parsed = JSON.parse(backupJson);
+      cachedDocumentJson = parsed;
+      return parsed;
+    }
+    
+    return {};
+  } catch (error) {
+    console.error('Error loading document state:', error);
+    return {};
+  }
+}
+
+/**
+ * Word 문서의 document.xml 콘텐츠를 추출하는 함수
+ * @returns document.xml의 내용을 담은 Promise
+ */
+export async function getDocumentXml(): Promise<string> {
+  try {
+    // Word API 컨텍스트 생성
+    const ctx = new Word.RequestContext();
+    
+    // 문서 본문의 OOXML 가져오기
+    const flat = ctx.document.body.getOoxml();
+    await ctx.sync();
+    
+    // 전체 Flat OPC XML
+    const fullFlatXml = flat.value;
+    
+    // document.xml 부분만 추출
+    const docXml = extractDocumentXml(fullFlatXml);
+    return docXml;
+  } catch (error) {
+    console.error("문서 XML 추출 중 오류 발생:", error);
+    throw error;
+  }
 }
