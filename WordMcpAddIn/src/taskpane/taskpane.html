@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Oppice AI Assistant</title>
+    <title>Word MCP Assistant</title>
 
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 
@@ -26,32 +26,111 @@
 
       <!-- Main UI -->
       <div id="mainContent">
-        <h2>📎 Oppice AI Assistant</h2>
+        <h2>📎 Word MCP Assistant</h2>
 
-        <div class="section">
-          <h3>📘 Read by Block ID</h3>
-          <input id="readId" placeholder="e.g. para-0" />
-          <button id="readBtn">Read</button>
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+          <button class="tab-button active" data-tab="read">📖 Read</button>
+          <button class="tab-button" data-tab="edit">✏️ Edit</button>
+          <button class="tab-button" data-tab="patch">🔄 Patch</button>
         </div>
 
-        <div class="section">
-          <h3>🔎 Search by Keyword</h3>
-          <input id="searchKw" placeholder="e.g. introduction" />
-          <button id="searchBtn">Search</button>
+        <!-- Read Tab -->
+        <div id="tab-read" class="tab-content active">
+          <div class="section">
+            <h3>📊 Document Structure</h3>
+            <p class="description">Get a snapshot of the current document structure</p>
+            <button id="snapshotBtn" class="action-button">
+              📷 Capture Document Structure
+            </button>
+          </div>
+
+          <div class="section">
+            <h3>🔍 View Element</h3>
+            <p class="description">Enter an element ID to view its details</p>
+            <div class="input-group">
+              <input id="viewId" placeholder="Element ID (e.g. p_QodjOgfRsFE)" />
+              <button id="viewElementBtn" class="action-button">View</button>
+            </div>
+          </div>
         </div>
 
-        <div class="section">
-          <h3>✏️ Edit Paragraph</h3>
-          <input id="editId" placeholder="Block ID" style="width: 120px;" />
-          <input id="editTxt" placeholder="New paragraph text" style="width: 280px;" />
-          <button id="editBtn">Apply Edit</button>
+        <!-- Edit Tab -->
+        <div id="tab-edit" class="tab-content">
+          <div class="section">
+            <h3>🗑️ Delete Element</h3>
+            <p class="description">Delete an element from the document</p>
+            <div class="input-group">
+              <input id="deleteId" placeholder="Element ID to delete" />
+              <button id="deleteElementBtn" class="action-button">Delete</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>↔️ Update Paragraph Alignment</h3>
+            <p class="description">Change paragraph alignment properties</p>
+            <div class="input-group">
+              <input id="paragraphId" placeholder="Paragraph ID" />
+            </div>
+            <div class="input-group">
+              <select id="paragraphAlignment">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+                <option value="justify">Justify</option>
+              </select>
+              <button id="updateParagraphBtn" class="action-button">Update</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>✏️ Update Text</h3>
+            <p class="description">Change text content in a run</p>
+            <div class="input-group">
+              <input id="runParagraphId" placeholder="Paragraph ID" />
+            </div>
+            <div class="input-group">
+              <input id="runId" placeholder="Run ID" />
+            </div>
+            <div class="input-group">
+              <input id="newText" placeholder="New text content" />
+              <button id="updateRunBtn" class="action-button">Update</button>
+            </div>
+          </div>
         </div>
 
-        <hr />
+        <!-- Patch Tab -->
+        <div id="tab-patch" class="tab-content">
+          <div class="section">
+            <h3>🧪 Sample Patch</h3>
+            <p class="description">Run a predefined sample patch</p>
+            <button id="samplePatchBtn" class="action-button primary">
+              Run Sample Patch
+            </button>
+          </div>
 
-        <div class="section">
-          <h4>📝 Result</h4>
-          <pre id="result"></pre>
+          <div class="section">
+            <h3>📝 Custom JSON Patch</h3>
+            <p class="description">Apply a custom JSON RFC Merge Patch</p>
+            <div class="button-group">
+              <button id="loadExampleBtn" class="action-button">
+                Simple Example
+              </button>
+              <button id="loadComplexBtn" class="action-button">
+                Complex Example
+              </button>
+            </div>
+            <textarea id="customPatch" rows="6" placeholder="Enter JSON RFC Merge Patch data"></textarea>
+            <button id="applyPatchBtn" class="action-button primary">
+              Apply Patch
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="section result-section">
+          <h3>📋 Result</h3>
+          <pre id="result" class="result-box"></pre>
         </div>
       </div>
     </div>

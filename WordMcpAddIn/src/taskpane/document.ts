@@ -239,7 +239,7 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       
       // 9. 최종 XML에서 다시 JSON 구조 추출 (중요 변경점!)
       const finalXmlDoc = new DOMParser().parseFromString(finalDocXml, "text/xml");
-      const finalJson = extractJsonFromContentControls(finalXmlDoc, originalJson);
+      const finalJson = extractJsonFromContentControls(finalXmlDoc);
       console.log("최종 문서에서 추출한 JSON 구조:\n", JSON.stringify(finalJson, null, 2));
       
       console.log("=== 문서 구조 업데이트 완료 ===");

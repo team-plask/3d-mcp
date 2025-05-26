@@ -252,7 +252,7 @@ export function processDocument(
   const updatedXmlString = xmlSerializer.serializeToString(xmlDocWithControls);
   
   // 4. JSON 추출 (주의: updatedXmlString이 아닌 xmlDocWithControls 직접 사용)
-  const resultJson = extractJsonFromContentControls(xmlDocWithControls, existingJson);
+  const resultJson = extractJsonFromContentControls(xmlDocWithControls);
   
   return {
     json: resultJson,
@@ -267,7 +267,7 @@ export function extractFinalJson(
 ): Record<string, any> {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-  return extractJsonFromContentControls(xmlDoc, existingJson);
+  return extractJsonFromContentControls(xmlDoc);
 }
 
 /**
@@ -344,54 +344,37 @@ function applyContentControlsToDocument(xmlDoc: Document): Document {
   console.log(`감싸진 요소 샘플: ${wrappedElementInfo.join(', ')}`);
   
   // 재귀적으로 상위 구조에 Content Control이 있는지 확인하는 함수
-  // 재귀적으로 상위 구조에 Content Control이 있는지 확인하는 함수
-function isInsideContentControl(element: Element): boolean {
-  let parent = element.parentNode;
-  let parentTable = null;
-  
-  while (parent) {
-    if (parent.nodeType !== Node.ELEMENT_NODE) {
-      parent = parent.parentNode;
-      continue;
-    }
+  /**
+   * 요소가 Content Control 내부에 있는지 확인하는 함수 (최대 2계층까지만 확인)
+   */
+  function isInsideContentControl(element: Element): boolean {
+    // 1단계: 직접적인 부모 확인
+    let parent = element.parentNode;
+    if (!parent) return false;
     
-    const parentElement = parent as Element;
-    
-    if (parentElement.nodeName === "w:sdtContent") {
-      // 테이블의 Content Control 내부에 있는지 확인
-      const sdtParent = parentElement.parentNode;
-      if (sdtParent && sdtParent.nodeType === Node.ELEMENT_NODE) {
-        const sdtElement = sdtParent as Element;
-        if (sdtElement.nodeName === "w:sdt") {
-          // 테이블 Content Control 확인 (첫 번째 자식이 테이블인지)
-          const contentElements = sdtElement.getElementsByTagName("w:sdtContent");
-          if (contentElements.length > 0) {
-            const content = contentElements[0];
-            const firstChild = content.firstElementChild;
-            
-            if (firstChild && firstChild.nodeName === "w:tbl") {
-              // 테이블 내부 요소는 별도 Content Control 허용
-              // 테이블 Content Control을 건너뛰고 계속 검사
-              parent = sdtElement.parentNode;
-              continue;
-            }
-          }
+    if (parent.nodeType === Node.ELEMENT_NODE) {
+      const parentElement = parent as Element;
+      
+      // 직접적인 부모가 Content Control인 경우
+      if (parentElement.nodeName === "w:sdtContent") {
+        return true;
+      }
+      
+      // 2단계: 한 단계 더 올라가서 확인
+      parent = parentElement.parentNode;
+      if (parent && parent.nodeType === Node.ELEMENT_NODE) {
+        const grandParentElement = parent as Element;
+        
+        // 한 단계 위 부모가 Content Control인 경우
+        if (grandParentElement.nodeName === "w:sdt") {
+          return true;
         }
       }
-      return true;
     }
     
-    // 테이블 감지
-    if (parentElement.nodeName === "w:tbl") {
-      parentTable = parentElement;
-    }
-    
-    parent = parentElement.parentNode;
+    return false;
   }
-  
-  return false;
-}
-  
+  console.log("wrappedElements", wrappedElements);
   // 화이트리스트 요소 수집 (깊이 순으로 정렬)
   const elementsToWrap = collectTargetElements(xmlDoc, wrappedElements);
   
@@ -413,7 +396,7 @@ function isInsideContentControl(element: Element): boolean {
     return true;
   });
   
-  console.log(`필터링 후 Content Control 적용 대상 요소 수: ${filteredElements.length}`);
+  console.log(`필터링 후 Content Control 적용 대상 요소 수: ${filteredElements}`);
   
   // 대상 요소의 상세 정보 로깅 (최대 5개만)
   if (filteredElements.length > 0) {
@@ -450,13 +433,10 @@ function wrapWithContentControl(
   type: string
 ): void {
   // 이미 Content Control로 감싸져 있는지 한번 더 검사
-  let parent = element.parentNode;
-  while (parent) {
-    if (parent.nodeName === "w:sdtContent") {
-      console.log(`요소 ${element.nodeName}는 이미 Content Control 내부에 있어 건너뜀`);
-      return;
-    }
-    parent = parent.parentNode;
+  const parent = element.parentNode;
+  if (parent && parent.nodeName === "w:sdtContent") {
+    console.log(`요소 ${element.nodeName}는 이미 Content Control 내부에 있어 건너뜀`);
+    return;
   }
   
   // 문서 참조 가져오기
@@ -530,6 +510,7 @@ function collectTargetElements(
   // 처리된 테이블 추적
   const processedTables = new Set<Element>();
   
+  console.log("wrapWithContentControl: 문서에서 Content Control 적용 대상 요소 수집 시작", wrappedElements);
   // 재귀적으로 모든 요소 검사
   function examineNode(node: Node, depth: number = 0) {
     if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -543,6 +524,7 @@ function collectTargetElements(
       
       // 이미 Content Control로 감싸져 있지 않은 경우에만 추가
       if (!wrappedElements.has(element)) {
+        console.log(`대상 요소 발견: ${nodeName}, 깊이: ${depth}, element:`, element);
         targetElements.push({
           element,
           type: TAG_TYPE_MAP[nodeName],
