@@ -1,6 +1,6 @@
 import * as shortid from 'shortid';
 import { formatXML } from './document';
-
+import { generateNKeysBetween } from 'fractional-indexing';
 // 추적할 요소와 속성 정의
 // 추적할 요소와 속성 정의 - 개선된 계층 구조
 const TRACKED_ELEMENTS = {
@@ -419,6 +419,8 @@ function applyContentControlsToDocument(xmlDoc: Document): Document {
     wrapWithContentControl(element, id, type);
   }
   
+  assignOrderToContentControls(xmlDoc);
+  
   console.log("Content Control 적용 완료");
   
   // 업데이트된 Document XML 로깅 (디버깅용)
@@ -582,6 +584,21 @@ export function extractJsonFromContentControls(
     if (tagElements.length > 0 && tagElements[0].hasAttribute("w:val")) {
       const id = tagElements[0].getAttribute("w:val");
       
+      // 순서 정보 추출
+      let order = null;
+      const aliasElements = sdt.getElementsByTagName("w:alias");
+      if (aliasElements.length > 0 && aliasElements[0].hasAttribute("w:val")) {
+        const aliasValue = aliasElements[0].getAttribute("w:val");
+        
+        // alias 값에서 order 추출 (type id__order 형식)
+        if (aliasValue.includes('__')) {
+          const parts = aliasValue.split('__');
+          if (parts.length > 1) {
+            order = parts[parts.length - 1];
+          }
+        }
+      }
+      
       // Content 요소 찾기
       const contentElements = sdt.getElementsByTagName("w:sdtContent");
       if (contentElements.length > 0 && contentElements[0].firstElementChild) {
@@ -596,10 +613,14 @@ export function extractJsonFromContentControls(
         
         // 요소 속성 추출
         const attributes = extractElementAttributes(element, elementType);
-        
+
         // 이전 JSON에서 정보 가져오기 (있는 경우)
-        let elementData: { type: string; attributes: Record<string, any>; children?: Record<string, any> } = { type: elementType, attributes };
+        let elementData: { type: string; attributes: Record<string, any>; order?: string; children?: Record<string, any> } = { type: elementType, attributes };
         
+        if (order) {
+          elementData.order = order;
+        }
+
         if (existingJson[id]) {
           // 기존 데이터가 있으면 타입은 유지하고 속성은 업데이트
           elementData = {
@@ -609,6 +630,12 @@ export function extractJsonFromContentControls(
               ...attributes
             }
           };
+
+          if (order) {
+            elementData.order = order;
+          } else if (existingJson[id].order) {
+            elementData.order = existingJson[id].order;
+          }
           
           // 기존에 children 속성이 있었다면 유지
           if (existingJson[id].children) {
@@ -799,6 +826,13 @@ function buildHierarchyStructure(
       });
       
       if (childIds.length > 0) {
+        // 순서 속성에 따라 자식 ID 정렬
+        childIds.sort((a, b) => {
+          const orderA = resultJson[a]?.order || "";
+          const orderB = resultJson[b]?.order || "";
+          return orderA.localeCompare(orderB);
+        });
+        
         parentChildMap.set(id, childIds);
       }
     } 
@@ -844,6 +878,13 @@ function buildHierarchyStructure(
       });
       
       if (childIds.length > 0) {
+        // 순서 속성에 따라 자식 ID 정렬
+        childIds.sort((a, b) => {
+          const orderA = resultJson[a]?.order || "";
+          const orderB = resultJson[b]?.order || "";
+          return orderA.localeCompare(orderB);
+        });
+        
         parentChildMap.set(id, childIds);
         
         // 구조화된 셀 정보 추가 (일관성 유지)
@@ -1037,5 +1078,148 @@ export function optimizeTableStructures(xmlString: string): string {
   } catch (error) {
     console.error("테이블 구조 최적화 중 오류:", error);
     return xmlString; // 오류 발생 시 원본 반환
+  }
+}
+
+/**
+ * 모든 Content Control에 순서 속성을 하향식으로 부여
+ * 문서 루트에서 시작하여 계층별로 내려가면서 순서 부여
+ */
+function assignOrderToContentControls(xmlDoc: Document): void {
+  console.log("Content Control 요소에 하향식 순서 부여 시작");
+  
+  // 1. 문서의 body 요소 찾기 (루트 시작점)
+  const bodyElements = xmlDoc.getElementsByTagName("w:body");
+  if (bodyElements.length === 0) {
+    console.log("문서 body 요소를 찾을 수 없음");
+    return;
+  }
+  
+  const body = bodyElements[0];
+  
+  // 2. 재귀적으로 요소와 그 자식들에게 순서 부여
+  processElementAndChildren(body);
+  
+  console.log("모든 Content Control에 순서 속성 부여 완료");
+  
+  // 요소와 그 직계 자식들을 처리하는 재귀 함수
+  function processElementAndChildren(element: Element): void {
+    // 현재 요소의 직계 자식 중 Content Control 요소만 수집
+    const directChildSdts: Element[] = [];
+    
+    for (let i = 0; i < element.childNodes.length; i++) {
+      const child = element.childNodes[i];
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const childElement = child as Element;
+        
+        // Content Control인 경우 목록에 추가
+        if (childElement.nodeName === "w:sdt") {
+          directChildSdts.push(childElement);
+        }
+        // 일반 요소인 경우 재귀적으로 처리
+        else {
+          processElementAndChildren(childElement);
+        }
+      }
+    }
+    
+    // 직계 자식 Content Control이 있으면 순서 부여
+    if (directChildSdts.length > 0) {
+      const elementName = element.nodeName;
+      console.log(`${elementName} 요소 내 ${directChildSdts.length}개의 직계 Content Control 요소 처리`);
+      
+      // DOM 순서대로 정렬 (이미 DOM 순서대로 수집되었으므로 필요 없을 수도 있음)
+      // directChildSdts.sort((a, b) => getElementPosition(a) - getElementPosition(b));
+      
+      // 순서 배열 생성
+      const orders = generateNKeysBetween(null, null, directChildSdts.length);
+      
+      // 각 Content Control에 순서 할당
+      directChildSdts.forEach((sdt, index) => {
+        // alias에 순서 정보 설정
+        setOrderToContentControl(sdt, orders[index]);
+        
+        // Content Control 내부의 요소들도 재귀적으로 처리
+        const contentElements = sdt.getElementsByTagName("w:sdtContent");
+        if (contentElements.length > 0) {
+          processElementAndChildren(contentElements[0]);
+        }
+      });
+    }
+  }
+  
+  // 요소의 DOM 내 위치 가져오기
+  function getElementPosition(element: Element): number {
+    if (!element.parentNode) return 0;
+    
+    const siblings = Array.from(element.parentNode.childNodes)
+      .filter(node => node.nodeType === Node.ELEMENT_NODE);
+    
+    for (let i = 0; i < siblings.length; i++) {
+      if (siblings[i] === element) {
+        return i;
+      }
+    }
+    
+    return 0;
+  }
+  
+  // Content Control에 순서 정보 설정
+  function setOrderToContentControl(sdt: Element, order: string): void {
+    // sdtPr 요소 찾기
+    const sdtPrElements = sdt.getElementsByTagName("w:sdtPr");
+    if (sdtPrElements.length === 0) return;
+    
+    const sdtPr = sdtPrElements[0];
+    
+    // alias 요소 찾기
+    let aliasElement = sdt.getElementsByTagName("w:alias")[0];
+    
+    // 없으면 새로 생성
+    if (!aliasElement) {
+      aliasElement = xmlDoc.createElement("w:alias");
+      sdtPr.appendChild(aliasElement);
+    }
+    
+    // 기존 값 확인
+    let existingValue = "";
+    if (aliasElement.hasAttribute("w:val")) {
+      existingValue = aliasElement.getAttribute("w:val");
+    }
+    
+    // Content Control ID 가져오기
+    const tagElements = sdt.getElementsByTagName("w:tag");
+    if (tagElements.length > 0 && tagElements[0].hasAttribute("w:val")) {
+      const id = tagElements[0].getAttribute("w:val");
+      const elementType = id.split('_')[0]; // ID에서 타입 추출 (p, r, t 등)
+      
+      // alias 값에 순서 정보 추가
+      let newValue = "";
+      
+      // 기존 값에 순서 정보가 있는지 확인
+      if (existingValue && existingValue.includes('__')) {
+        // 기존 순서 정보 제거 후 새 순서 정보 추가
+        const basePart = existingValue.split('__')[0];
+        newValue = `${basePart}__${order}`;
+      } else if (existingValue) {
+        // 기존 값에 순서 정보 추가
+        newValue = `${existingValue}__${order}`;
+      } else {
+        // 기본 형식으로 설정
+        newValue = `${elementType} ${id}__${order}`;
+      }
+      
+      // 새 값 설정
+      aliasElement.setAttribute("w:val", newValue);
+      
+      // 내부 요소 정보 (로깅용)
+      let contentType = "unknown";
+      const contentElements = sdt.getElementsByTagName("w:sdtContent");
+      if (contentElements.length > 0 && contentElements[0].firstElementChild) {
+        contentType = contentElements[0].firstElementChild.nodeName;
+      }
+      
+      console.log(`  Content Control ${id} (${contentType}): 순서 ${order} 할당`);
+    }
   }
 }

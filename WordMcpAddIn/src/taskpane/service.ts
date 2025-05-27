@@ -14,6 +14,423 @@ function getElementTypeFromId(id: string): string {
 }
 
 /**
+ * 문서에 새로운 요소 삽입
+ */
+async function insertNewElement(
+  context: Word.RequestContext,
+  id: string,
+  elementData: any,
+  documentStructure: Record<string, any>
+): Promise<void> {
+  try {
+    console.log(`새 요소 삽입 시작: ${id}`);
+    
+    const elementType = elementData.type;
+    const attributes = elementData.attributes || {};
+    const order = elementData.order;
+    
+    if (!elementType) {
+      console.error(`요소 타입이 지정되지 않음: ${id}`);
+      return;
+    }
+    
+    // 삽입 위치 찾기
+    const insertionPosition = findInsertionPosition(id, elementType, order, documentStructure);
+    
+    // 요소 타입별 생성 및 삽입
+    switch (elementType) {
+      case 'paragraph':
+        await insertParagraph(context, id, attributes, insertionPosition, elementData);
+        break;
+        
+      case 'run':
+        await insertRun(context, id, attributes, insertionPosition, elementData);
+        break;
+        
+      case 'table':
+        await insertTable(context, id, attributes, insertionPosition, elementData);
+        break;
+        
+      default:
+        console.warn(`지원하지 않는 요소 타입: ${elementType}, ID: ${id}`);
+    }
+    
+    await context.sync();
+    console.log(`새 요소 삽입 완료: ${id}`);
+    
+  } catch (error) {
+    console.error(`새 요소 삽입 실패 (ID: ${id}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 새 단락 삽입
+ */
+async function insertParagraph(
+  context: Word.RequestContext,
+  id: string,
+  attributes: any,
+  insertionPosition: any,
+  elementData: any
+): Promise<void> {
+  try {
+    let newParagraph: Word.Paragraph;
+    const body = context.document.body;
+    
+    // 삽입 위치에 따라 다르게 처리
+    if (insertionPosition.position === 'end') {
+      newParagraph = body.insertParagraph("", Word.InsertLocation.end);
+    } else if (insertionPosition.position === 'start') {
+      newParagraph = body.insertParagraph("", Word.InsertLocation.start);
+    } else if (insertionPosition.referenceId) {
+      // 참조 요소 찾기
+      const referenceContentControl = await findContentControlById(context, insertionPosition.referenceId);
+      
+      if (!referenceContentControl) {
+        console.warn(`참조 요소를 찾을 수 없음: ${insertionPosition.referenceId}`);
+        newParagraph = body.insertParagraph("", Word.InsertLocation.end);
+      } else {
+        // 참조 요소 위치 기준으로 삽입
+        const range = referenceContentControl.getRange();
+        
+        if (insertionPosition.position === 'before') {
+          // range.insertParagraph 사용 (올바른 API 호출)
+          newParagraph = range.insertParagraph("", Word.InsertLocation.before);
+        } else {
+          newParagraph = range.insertParagraph("", Word.InsertLocation.after);
+        }
+      }
+    } else {
+      // 기본값: 문서 끝에 삽입
+      newParagraph = body.insertParagraph("", Word.InsertLocation.end);
+    }
+    
+    // 새 단락에 Content Control 적용
+    const contentControl = newParagraph.insertContentControl();
+    contentControl.tag = id;
+    contentControl.title = `paragraph ${id}`;
+    
+    // 단락 속성 적용
+    if (attributes) {
+      await applyParagraphAttributes(context, newParagraph, attributes);
+    }
+    
+    await context.sync();
+    
+    // 자식 Run 요소 삽입 (있는 경우)
+    for (const key in elementData) {
+      if (key.startsWith('r_') && typeof elementData[key] === 'object') {
+        const runData = elementData[key];
+        
+        if (runData.type === 'run' && runData.attributes) {
+          // Run 삽입 위치 정보 생성 (부모 단락의 Content Control 내부)
+          const runInsertionPosition = {
+            parentId: id,
+            position: 'end' as const,
+            index: -1
+          };
+          
+          await insertRun(context, key, runData.attributes, runInsertionPosition, runData);
+        }
+      }
+    }
+    
+    console.log(`단락 ${id} 삽입 완료`);
+    
+  } catch (error) {
+    console.error(`단락 삽입 실패 (ID: ${id}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 새 텍스트 Run 삽입
+ */
+async function insertRun(
+  context: Word.RequestContext,
+  id: string,
+  attributes: any,
+  insertionPosition: any,
+  elementData: any
+): Promise<void> {
+  try {
+    // 부모 단락의 Content Control 찾기
+    if (!insertionPosition.parentId) {
+      console.error(`Run 요소 ${id}의 부모 ID가 지정되지 않음`);
+      return;
+    }
+    
+    const parentContentControl = await findContentControlById(context, insertionPosition.parentId);
+    
+    if (!parentContentControl) {
+      console.error(`Run 요소 ${id}의 부모 Content Control을 찾을 수 없음: ${insertionPosition.parentId}`);
+      return;
+    }
+    
+    // 텍스트 내용 가져오기
+    const text = attributes['w:t'] || "";
+    
+    // 삽입 위치에 따라 다르게 처리
+    let range: Word.Range;
+    
+    if (insertionPosition.position === 'end') {
+      // 부모 단락 끝에 텍스트 삽입
+      range = parentContentControl.insertText(text, Word.InsertLocation.end);
+    } else if (insertionPosition.position === 'start') {
+      // 부모 단락 시작에 텍스트 삽입
+      range = parentContentControl.insertText(text, Word.InsertLocation.start);
+    } else if (insertionPosition.referenceId) {
+      // 참조 요소 찾기
+      const referenceContentControl = await findContentControlById(context, insertionPosition.referenceId);
+      
+      if (!referenceContentControl) {
+        console.warn(`참조 Run 요소를 찾을 수 없음: ${insertionPosition.referenceId}`);
+        range = parentContentControl.insertText(text, Word.InsertLocation.end);
+      } else {
+        // 참조 요소 위치 기준으로 삽입
+        const refRange = referenceContentControl.getRange();
+        
+        if (insertionPosition.position === 'before') {
+          range = refRange.insertText(text, Word.InsertLocation.before);
+        } else {
+          range = refRange.insertText(text, Word.InsertLocation.after);
+        }
+      }
+    } else {
+      // 기본값: 부모 단락 끝에 삽입
+      range = parentContentControl.insertText(text, Word.InsertLocation.end);
+    }
+    
+    // 삽입된 텍스트에 Content Control 적용
+    const contentControl = range.insertContentControl();
+    contentControl.tag = id;
+    contentControl.title = `run ${id}`;
+    
+    // Run 속성 적용 (텍스트 제외)
+    const formatAttributes = { ...attributes };
+    delete formatAttributes['w:t']; // 텍스트는 이미 처리했으므로 제외
+    
+    if (Object.keys(formatAttributes).length > 0) {
+      await applyRunAttributes(context, range, formatAttributes);
+    }
+    
+    await context.sync();
+    console.log(`Run ${id} 삽입 완료: "${text}"`);
+    
+  } catch (error) {
+    console.error(`Run 삽입 실패 (ID: ${id}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * 새 테이블 삽입
+ */
+async function insertTable(
+  context: Word.RequestContext,
+  id: string,
+  attributes: any,
+  insertionPosition: any,
+  elementData: any
+): Promise<void> {
+  try {
+    let range: Word.Range;
+    const body = context.document.body;
+    
+    // 삽입 위치에 따라 다르게 처리
+    if (insertionPosition.position === 'end') {
+      range = body.getRange(Word.RangeLocation.end);
+    } else if (insertionPosition.position === 'start') {
+      range = body.getRange(Word.RangeLocation.start);
+    } else if (insertionPosition.referenceId) {
+      // 참조 요소 찾기
+      const referenceContentControl = await findContentControlById(context, insertionPosition.referenceId);
+      
+      if (!referenceContentControl) {
+        console.warn(`참조 요소를 찾을 수 없음: ${insertionPosition.referenceId}`);
+        range = body.getRange(Word.RangeLocation.end);
+      } else {
+        // 참조 요소 위치 기준으로 범위 설정
+        range = referenceContentControl.getRange();
+      }
+    } else {
+      // 기본값: 문서 끝에 삽입
+      range = body.getRange(Word.RangeLocation.end);
+    }
+    
+    // 기본 테이블 구조 결정 (행/열 수)
+    let rowCount = 2;
+    let columnCount = 2;
+    
+    // cells 속성에서 실제 크기 확인 (있는 경우)
+    if (elementData.cells) {
+      // 행 수 계산
+      const cellKeys = Object.keys(elementData.cells);
+      if (cellKeys.length > 0) {
+        // 'cell_0_0', 'cell_0_1', ... 형식 예상
+        const rowIndices = new Set<number>();
+        const colIndices = new Set<number>();
+        
+        cellKeys.forEach(cellKey => {
+          const match = cellKey.match(/cell_(\d+)_(\d+)/);
+          if (match) {
+            rowIndices.add(parseInt(match[1]));
+            colIndices.add(parseInt(match[2]));
+          }
+        });
+        
+        // Set을 배열로 변환하여 Math.max 사용
+        rowCount = Math.max(...Array.from(rowIndices)) + 1;
+        columnCount = Math.max(...Array.from(colIndices)) + 1;
+      }
+    }
+    
+    // 테이블 삽입
+    let newTable: Word.Table;
+    
+    if (insertionPosition.position === 'before') {
+      newTable = range.insertTable(rowCount, columnCount, Word.InsertLocation.before, []);
+    } else if (insertionPosition.position === 'after') {
+      newTable = range.insertTable(rowCount, columnCount, Word.InsertLocation.after, []);
+    } else {
+      // end 또는 기본값
+      newTable = range.insertTable(rowCount, columnCount, Word.InsertLocation.after, []);
+    }
+    
+    // 테이블에 Content Control 적용
+    const contentControl = newTable.insertContentControl();
+    contentControl.tag = id;
+    contentControl.title = `table ${id}`;
+    
+    // 테이블 속성 적용
+    if (attributes) {
+      await applyTableAttributes(context, newTable, attributes);
+    }
+    
+    await context.sync();
+    
+    // 테이블 셀 내용 채우기 (있는 경우)
+    if (elementData.cells) {
+      for (const cellKey in elementData.cells) {
+        const match = cellKey.match(/cell_(\d+)_(\d+)/);
+        
+        if (match) {
+          const rowIndex = parseInt(match[1]);
+          const colIndex = parseInt(match[2]);
+          
+          if (rowIndex < rowCount && colIndex < columnCount) {
+            try {
+              // 셀 내용 (단락 ID 목록)
+              const paragraphIds = elementData.cells[cellKey];
+              
+              if (Array.isArray(paragraphIds) && paragraphIds.length > 0) {
+                // 첫 번째 단락만 처리 (예시)
+                const firstParagraphId = paragraphIds[0];
+                
+                if (firstParagraphId && elementData[firstParagraphId]) {
+                  const cell = newTable.getCell(rowIndex, colIndex);
+                  
+                  // 셀 본문 로드
+                  cell.load("body");
+                  await context.sync();
+                  
+                  // 셀의 첫 번째 단락을 Content Control으로 감싸기
+                  const paragraph = cell.body.paragraphs.getFirst();
+                  const cellContentControl = paragraph.insertContentControl();
+                  cellContentControl.tag = firstParagraphId;
+                  cellContentControl.title = `paragraph ${firstParagraphId}`;
+                  
+                  // 단락 속성 적용
+                  if (elementData[firstParagraphId].attributes) {
+                    await applyParagraphAttributes(context, paragraph, elementData[firstParagraphId].attributes);
+                  }
+                  
+                  // 단락 내 런 요소 삽입 (향후 확장)
+                }
+              }
+            } catch (cellError) {
+              console.error(`테이블 셀 (${rowIndex}, ${colIndex}) 설정 오류:`, cellError);
+            }
+          }
+        }
+      }
+    }
+    
+    await context.sync();
+    console.log(`테이블 ${id} 삽입 완료 (${rowCount}행 x ${columnCount}열)`);
+    
+  } catch (error) {
+    console.error(`테이블 삽입 실패 (ID: ${id}):`, error);
+    throw error;
+  }
+}
+
+// findInsertionPosition 함수 반환 타입 명시적 정의
+interface InsertionPosition {
+  parentId?: string;
+  referenceId?: string; 
+  position: 'before' | 'after' | 'start' | 'end';
+  index: number;
+}
+
+/**
+ * 요소 삽입 위치 정보 반환
+ */
+function findInsertionPosition(
+  id: string,
+  elementType: string,
+  order: string,
+  documentStructure: Record<string, any>
+): InsertionPosition {
+  // 기본 삽입 위치 (문서 끝)
+  let result: InsertionPosition = {
+    position: 'end',
+    index: -1
+  };
+  
+  // 단락 삽입의 경우
+  if (elementType === 'paragraph') {
+    // 최상위 레벨 요소들의 ID와 순서 값 수집
+    const topLevelElements: Array<{ id: string; order: string }> = [];
+    
+    for (const elemId in documentStructure) {
+      const elem = documentStructure[elemId];
+      if (elem.type === 'paragraph' && elem.order) {
+        topLevelElements.push({ id: elemId, order: elem.order });
+      }
+    }
+    
+    // 순서 값 기준으로 정렬
+    topLevelElements.sort((a, b) => a.order.localeCompare(b.order));
+    
+    // 삽입 위치 찾기
+    let insertIndex = topLevelElements.findIndex(elem => elem.order > order);
+    
+    if (insertIndex === -1) {
+      // 모든 요소보다 순서가 크면 끝에 추가
+      result = {
+        position: 'end',
+        index: topLevelElements.length
+      };
+    } else {
+      // 특정 요소 앞에 삽입
+      result = {
+        referenceId: topLevelElements[insertIndex].id,
+        position: 'before',
+        index: insertIndex
+      };
+    }
+    
+    console.log(`단락 삽입 위치 결정: ${result.position}${result.referenceId ? ` (기준: ${result.referenceId})` : ''}, 인덱스: ${result.index}`);
+  }
+  
+  // 나머지 함수 내용 유지...
+  
+  return result;
+}
+
+/**
  * 요소 업데이트 (타입에 따라 적절한 처리)
  */
 async function updateElement(
@@ -716,7 +1133,68 @@ export function getSamplePatch(): Record<string, any> {
 }
 
 /**
- * 문서 패치 적용 (외부에서 호출하는 주 함수) - 에러 처리 개선
+ * 패치 변경사항 분석 - 추가/수정/삭제 식별 (중첩 요소 지원)
+ */
+function analyzeChanges(
+  patchData: Record<string, any>,
+  documentStructure: Record<string, any>
+): { inserts: string[]; updates: string[]; deletions: string[]; nestedInserts: Array<{parentId: string, childId: string}> } {
+  const inserts: string[] = [];
+  const updates: string[] = [];
+  const deletions: string[] = [];
+  const nestedInserts: Array<{parentId: string, childId: string}> = [];
+  
+  // 최상위 요소 변경사항 분석
+  for (const id in patchData) {
+    if (patchData[id] === null) {
+      deletions.push(id);
+    } else if (!documentStructure[id]) {
+      // 기존 문서에 없는 ID는 삽입으로 처리
+      inserts.push(id);
+    } else {
+      // 기존 문서에 있는 ID는 업데이트로 처리
+      updates.push(id);
+      
+      // 중첩된 요소 분석 (자식 요소)
+      if (typeof patchData[id] === 'object') {
+        for (const childKey in patchData[id]) {
+          // r_로 시작하는 자식 요소 ID 확인 (run 요소 등)
+          if (childKey.startsWith('r_') || 
+              childKey.startsWith('t_') || 
+              childKey.startsWith('i_') || 
+              childKey.startsWith('d_')) {
+            
+            // 요소가 null이면 삭제로 처리
+            if (patchData[id][childKey] === null) {
+              // 부모 요소 업데이트 내에서 자식 요소 삭제 처리
+              // 별도 처리 필요 없음 (updateElement에서 처리)
+            } 
+            // 기존 문서에 없는 자식 요소는 중첩 삽입으로 처리
+            else if (!documentStructure[id][childKey]) {
+              nestedInserts.push({
+                parentId: id,
+                childId: childKey
+              });
+            }
+            // 기존 요소는 부모 업데이트 내에서 자동 처리
+          }
+        }
+      }
+    }
+  }
+  
+  console.log("패치 분석 결과:", {
+    inserts,
+    updates,
+    deletions,
+    nestedInserts
+  });
+  
+  return { inserts, updates, deletions, nestedInserts };
+}
+
+/**
+ * 문서 패치 적용 (외부에서 호출하는 주 함수) - 중첩 요소 삽입 지원
  */
 export async function writeDocContent(
   patchData: Record<string, any>
@@ -729,9 +1207,8 @@ export async function writeDocContent(
     // 패치 적용
     console.log("패치 데이터:", patchData);
     
-    // 패치 분석 (변경/삭제 요소 식별)
-    const changes = analyzeChanges(patchData);
-    console.log("분석된 변경 사항:", changes);
+    // 패치 분석 (추가/변경/삭제 요소 식별)
+    const changes = analyzeChanges(patchData, documentStructure);
     
     // 변경 적용 결과 추적
     const results = {
@@ -742,7 +1219,7 @@ export async function writeDocContent(
     
     // Word 문서 작업 컨텍스트 생성
     await Word.run(async context => {
-      // 삭제 먼저 처리
+      // 1. 삭제 먼저 처리
       for (const deleteId of changes.deletions) {
         try {
           await deleteElement(context, deleteId);
@@ -765,7 +1242,7 @@ export async function writeDocContent(
         }
       }
       
-      // 변경 처리
+      // 2. 변경 처리
       for (const updateId of changes.updates) {
         try {
           await updateElement(
@@ -793,6 +1270,128 @@ export async function writeDocContent(
         }
       }
       
+      // 3. 새 요소 추가
+      for (const insertId of changes.inserts) {
+        try {
+          await insertNewElement(
+            context,
+            insertId,
+            patchData[insertId],
+            documentStructure
+          );
+          results.success++;
+          results.details.push({
+            id: insertId,
+            operation: 'insert',
+            success: true
+          });
+        } catch (insertError) {
+          results.failed++;
+          results.details.push({
+            id: insertId,
+            operation: 'insert',
+            success: false,
+            error: insertError instanceof Error ? insertError.message : String(insertError)
+          });
+          console.error(`요소 ${insertId} 삽입 실패:`, insertError);
+          // 오류가 발생해도 계속 진행
+        }
+      }
+      
+      // 4. 중첩된 새 요소 추가 (예: 문단 내 새 run 요소)
+      for (const { parentId, childId } of changes.nestedInserts) {
+        try {
+          // 부모 요소 Content Control 찾기
+          const parentContentControl = await findContentControlById(context, parentId);
+          
+          if (!parentContentControl) {
+            console.error(`중첩 요소 삽입 실패: 부모 요소 ${parentId}를 찾을 수 없음`);
+            continue;
+          }
+          
+          // 자식 요소 데이터
+          const childElementData = patchData[parentId][childId];
+          
+          // 자식 요소 타입 확인 (ID 프리픽스로 판단)
+          const childElementType = getElementTypeFromId(childId);
+          
+          // 삽입 위치 결정 (order 속성 기반)
+          const order = childElementData.order || "z"; // 기본값은 가장 마지막
+          
+          // 부모 내 자식 요소들 가져오기
+          const siblings: Array<{ id: string; order: string }> = [];
+          const parentElement = documentStructure[parentId];
+          
+          if (parentElement) {
+            for (const key in parentElement) {
+              if (key.startsWith('r_') && parentElement[key].order) {
+                siblings.push({
+                  id: key,
+                  order: parentElement[key].order
+                });
+              }
+            }
+          }
+          
+          // 순서 값 기준으로 정렬
+          siblings.sort((a, b) => a.order.localeCompare(b.order));
+          
+          // 삽입 위치 찾기
+          let insertIndex = siblings.findIndex(elem => elem.order > order);
+          let referenceId: string | undefined;
+          let position: 'before' | 'after' | 'start' | 'end' = 'end';
+          
+          if (insertIndex === -1) {
+            // 모든 요소보다 순서가 크면 끝에 추가
+            position = 'end';
+          } else if (insertIndex === 0) {
+            // 첫 번째 요소보다 순서가 작으면 시작에 추가
+            position = 'start';
+          } else {
+            // 그 외의 경우, 이전 요소 다음에 추가
+            referenceId = siblings[insertIndex - 1].id;
+            position = 'after';
+          }
+          
+          // 삽입 위치 정보
+          const insertionPosition = {
+            parentId,
+            referenceId,
+            position,
+            index: insertIndex === -1 ? siblings.length : insertIndex
+          };
+          
+          // 자식 요소 타입에 따라 삽입
+          if (childElementType === 'run') {
+            await insertRun(
+              context,
+              childId,
+              childElementData.attributes || {},
+              insertionPosition,
+              childElementData
+            );
+          }
+          // 다른 타입의 중첩 요소에 대한 지원은 필요에 따라 추가
+          
+          results.success++;
+          results.details.push({
+            id: `${parentId}.${childId}`,
+            operation: 'nested-insert',
+            success: true
+          });
+          
+        } catch (nestedInsertError) {
+          results.failed++;
+          results.details.push({
+            id: `${parentId}.${childId}`,
+            operation: 'nested-insert',
+            success: false,
+            error: nestedInsertError instanceof Error ? nestedInsertError.message : String(nestedInsertError)
+          });
+          console.error(`중첩 요소 ${childId} (부모: ${parentId}) 삽입 실패:`, nestedInsertError);
+        }
+      }
+      
       await context.sync();
     });
     
@@ -813,26 +1412,6 @@ export async function writeDocContent(
       error: error instanceof Error ? error.message : String(error)
     };
   }
-}
-
-/**
- * 패치 변경사항 분석
- */
-function analyzeChanges(
-  patchData: Record<string, any>
-): { updates: string[]; deletions: string[] } {
-  const updates: string[] = [];
-  const deletions: string[] = [];
-  
-  for (const id in patchData) {
-    if (patchData[id] === null) {
-      deletions.push(id);
-    } else {
-      updates.push(id);
-    }
-  }
-  
-  return { updates, deletions };
 }
 
 /**
