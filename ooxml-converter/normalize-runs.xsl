@@ -47,82 +47,142 @@
         </xsl:copy>
     </xsl:template>
 
-    <!-- ========== <w:p> 요소 처리: 텍스트 실행 병합 ========== -->
+    <!-- ========== <w:p> 요소 처리: 레거시와 동일하게 ========== -->
     <xsl:template match="w:p">
         <xsl:copy>
             <xsl:apply-templates select="@*"/>
-            <xsl:copy-of select="w:pPr"/> <!-- 단락 속성은 그대로 복사 -->
+            <xsl:copy-of select="w:pPr"/> 
             
-            <!-- 
-                <w:p>의 자식 노드 중 병합 가능한 텍스트 실행들을 그룹화합니다.
-                <w:proofErr>는 이미 제거된 것으로 간주하거나, 여기서 명시적으로 제외합니다.
-                병합을 중단시키는 요소 (예: <w:br/>, 그림, 탭 등)를 기준으로 그룹을 나눕니다.
-            -->
-            <xsl:for-each-group select="node()[not(self::w:pPr or self::w:bookmarkStart or self::w:bookmarkEnd or self::w:commentRangeStart or self::w:commentRangeEnd or self::w:permStart or self::w:permEnd)]"
-                                group-ending-with="*[self::w:br or self::w:tab or self::w:drawing or self::w:pict or self::w:sym or self::w:pgNum or self::w:softHyphen or self::w:cr or self::w:noBreakHyphen or self::w:lastRenderedPageBreak or self::w:instrText[normalize-space(.) != ''] or self::w:footnoteReference or self::w:endnoteReference or self::w:annotationRef]">
-                
-                <!-- 현재 그룹 내에서 다시 한번 실제 <w:r> 또는 <w:hyperlink>/<w:r> 등 텍스트 컨테이너만 필터링하여 연속된 스타일 그룹핑 -->
-                <xsl:for-each-group select="current-group()[self::w:r or self::w:hyperlink or self::w:smartTag]"
-                                    group-adjacent="w:get-significant-rpr-fingerprint((self::w:r/w:rPr | self::w:hyperlink/w:r[1]/w:rPr | self::w:smartTag/w:r[1]/w:rPr)[1])">
-                    <xsl:variable name="current-runs" select="current-group()"/>
-                    <xsl:variable name="first-node" select="$current-runs[1]"/>
-                    
-                    <xsl:choose>
-                        <xsl:when test="count($current-runs) > 1">
-                            <!-- 여러 개의 <w:r> 등을 하나로 병합 -->
-                            <xsl:variable name="merged-text-value" select="normalize-space(string-join($current-runs/(self::w:r/w:t | self::w:hyperlink/w:r/w:t | self::w:smartTag/w:r/w:t)/text(), ''))"/>
-
-                            <xsl:choose>
-                                <xsl:when test="$first-node[self::w:r]">
-                                    <w:r>
-                                        <xsl:apply-templates select="$first-node/@*"/>
-                                        <xsl:copy-of select="$first-node/w:rPr"/>
-                                        <w:t xml:space="preserve"><xsl:value-of select="$merged-text-value"/></w:t>
-                                        <!-- 첫 번째 w:r에서 다른 자식 노드들(텍스트나 rPr가 아니며 그룹 구분자도 아닌 경우) 복사 -->
-                                        <xsl:apply-templates select="$first-node/node()[not(self::w:rPr or self::w:t)]"/>
-                                    </w:r>
-                                </xsl:when>
-                                <xsl:when test="$first-node[self::w:hyperlink or self::w:smartTag]">
-                                    <xsl:element name="{name($first-node)}" namespace="{namespace-uri($first-node)}">
-                                        <xsl:apply-templates select="$first-node/@*"/>
-                                        <xsl:variable name="original-rPr-for-style" select="$first-node/w:r[1]/w:rPr"/>
-                                        <w:r>
-                                            <xsl:copy-of select="$original-rPr-for-style"/>
-                                            <w:t xml:space="preserve"><xsl:value-of select="$merged-text-value"/></w:t>
-                                        </w:r>
-                                        <!-- hyperlink/smartTag의 다른 자식 노드들 (방금 대체한 w:r 제외) 복사 -->
-                                        <xsl:apply-templates select="$first-node/node()[not(self::w:r)]"/>
-                                    </xsl:element>
-                                </xsl:when>
-                                <xsl:otherwise>
-                                     <!-- 이론적으로 이 경우는 발생하지 않아야 하지만, 안전장치로 추가 -->
-                                     <xsl:apply-templates select="$current-runs"/>
-                                </xsl:otherwise>
-                            </xsl:choose>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <!-- 단일 <w:r> 또는 병합 불가능한 요소는 그대로 복사 -->
-                            <xsl:apply-templates select="$current-runs"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:for-each-group>
-                
-                <!-- 그룹을 중단시킨 요소 (예: <w:br/>)가 있다면 그것도 출력 -->
-                <xsl:apply-templates select="current-group()[self::w:br or self::w:tab or self::w:drawing or self::w:pict or self::w:sym or self::w:pgNum or self::w:softHyphen or self::w:cr or self::w:noBreakHyphen or self::w:lastRenderedPageBreak or self::w:instrText[normalize-space(.) != ''] or self::w:footnoteReference or self::w:endnoteReference or self::w:annotationRef]"/>
-            </xsl:for-each-group>
+            <xsl:call-template name="process-paragraph-children">
+                <xsl:with-param name="nodes" select="node()[not(self::w:pPr or self::w:bookmarkStart or self::w:bookmarkEnd or self::w:commentRangeStart or self::w:commentRangeEnd or self::w:permStart or self::w:permEnd or self::w:proofErr or self::w:delText or self::w:ins or self::w:moveTo or self::w:moveFrom or self::w:commentReference or self::w:instrText[normalize-space(.) = ''])]"/>
+            </xsl:call-template>
             
-            <!-- <w:p> 내의 다른 주요 구조적 요소들 (예: 북마크) -->
             <xsl:apply-templates select="w:bookmarkStart | w:bookmarkEnd | w:commentRangeStart | w:commentRangeEnd | w:permStart | w:permEnd"/>
         </xsl:copy>
     </xsl:template>
 
-    <!-- ========== 불필요한 요소 및 속성 제거 ========== -->
-    <xsl:template match="w:proofErr | @w:*[starts-with(local-name(), 'rsid')] | w:delText | w:ins | w:moveTo | w:moveFrom"/>
-    <xsl:template match="w:rPrChange | w:pPrChange"/>
-    <xsl:template match="w:commentReference"/> <!-- 댓글 내용이 아닌 참조 마크만 제거 -->
-    <!-- 빈 <w:instrText> (필드 코드 결과가 없는 경우) 제거 -->
-    <xsl:template match="w:instrText[normalize-space(.) = '']"/>
-    <!-- 의미 없는 빈 <w:r> 제거 (예: <w:rPr>만 있고 <w:t>나 다른 내용이 없는 경우) -->
-    <xsl:template match="w:r[not(node()[not(self::w:rPr)])]"/>
+    <!-- ========== <w:sdt> 요소 처리 ========== -->
+    <!-- 블록 레벨 sdt (내부에 p가 있거나, p의 조상이 아닌 경우)는 구조 유지하고 내부 컨텐츠를 apply-templates로 처리 -->
+    <xsl:template match="w:sdt[w:sdtContent/w:p or not(ancestor::w:p)]">
+        <xsl:copy>
+            <xsl:apply-templates select="@*"/>
+            <xsl:copy-of select="w:sdtPr | w:sdtEndPr"/>
+            <w:sdtContent>
+                <xsl:apply-templates select="w:sdtContent/node()"/>
+            </w:sdtContent>
+        </xsl:copy>
+    </xsl:template>
+    
+    <!-- 런 레벨 <w:sdt> (w:p 내부에 있고, 자신은 w:p를 포함하지 않음) -->
+    <!-- 이 템플릿은 해당 SDT가 process-paragraph-children에 의해 직접 처리되지 않고 개별적으로 apply-templates될 때 호출됨 -->
+    <xsl:template match="w:sdt[ancestor::w:p and not(w:sdtContent/w:p)]">
+        <xsl:copy>
+            <xsl:apply-templates select="@*"/>
+            <xsl:copy-of select="w:sdtPr | w:sdtEndPr"/>
+            <w:sdtContent>
+                <!-- 런 레벨 SDT 내부의 자식들도 정규화 (런 병합 등) -->
+                <xsl:call-template name="process-paragraph-children">
+                    <xsl:with-param name="nodes" select="w:sdtContent/node()[not(self::w:proofErr or self::w:delText or self::w:ins or self::w:moveTo or self::w:moveFrom or self::w:commentReference or self::w:instrText[normalize-space(.) = ''])]"/>
+                </xsl:call-template>
+            </w:sdtContent>
+        </xsl:copy>
+    </xsl:template>
+
+    <!-- <w:sdtContent>는 그 자체로 특별한 출력을 만들지 않음. 부모인 w:sdt 템플릿에서 처리 -->
+    <xsl:template match="w:sdtContent"/>
+
+    <!-- ========== 불필요한 요소 및 속성 제거 (레거시와 동일) ========== -->
+    <xsl:template match="w:proofErr | @w:*[starts-with(local-name(), 'rsid')] | w:delText | w:ins | w:moveTo | w:moveFrom" priority="10"/>
+    <xsl:template match="w:rPrChange | w:pPrChange" priority="10"/>
+    <xsl:template match="w:commentReference" priority="10"/>
+    <xsl:template match="w:instrText[normalize-space(.) = '']" priority="10"/>
+    <xsl:template match="w:r[not(node()[not(self::w:rPr)])]" priority="10"/>
+
+    <!-- ========== 명명된 템플릿: 단락(<w:p>) 또는 런 레벨 SDT 내부의 자식 노드들을 처리하여 런 병합 ========== -->
+    <xsl:template name="process-paragraph-children">
+        <xsl:param name="nodes" as="node()*"/>
+
+        <xsl:for-each-group select="$nodes"
+                            group-ending-with="*[self::w:br or self::w:tab or self::w:drawing or self::w:pict or self::w:sym or self::w:pgNum or self::w:softHyphen or self::w:cr or self::w:noBreakHyphen or self::w:lastRenderedPageBreak or self::w:instrText[normalize-space(.) != ''] or self::w:footnoteReference or self::w:endnoteReference or self::w:annotationRef or self::w:sdt[w:sdtContent/w:p or not(ancestor::w:p)]]">
+            
+            <xsl:variable name="current-segment" select="current-group()"/>
+
+            <xsl:for-each-group select="$current-segment"
+                                group-adjacent="w:get-significant-rpr-fingerprint( (self::w:r/w:rPr | self::w:hyperlink/w:r[1]/w:rPr | self::w:smartTag/w:r[1]/w:rPr | self::w:sdt[not(w:sdtContent/w:p)]/w:sdtContent/w:r[1]/w:rPr)[1] )">
+                
+                <xsl:variable name="current-runs-group" select="current-group()"/>
+                <xsl:variable name="first-node-in-group" select="$current-runs-group[1]"/>
+                
+                <xsl:variable name="final-merged-text-nodes" as="node()*">
+                    <xsl:for-each select="$current-runs-group">
+                        <xsl:choose>
+                            <xsl:when test=". instance of element(w:sdt) and not(w:sdtContent/w:p)">
+                                <xsl:sequence select="w:sdtContent/w:r/w:t/node()"/>
+                            </xsl:when>
+                            <xsl:when test=". instance of element(w:r)">
+                                <xsl:sequence select="w:t/node()"/>
+                            </xsl:when>
+                            <xsl:when test=". instance of element(w:hyperlink) or . instance of element(w:smartTag)">
+                                <xsl:sequence select="w:r/w:t/node()"/>
+                            </xsl:when>
+                        </xsl:choose>
+                    </xsl:for-each>
+                </xsl:variable>
+                <xsl:variable name="final-merged-text" select="string-join($final-merged-text-nodes, '')"/>
+                
+                <xsl:variable name="effective-rPr-of-first" select="($first-node-in-group/self::w:r/w:rPr |
+                                                                     $first-node-in-group/self::w:hyperlink/w:r[1]/w:rPr |
+                                                                     $first-node-in-group/self::w:smartTag/w:r[1]/w:rPr |
+                                                                     $first-node-in-group/self::w:sdt[not(w:sdtContent/w:p)]/w:sdtContent/w:r[1]/w:rPr)[1]"/>
+
+                <xsl:variable name="other-children-of-first-effective-run" select="($first-node-in-group/self::w:r/node()[not(self::w:rPr or self::w:t)] |
+                                                                                   $first-node-in-group/self::w:sdt[not(w:sdtContent/w:p)]/w:sdtContent/w:r[1]/node()[not(self::w:rPr or self::w:t)])"/>
+
+                <xsl:choose>
+                    <xsl:when test="count($current-runs-group) > 1 and $final-merged-text != ''">
+                        <xsl:choose>
+                            <xsl:when test="$first-node-in-group[self::w:sdt and not(w:sdtContent/w:p)]">
+                                <w:sdt>
+                                    <xsl:apply-templates select="$first-node-in-group/@*"/>
+                                    <xsl:copy-of select="$first-node-in-group/w:sdtPr"/>
+                                    <w:sdtContent>
+                                        <w:r>
+                                            <xsl:copy-of select="$effective-rPr-of-first"/>
+                                            <w:t xml:space="preserve"><xsl:value-of select="$final-merged-text"/></w:t>
+                                            <xsl:copy-of select="$other-children-of-first-effective-run"/>
+                                        </w:r>
+                                    </w:sdtContent>
+                                    <xsl:copy-of select="$first-node-in-group/w:sdtEndPr"/>
+                                </w:sdt>
+                            </xsl:when>
+                            <xsl:when test="$first-node-in-group[self::w:r]">
+                                <w:r>
+                                    <xsl:apply-templates select="$first-node-in-group/@*"/>
+                                    <xsl:copy-of select="$effective-rPr-of-first"/>
+                                    <w:t xml:space="preserve"><xsl:value-of select="$final-merged-text"/></w:t>
+                                    <xsl:copy-of select="$other-children-of-first-effective-run"/>
+                                </w:r>
+                            </xsl:when>
+                            <xsl:when test="$first-node-in-group[self::w:hyperlink or self::w:smartTag]">
+                                 <xsl:element name="{name($first-node-in-group)}" namespace="{namespace-uri($first-node-in-group)}">
+                                    <xsl:apply-templates select="$first-node-in-group/@*"/>
+                                    <w:r>
+                                        <xsl:copy-of select="$effective-rPr-of-first"/>
+                                        <w:t xml:space="preserve"><xsl:value-of select="$final-merged-text"/></w:t>
+                                    </w:r>
+                                    <xsl:apply-templates select="$first-node-in-group/node()[not(self::w:r)]"/>
+                                </xsl:element>
+                            </xsl:when>
+                        </xsl:choose>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:apply-templates select="$current-runs-group"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:for-each-group>
+            
+            <xsl:apply-templates select="$current-segment[last()][self::w:br or self::w:tab or self::w:drawing or self::w:pict or self::w:sym or self::w:pgNum or self::w:softHyphen or self::w:cr or self::w:noBreakHyphen or self::w:lastRenderedPageBreak or self::w:instrText[normalize-space(.) != ''] or self::w:footnoteReference or self::w:endnoteReference or self::w:annotationRef or self::w:sdt[w:sdtContent/w:p or not(ancestor::w:p)]]"/>
+        </xsl:for-each-group>
+    </xsl:template>
 
 </xsl:stylesheet>
