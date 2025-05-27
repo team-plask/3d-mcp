@@ -304,7 +304,7 @@ function applyContentControlsToDocument(xmlDoc: Document): Document {
       if (contentElements.length > 0) {
         // 내부의 모든 자식 요소들을 감싸진 것으로 표시
         const contentElement = contentElements[0];
-        console.log(`Content Control 요소 발견: ${element.nodeName}, ID: ${tagId}`);
+        // console.log(`Content Control 요소 발견: ${element.nodeName}, ID: ${tagId}`);
         // 첫 번째 직접 자식 요소부터 처리
         for (let i = 0; i < contentElement.childNodes.length; i++) {
           const child = contentElement.childNodes[i];
@@ -313,7 +313,7 @@ function applyContentControlsToDocument(xmlDoc: Document): Document {
             wrappedElements.add(childElement);
             if (tagId) {
               contentControlIds.set(childElement, tagId);
-              console.log(`요소 ${childElement.nodeName}는 이미 ID ${tagId}로 Content Control 적용됨`);
+              // console.log(`요소 ${childElement.nodeName}는 이미 ID ${tagId}로 Content Control 적용됨`);
             }
           }
         }
@@ -526,7 +526,7 @@ function collectTargetElements(
       
       // 이미 Content Control로 감싸져 있지 않은 경우에만 추가
       if (!wrappedElements.has(element)) {
-        console.log(`대상 요소 발견: ${nodeName}, 깊이: ${depth}, element:`, element);
+        // console.log(`대상 요소 발견: ${nodeName}, 깊이: ${depth}, element:`, element);
         targetElements.push({
           element,
           type: TAG_TYPE_MAP[nodeName],
@@ -536,7 +536,7 @@ function collectTargetElements(
         // 테이블인 경우 나중에 참조할 수 있도록 추적
         if (nodeName === "w:tbl") {
           processedTables.add(element);
-          console.log("테이블 발견: ID 할당 예정");
+          // console.log("테이블 발견: ID 할당 예정");
         }
       }
     }
@@ -574,7 +574,7 @@ export function extractJsonFromContentControls(
   
   // Content Control 리스트 가져오기
   const sdtElements = xmlDoc.getElementsByTagName("w:sdt");
-  console.log(`문서에서 ${sdtElements.length}개의 Content Control 요소 발견`);
+  // console.log(`문서에서 ${sdtElements.length}개의 Content Control 요소 발견`);
   
   // 1. 먼저 모든 Content Control 요소와 ID 수집
   for (let i = 0; i < sdtElements.length; i++) {
@@ -1126,7 +1126,7 @@ function assignOrderToContentControls(xmlDoc: Document): void {
     // 직계 자식 Content Control이 있으면 순서 부여
     if (directChildSdts.length > 0) {
       const elementName = element.nodeName;
-      console.log(`${elementName} 요소 내 ${directChildSdts.length}개의 직계 Content Control 요소 처리`);
+      // console.log(`${elementName} 요소 내 ${directChildSdts.length}개의 직계 Content Control 요소 처리`);
       
       // DOM 순서대로 정렬 (이미 DOM 순서대로 수집되었으므로 필요 없을 수도 있음)
       // directChildSdts.sort((a, b) => getElementPosition(a) - getElementPosition(b));
@@ -1219,7 +1219,7 @@ function assignOrderToContentControls(xmlDoc: Document): void {
         contentType = contentElements[0].firstElementChild.nodeName;
       }
       
-      console.log(`  Content Control ${id} (${contentType}): 순서 ${order} 할당`);
+      // console.log(`  Content Control ${id} (${contentType}): 순서 ${order} 할당`);
     }
   }
 }

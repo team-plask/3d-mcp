@@ -184,12 +184,12 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
 
       // 3. XML 정규화 (옵션)
       let normalizedXml = docXml;
-      // try {
-      //   normalizedXml = await normalizeOoxml(docXml, 'assets/normalize-runs.sef.json');
-      //   console.log("정규화된 Document XML:\n", formatXML(normalizedXml));
-      // } catch (error) {
-      //   console.warn("XML 정규화 실패, 원본 XML 사용:", error);
-      // }
+      try {
+        normalizedXml = await normalizeOoxml(docXml, 'assets/normalize-runs.sef.json');
+        console.log("정규화된 Document XML:\n", formatXML(normalizedXml));
+      } catch (error) {
+        console.warn("XML 정규화 실패, 원본 XML 사용:", error);
+      }
 
       // 4. OOXML을 JSON으로 변환
       const existingJson = loadDocumentState();
