@@ -28,9 +28,13 @@ module.exports = async (env, options) => {
       taskpane: ["./src/taskpane/taskpane.ts", "./src/taskpane/taskpane.html"],
       commands: "./src/commands/commands.ts"
     },
-    output: { clean: true, publicPath: "/" },
+    output: { 
+      clean: true, 
+      publicPath: "/",
+      filename: "[name].[contenthash].js"
+    },
     resolve: {
-      extensions: [".ts", ".js", ".html"],
+      extensions: [".ts", ".js", ".html", ".css"],
       fallback: {
         "stream": require.resolve("stream-browserify"),
         "url": require.resolve("url/"),
@@ -53,6 +57,13 @@ module.exports = async (env, options) => {
         {
           test: /\.html$/,
           use: "html-loader",
+        },
+        {
+          test: /\.css$/,
+          use: [
+            'style-loader',  // Injects CSS into the DOM
+            'css-loader'     // Interprets @import and url() like import/require()
+          ]
         },
         {
           test: /\.(png|jpg|jpeg|gif|ico)$/,

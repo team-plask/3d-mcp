@@ -1,311 +1,438 @@
 import { v4 as uuid } from 'uuid';
-import * as svc from './service';
 import { updateDocumentStructure } from './document';
-import { TRACKED_ELEMENTS } from './converter';
+import { writeDocContent } from './service';
 
-// 메시지 타입 정의
-export interface ToolCallRequest {
-  kind: 'req';
-  id: string;
-  type: 'tool_call_request';
-  name: string;
-  params?: any;
-}
+// Role definitions
+const Roles = ["user", "model", "process"] as const;
+type Role = (typeof Roles)[number];
 
-export interface ToolResultResponse {
-  kind: 'res';
-  id: string;
-  type: 'tool_result_response';
-  name: string;
-  result: any;
+// Part type definition
+type PartType = {
+  mimeType: string;
+  content: string;
+};
+
+// Tool definitions
+const TOOLS = {
+  WRITE_DOC: {
+    description: "Write the document. The patch is a JSON Merge Patch to apply to the document.",
+    parameters: {
+      type: "object",
+      properties: {
+        document_id: { type: "string" },
+        patch: { type: "object" },
+      },
+      required: ["document_id", "patch"],
+    },
+  }
+} as const;
+
+// Command type definitions
+type Command<T extends keyof typeof TOOLS = keyof typeof TOOLS> = {
+  ACCEPT: {
+    REQUEST: { processId: string; nodeId: string; };
+    RESPONSE: {};
+  };
+  REJECT: {
+    REQUEST: { processId: string; nodeId: string; };
+    RESPONSE: {};
+  };
+  HIGHLIGHT: {
+    REQUEST: { processId: string; nodeId: string; };
+    RESPONSE: {};
+  };
+  AGENT: {
+    REQUEST: {
+      mimeType: string;
+      history: {
+        role: "user" | "model";
+        parts: PartType[];
+      }[];
+      processes: {
+        id: string;
+        metadata: Record<string, any>;
+        document: string;
+      }[];
+    };
+    RESPONSE: {};
+  };
+  TOOL: {
+    REQUEST: {
+      name: keyof typeof TOOLS;
+      args: Record<string, any>;
+    };
+    RESPONSE: {
+      result: Record<string, any>;
+    };
+  };
+  UPDATE: {
+    REQUEST: {
+      document: string;
+      processId: string;
+    };
+    RESPONSE: {};
+  };
+};
+
+// Message type definition
+type Message<T extends keyof Command, R extends keyof Command[T]> = {
+  role: Role;
+  command: T;
+  type: R;
+  id?: string;
+} & Command[T][R] & {
   error?: string;
-}
-
-// 요청 처리 핸들러 정의
-const nameToHandler = {
-  // 문서 읽기 - 현재 문서의 JSON 구조 반환
-  read: async (message: ToolCallRequest): Promise<ToolResultResponse> => {
-    try {
-      const documentStructure = await updateDocumentStructure();
-      return {
-        kind: 'res',
-        id: message.id,
-        type: 'tool_result_response',
-        name: message.name,
-        result: documentStructure
-      };
-    } catch (error) {
-      console.error("문서 읽기 오류:", error);
-      return {
-        kind: 'res',
-        id: message.id,
-        type: 'tool_result_response',
-        name: message.name,
-        result: null,
-        error: error instanceof Error ? error.message : String(error)
-      };
-    }
-  },
-  
-  // 문서 쓰기 - JSON RFC Merge Patch 적용
-  write_doc: async (message: ToolCallRequest): Promise<ToolResultResponse> => {
-    try {
-      if (!message.params || typeof message.params !== 'object') {
-        throw new Error("유효한 패치 데이터가 필요합니다.");
-      }
-      
-      // JSON RFC Merge Patch 적용
-      const result = await svc.writeDocContent(message.params);
-      
-      return {
-        kind: 'res',
-        id: message.id,
-        type: 'tool_result_response',
-        name: message.name,
-        result: result
-      };
-    } catch (error) {
-      console.error("문서 쓰기 오류:", error);
-      return {
-        kind: 'res',
-        id: message.id,
-        type: 'tool_result_response',
-        name: message.name,
-        result: null,
-        error: error instanceof Error ? error.message : String(error)
-      };
-    }
-  }
 };
 
-// 메시지 타입별 처리 핸들러
-const typeToHandler = {
-  'tool_call_request': async (message: ToolCallRequest, ws: RpcWebSocket) => {
-    try {
-      // 해당 요청 핸들러 존재 여부 확인
-      if (!nameToHandler[message.name]) {
-        const errorResponse: ToolResultResponse = {
-          kind: 'res',
-          id: message.id,
-          type: 'tool_result_response',
-          name: message.name,
-          result: null,
-          error: `지원하지 않는 명령: ${message.name}`
-        };
-        ws.raw(errorResponse);
-        return;
-      }
-
-      // 해당 핸들러 실행 및 응답 전송
-      const response = await nameToHandler[message.name](message);
-      ws.raw(response);
-    } catch (error) {
-      console.error(`메시지 처리 오류(${message.name}):`, error);
-      const errorResponse: ToolResultResponse = {
-        kind: 'res',
-        id: message.id,
-        type: 'tool_result_response',
-        name: message.name,
-        result: null,
-        error: error instanceof Error ? error.message : String(error)
-      };
-      ws.raw(errorResponse);
-    }
-  }
+// Command handler type for better type-checking
+type CommandHandlers = {
+  [K in keyof Command]?: (
+    message: Message<K, "REQUEST"> & { id: string }
+  ) => Promise<Message<K, "RESPONSE">>;
 };
 
-// WebSocket 싱글톤 인스턴스
-let wsInstance: RpcWebSocket | null = null;
+// WebSocket client singleton
+let wsInstance: WebSocketClient | null = null;
 
-// RpcWebSocket 클래스 개선
-export class RpcWebSocket {
+export class WebSocketClient {
   private ws: WebSocket | null = null;
   private isInitialized = false;
-  readonly id = uuid(); // 클라이언트 ID 생성 (서버 요구사항)
+  readonly clientId = uuid();
+  private processId = uuid();
+  private documentId = uuid();
+  private pendingRequests = new Map<string, (response: any) => void>();
 
-  constructor(private url: string, private app = 'word') {
-    // 싱글톤 패턴 적용
-    if (wsInstance) {
-      return wsInstance;
-    }
-    wsInstance = this;
-  }
-
+  // Event callbacks
   onOpen = () => {};
   onClose = () => {};
   onError = (_: any) => {};
   onMessage = (_: any) => {};
-  onInitialized = () => {}; // 초기화 완료 이벤트 핸들러 추가
+  onInitialized = () => {};
+
+  constructor(private url: string) {
+    if (wsInstance) return wsInstance;
+    wsInstance = this;
+  }
 
   async connect(): Promise<void> {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log("WebSocket 이미 연결됨");
+      console.log("WebSocket already connected");
       return;
     }
 
-    this.ws = new WebSocket(this.url);
-
-    this.ws.onopen = async () => {
-      console.log("WebSocket 연결 성공");
-      this.onOpen();
-    
-      // 초기화 메시지 준비 및 전송
+    return new Promise((resolve, reject) => {
       try {
-        // 문서 스냅샷 가져오기 (기본 옵션: 전체 문서)
-        const fullSnapshot = await updateDocumentStructure();
-                
-        // 서버 요구사항에 맞는 초기화 메시지 전송
-        const initMessage = {
-          kind: 'req',
-          id: this.id, // 클라이언트에서 생성한 고유 ID
-          init: {
-            name: 'Word JSON Add-in',
-            version: '0.1.0',
-            description: 'Task-pane add-in exposing read/search/edit RPC',
-            capabilities: ['read', 'write_doc'],
-            requires_ui: true,
-            document: fullSnapshot, // 전체 문서 상태
-            whitelist: TRACKED_ELEMENTS, // 추적할 요소 목록
-            meta: {
-              application: this.app,
-              clientId: this.id,
-              timestamp: new Date().toISOString() // 타임스탬프 추가
-            }
+        this.ws = new WebSocket(this.url);
+
+        this.ws.onopen = async () => {
+          console.log("WebSocket connection established");
+          this.onOpen();
+          
+          try {
+            await this.syncDocument();
+            resolve();
+          } catch (error) {
+            console.error("Failed to initialize with document:", error);
+            reject(error);
           }
         };
-        
-        this.raw(initMessage);
-        console.log("초기화 메시지 전송 완료");
+
+        this.ws.onclose = (event) => {
+          console.log(`WebSocket connection closed: ${event.code} - ${event.reason}`);
+          this.isInitialized = false;
+          this.onClose();
+        };
+
+        this.ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          this.onError(error);
+          reject(error);
+        };
+
+        this.ws.onmessage = this.handleMessage.bind(this);
       } catch (error) {
-        console.error("초기화 메시지 준비 실패:", error);
+        console.error("Failed to connect WebSocket:", error);
+        reject(error);
       }
-    };
+    });
+  }
 
-    this.ws.onclose = (event) => {
-      console.log(`WebSocket 연결 종료: ${event.code} - ${event.reason}`);
-      this.isInitialized = false;
-      this.onClose();
-    };
+  async syncDocument(): Promise<void> {
+    try {
+      const documentStructure = await updateDocumentStructure();
+      
+      const result = await this.send<"UPDATE">({
+        role: "process",
+        command: "UPDATE",
+        type: "REQUEST",
+        document: JSON.stringify(documentStructure),
+        processId: this.processId
+      });
+      
+      if (result.error) {
+        console.error("Document synchronization failed:", result.error);
+      } else {
+        console.log("Document synchronization successful");
+        this.isInitialized = true;
+        this.onInitialized();
+      }
+    } catch (error) {
+      console.error("Error synchronizing document:", error);
+      throw error;
+    }
+  }
 
-    this.ws.onerror = (error) => {
-      console.error("WebSocket 오류:", error);
-      this.onError(error);
-    };
+  private async handleMessage(event: MessageEvent): Promise<void> {
+    try {
+      const message = JSON.parse(event.data);
+      console.log("Received message:", message);
 
-    this.ws.onmessage = async (event) => {
-      let message;
-      try {
-        message = JSON.parse(event.data as string);
-        console.log("수신된 메시지:", message);
-      } catch (error) {
-        console.error("잘못된 메시지 형식:", error);
+      // Handle pending responses
+      if (message.id && this.pendingRequests.has(message.id)) {
+        const resolver = this.pendingRequests.get(message.id)!;
+        this.pendingRequests.delete(message.id);
+        resolver(message);
         return;
       }
 
-      // 초기화 응답 처리
-      if (message.kind === 'res' && message.init && message.id === this.id) {
-        if (message.init.ok) {
-          console.log("서버 초기화 성공");
-          this.isInitialized = true;
-          this.onInitialized();
-        } else {
-          console.error("서버 초기화 실패:", message.init.err);
-        }
-        return;
+      // Process incoming requests
+      if (message.type === "REQUEST") {
+        await this.handleRequest(message);
       }
 
-      // 도구 호출 요청 처리
-      if (message.type === 'tool_call_request' && message.kind === 'req') {
-        if (typeToHandler[message.type]) {
-          await typeToHandler[message.type](message, this);
-        } else {
-          console.warn(`지원하지 않는 메시지 타입: ${message.type}`);
-          // 오류 응답 전송
-          this.raw({
-            kind: 'res',
-            id: message.id,
-            type: 'tool_result_response',
-            name: message.name || 'unknown',
-            result: null,
-            error: `지원하지 않는 메시지 타입: ${message.type}`
-          });
-        }
-        return;
-      }
-
-      // 일반 메시지 처리
+      // Forward to general handler
       this.onMessage(message);
-    };
-  }
-
-  // 기존 메서드들을 서버 요구사항에 맞게 조정
-  sendReq(action: string, params: unknown = {}): void {
-    if (!this.isInitialized && action !== 'init') {
-      console.warn("WebSocket이 초기화되지 않았습니다. 요청을 보낼 수 없습니다.");
-      return;
-    }
-
-    const payload = { 
-      kind: 'req', 
-      id: this.id, 
-      [action]: params 
-    };
-    this.raw(payload);
-  }
-
-  sendRes(action: string, ok: boolean, data?: unknown, err?: string) {
-    if (!this.isInitialized) {
-      console.warn("WebSocket이 초기화되지 않았습니다. 응답을 보낼 수 없습니다.");
-      return;
-    }
-
-    const payload = {
-      kind: 'res',
-      id: this.id,
-      [action]: { ok, data, err }
-    };
-    this.raw(payload);
-  }
-
-  // 도구 호출 응답 전송
-  sendToolResponse(requestId: string, name: string, result: any, error?: string): void {
-    if (!this.isInitialized) {
-      console.warn("WebSocket이 초기화되지 않았습니다. 응답을 보낼 수 없습니다.");
-      return;
-    }
-
-    const response: ToolResultResponse = {
-      kind: 'res',
-      id: requestId, // 중요: 요청의 ID를 사용해야 함
-      type: 'tool_result_response',
-      name,
-      result,
-      error
-    };
-    this.raw(response);
-  }
-
-  raw(obj: object): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      const json = JSON.stringify(obj);
-      console.log("전송 메시지:", json);
-      this.ws.send(json);
-    } else {
-      console.warn("WebSocket이 연결되지 않았습니다. 메시지를 보낼 수 없습니다.");
+    } catch (error) {
+      console.error("Error handling message:", error);
     }
   }
 
-  // 연결 상태 확인
+  private async handleRequest(message: Message<keyof Command, "REQUEST"> & { id: string }): Promise<void> {
+    try {
+      const { command, id } = message;
+      let response: any = {
+        role: "process",
+        command,
+        type: "RESPONSE",
+        id
+      };
+
+      // Use a command-to-handler map similar to the simpler example
+      const commandHandlers: Record<keyof Command, Function> = {
+        TOOL: async () => this.handleToolRequest(message as Message<"TOOL", "REQUEST"> & { id: string }),
+        UPDATE: async () => ({ ...response, result: { success: true } }),
+        ACCEPT: async () => ({ ...response, result: { success: true } }),
+        REJECT: async () => ({ ...response, result: { success: true } }),
+        HIGHLIGHT: async () => ({ ...response, result: { success: true } }),
+        AGENT: async () => ({ ...response, result: { processed: true } })
+      };
+
+      const handler = commandHandlers[command];
+      if (handler) {
+        response = await handler();
+      } else {
+        response.error = `Unsupported command: ${command}`;
+      }
+
+      // Send response
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify(response));
+      }
+    } catch (error) {
+      console.error(`Error handling request:`, error);
+      
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({
+          role: "process",
+          command: message.command,
+          type: "RESPONSE",
+          id: message.id,
+          error: error instanceof Error ? error.message : String(error)
+        }));
+      }
+    }
+  }
+
+  private async handleToolRequest(message: Message<"TOOL", "REQUEST"> & { id: string }): Promise<Message<"TOOL", "RESPONSE"> & { id: string }> {
+    const { name, args, id } = message;
+    
+    // Normalize the tool name to handle case-insensitive matching
+    const normalizedName = String(name).toUpperCase().replace(/[-_]/g, '') as keyof typeof TOOLS;
+    
+    // Create a map for normalized tool names
+    const normalizedToolMap: Record<string, keyof typeof TOOLS> = {};
+    for (const toolName of Object.keys(TOOLS) as Array<keyof typeof TOOLS>) {
+      normalizedToolMap[String(toolName).toUpperCase().replace(/[-_]/g, '')] = toolName;
+    }
+    
+    // Look up the actual tool name using the normalized version
+    const actualToolName = normalizedToolMap[normalizedName];
+    
+    // Similar to the simpler example, use a name-to-handler map
+    const toolHandlers: Record<keyof typeof TOOLS, Function> = {
+      WRITE_DOC: async () => {
+        if (!args.patch || typeof args.patch !== 'object') {
+          throw new Error("Valid patch data is required");
+        }
+        
+        const result = await writeDocContent(args.patch);
+        setTimeout(() => this.syncDocument(), 500);
+        return result;
+      }
+    };
+    
+    try {
+      // Check if we have a valid normalized tool name
+      if (!actualToolName) {
+        throw new Error(`Unsupported tool: ${name}`);
+      }
+      
+      const handler = toolHandlers[actualToolName];
+      if (!handler) {
+        throw new Error(`Tool ${actualToolName} is defined but not implemented`);
+      }
+      
+      const result = await handler();
+      
+      return {
+        role: "process",
+        command: "TOOL",
+        type: "RESPONSE",
+        id,
+        result: { success: true, data: result }
+      };
+    } catch (error) {
+      console.error(`Error in ${name} tool:`, error);
+      return {
+        role: "process",
+        command: "TOOL",
+        type: "RESPONSE",
+        id,
+        result: { success: false, error: error instanceof Error ? error.message : String(error) }
+      };
+    }
+  }
+  
+  // Also update the writeDocument method to be consistent
+  async writeDocument(patch: Record<string, any>): Promise<any> {
+    const response = await this.send<"TOOL">({
+      role: "process",
+      command: "TOOL",
+      type: "REQUEST",
+      name: "WRITE_DOC", // This stays uppercase in our request
+      args: {
+        document_id: this.documentId,
+        patch
+      }
+    });
+  
+    if (response.error) {
+      throw new Error(`Failed to write document: ${response.error}`);
+    }
+  
+    return response.result;
+  }
+
+  async send<T extends keyof Command>(
+    message: Message<T, "REQUEST">,
+    timeout: number = 10000
+  ): Promise<Message<T, "RESPONSE">> {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return { error: "WebSocket not connected" } as Message<T, "RESPONSE">;
+    }
+
+    const id = uuid();
+    const messageWithId = { ...message, id };
+
+    console.log("Sending message:", messageWithId);
+    this.ws.send(JSON.stringify(messageWithId));
+
+    return new Promise<Message<T, "RESPONSE">>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        this.pendingRequests.delete(id);
+        resolve({ error: "Request timeout" } as Message<T, "RESPONSE">);
+      }, timeout);
+
+      this.pendingRequests.set(id, (response: Message<T, "RESPONSE">) => {
+        clearTimeout(timeoutId);
+        resolve(response);
+      });
+    });
+  }
+
+  // Utility methods
+  setProcessId(processId: string): void {
+    this.processId = processId;
+  }
+
+  setDocumentId(documentId: string): void {
+    this.documentId = documentId;
+  }
+
   isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
-  // 연결 종료
   disconnect(): void {
     if (this.ws) {
-      this.ws.close(1000, "클라이언트에서 연결 종료");
+      this.ws.close(1000, "Client disconnected");
       this.ws = null;
       this.isInitialized = false;
     }
   }
 }
+
+// Simplified message handler utility (similar to the simpler example)
+export const messageHandler = (ws: WebSocket) => {
+  const pendingRequests = new Map<string, (response: any) => void>();
+
+  const send = async <T extends keyof Command>(
+    message: Message<T, "REQUEST">,
+    timeout: number = 10000
+  ): Promise<Message<T, "RESPONSE">> => {
+    const id = uuid();
+    ws.send(JSON.stringify({ ...message, id }));
+
+    return new Promise<Message<T, "RESPONSE">>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        pendingRequests.delete(id);
+        resolve({ error: "Timeout" } as Message<T, "RESPONSE">);
+      }, timeout);
+
+      // Set up one-time message listener
+      const messageListener = (event: MessageEvent) => {
+        try {
+          const response = JSON.parse(event.data);
+          if (response.id === id) {
+            clearTimeout(timeoutId);
+            ws.removeEventListener("message", messageListener);
+            resolve(response);
+          }
+        } catch (error) {
+          console.error("Error parsing message:", error);
+        }
+      };
+
+      ws.addEventListener("message", messageListener);
+    });
+  };
+
+  const receive = (handlers: CommandHandlers): void => {
+    ws.addEventListener("message", async (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log("Handler received message:", message);
+        
+        const handler = handlers[message.command];
+        if (handler) {
+          const response = await handler(message);
+          ws.send(JSON.stringify({ ...response, id: message.id }));
+        }
+      } catch (error) {
+        console.error("Error in message handler:", error);
+      }
+    });
+  };
+
+  return { send, receive };
+};
