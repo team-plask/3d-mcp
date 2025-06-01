@@ -50,7 +50,7 @@ export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
           lang: { type: 'leaf', xmlTag: 'w:lang', jsonKey: 'language', parameters: ['w:val'] }
         }
       },
-      t: { type: 'leaf', xmlTag: 'w:t', jsonKey: 'text' }
+      t: { type: 'leaf', xmlTag: 'w:t', jsonKey: 'text' },
     }
   },
   table: {
@@ -127,19 +127,89 @@ export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
     parameters: ['r:id', 'w:anchor', 'w:history'],
     children: {}
   },
+  // ELEMENT_CONFIG 내 drawing 정의 예시 (핵심 경로 포함)
   drawing: {
     type: 'structural',
     xmlTag: 'w:drawing',
     children: {
       inline: {
-        type: 'property', xmlTag: 'wp:inline', jsonKey: 'inlineProperties', parameters: ['distT', 'distB', 'distL', 'distR'],
+        type: 'property', // drawing의 세부 속성으로 취급
+        xmlTag: 'wp:inline',
+        jsonKey: 'inline', // JSON에서 사용할 키
+        // wp:inline의 직접 속성들 (예: distT, distB 등)
+        parameters: ['distT', 'distB', 'distL', 'distR'],
         children: {
           extent: { type: 'leaf', xmlTag: 'wp:extent', jsonKey: 'extent', parameters: ['cx', 'cy'] },
-          docPr: { type: 'leaf', xmlTag: 'wp:docPr', jsonKey: 'docProperties', parameters: ['id', 'name', 'descr'] }
+          docPr: { type: 'leaf', xmlTag: 'wp:docPr', jsonKey: 'docProperties', parameters: ['id', 'name', 'descr'] },
+          graphic: {
+            type: 'property', xmlTag: 'a:graphic', jsonKey: 'graphic',
+            children: {
+              graphicData: {
+                type: 'property', xmlTag: 'a:graphicData', parameters: ['uri'], jsonKey: 'graphicData',
+                children: {
+                  pic: {
+                    type: 'property', xmlTag: 'pic:pic', jsonKey: 'picture',
+                    children: {
+                      blipFill: {
+                        type: 'property', xmlTag: 'pic:blipFill', jsonKey: 'blipFill',
+                        children: {
+                          blip: { // a:blip에서 r:embed 추출
+                            type: 'leaf',
+                            xmlTag: 'a:blip',
+                            jsonKey: 'blipReference',
+                            parameters: ['r:embed', 'cstate'] // ❗ r:embed 필수 추출
+                          }
+                        }
+                      },
+                      spPr: { type: 'property', xmlTag: 'pic:spPr', jsonKey: 'shapeProperties', children: { /* 상세 정의 필요시 */ } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      anchor: { // wp:anchor도 inline과 유사하게 상세 정의
+        type: 'property',
+        xmlTag: 'wp:anchor',
+        jsonKey: 'anchor',
+        // ... (inline과 유사한 상세 자식 구조 정의) ...
+        parameters: ['simplePos', 'relativeHeight', 'behindDoc', 'locked', 'layoutInCell', 'allowOverlap'],
+        children: {
+          extent: { type: 'leaf', xmlTag: 'wp:extent', jsonKey: 'extent', parameters: ['cx', 'cy'] },
+          docPr: { type: 'leaf', xmlTag: 'wp:docPr', jsonKey: 'docProperties', parameters: ['id', 'name', 'descr'] },
+          graphic: {
+            type: 'property', xmlTag: 'a:graphic', jsonKey: 'graphic',
+            children: {
+              graphicData: {
+                type: 'property', xmlTag: 'a:graphicData', parameters: ['uri'], jsonKey: 'graphicData',
+                children: {
+                  pic: {
+                    type: 'property', xmlTag: 'pic:pic', jsonKey: 'picture',
+                    children: {
+                      blipFill: {
+                        type: 'property', xmlTag: 'pic:blipFill', jsonKey: 'blipFill',
+                        children: {
+                          blip: { // a:blip에서 r:embed 추출
+                            type: 'leaf',
+                            xmlTag: 'a:blip',
+                            jsonKey: 'blipReference',
+                            parameters: ['r:embed', 'cstate'] // ❗ r:embed 필수 추출
+                          }
+                        }
+                      },
+                      spPr: { type: 'property', xmlTag: 'pic:spPr', jsonKey: 'shapeProperties', children: { /* 상세 정의 필요시 */ } }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
-  }
+  },
 };
 
 export const TAG_TO_TYPE: Record<string, string> = {
