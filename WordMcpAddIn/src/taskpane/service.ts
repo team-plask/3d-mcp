@@ -1,1424 +1,826 @@
-import { TRACKED_ELEMENTS, TAG_TYPE_MAP } from './converter';
-import { updateDocumentStructure } from './document'; // 명시적으로 가져옴
+// service.ts
+import {
+  applyPatch,
+  compare,
+  Operation,
+  AddOperation,
+  RemoveOperation,
+  ReplaceOperation
+} from 'fast-json-patch';
+import {
+  ELEMENT_CONFIG,
+  ElementConfig,
+  TAG_TO_TYPE,
+  processDocument as processDocumentFromConverter,
+} from './converter';
+import { formatXML } from './document';
 
-/**
- * 요소 ID에서 타입 추출
- */
-function getElementTypeFromId(id: string): string {
-  if (id.startsWith('p_')) return 'paragraph';
-  if (id.startsWith('t_')) return 'table';
-  if (id.startsWith('r_')) return 'run';
-  if (id.startsWith('i_')) return 'image';
-  if (id.startsWith('d_')) return 'drawing';
-  return 'unknown';
-}
-
-/**
- * 문서에 새로운 요소 삽입
- */
-async function insertNewElement(
-  context: Word.RequestContext,
-  id: string,
-  elementData: any,
-  documentStructure: Record<string, any>
-): Promise<void> {
-  try {
-    console.log(`새 요소 삽입 시작: ${id}`);
-    
-    const elementType = elementData.type;
-    const attributes = elementData.attributes || {};
-    const order = elementData.order;
-    
-    if (!elementType) {
-      console.error(`요소 타입이 지정되지 않음: ${id}`);
-      return;
-    }
-    
-    // 삽입 위치 찾기
-    const insertionPosition = findInsertionPosition(id, elementType, order, documentStructure);
-    
-    // 요소 타입별 생성 및 삽입
-    switch (elementType) {
-      case 'paragraph':
-        await insertParagraph(context, id, attributes, insertionPosition, elementData);
-        break;
-        
-      case 'run':
-        await insertRun(context, id, attributes, insertionPosition, elementData);
-        break;
-        
-      case 'table':
-        await insertTable(context, id, attributes, insertionPosition, elementData);
-        break;
-        
-      default:
-        console.warn(`지원하지 않는 요소 타입: ${elementType}, ID: ${id}`);
-    }
-    
-    await context.sync();
-    console.log(`새 요소 삽입 완료: ${id}`);
-    
-  } catch (error) {
-    console.error(`새 요소 삽입 실패 (ID: ${id}):`, error);
-    throw error;
+// --- Helper Functions (extractDocumentXml, replaceOriginalWithUpdated, findSdtElementById, createXmlElementFromJson, robustApplyMergePatchRecursive, insertSdtInOrder) ---
+// 이 함수들은 이전 답변의 내용으로 가정하고 생략합니다.
+// createXmlElementFromJson의 text 처리 로직이 이전 답변처럼 수정되었다고 가정합니다.
+function extractDocumentXml(flatXml: string): string {
+  if (flatXml.indexOf('<pkg:package') === -1) {
+    return flatXml.trim();
   }
+  const partMatch = flatXml.match(
+    /<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>[\s\S]*?<\/pkg:part>/i
+  );
+  if (!partMatch) throw new Error('document.xml part not found in Flat-OPC');
+  const xmlMatch = partMatch[0].match(
+    /<pkg:xmlData[^>]*>([\s\S]*?)<\/pkg:xmlData>/i
+  );
+  if (!xmlMatch) throw new Error('pkg:xmlData section missing in document.xml part');
+  return xmlMatch[1].trim();
 }
 
-/**
- * 새 단락 삽입
- */
-async function insertParagraph(
-  context: Word.RequestContext,
-  id: string,
-  attributes: any,
-  insertionPosition: any,
-  elementData: any
-): Promise<void> {
-  try {
-    let newParagraph: Word.Paragraph;
-    const body = context.document.body;
-    
-    // 삽입 위치에 따라 다르게 처리
-    if (insertionPosition.position === 'end') {
-      newParagraph = body.insertParagraph("", Word.InsertLocation.end);
-    } else if (insertionPosition.position === 'start') {
-      newParagraph = body.insertParagraph("", Word.InsertLocation.start);
-    } else if (insertionPosition.referenceId) {
-      // 참조 요소 찾기
-      const referenceContentControl = await findContentControlById(context, insertionPosition.referenceId);
-      
-      if (!referenceContentControl) {
-        console.warn(`참조 요소를 찾을 수 없음: ${insertionPosition.referenceId}`);
-        newParagraph = body.insertParagraph("", Word.InsertLocation.end);
-      } else {
-        // 참조 요소 위치 기준으로 삽입
-        const range = referenceContentControl.getRange();
-        
-        if (insertionPosition.position === 'before') {
-          // range.insertParagraph 사용 (올바른 API 호출)
-          newParagraph = range.insertParagraph("", Word.InsertLocation.before);
-        } else {
-          newParagraph = range.insertParagraph("", Word.InsertLocation.after);
+function replaceOriginalWithUpdated(originalFullFlatXml: string, updatedDocumentXmlContent: string): string {
+  if (originalFullFlatXml.indexOf('<pkg:package') !== -1) {
+    const partMatch = originalFullFlatXml.match(
+      /(<pkg:part[^>]*pkg:name="\/word\/document\.xml"[^>]*>)([\s\S]*?)(<\/pkg:part>)/i
+    );
+    if (!partMatch) {
+      return updatedDocumentXmlContent;
+    }
+    const xmlDataContainerMatch = partMatch[2].match(
+      /(<pkg:xmlData[^>]*>)([\s\S]*?)(<\/pkg:xmlData>)/i
+    );
+    if (!xmlDataContainerMatch) {
+      throw new Error('pkg:xmlData container not found in document.xml part.');
+    }
+    const originalDocContentInXmlData = xmlDataContainerMatch[2];
+    const originalDocRootMatch = originalDocContentInXmlData.match(/<w:document([^>]*)>/i);
+    let finalUpdatedDocumentXmlForEmbedding = updatedDocumentXmlContent;
+    if (originalDocRootMatch && originalDocRootMatch[1]) {
+        const updatedDocRootMatch = updatedDocumentXmlContent.match(/<w:document[^>]*>/i);
+        if (updatedDocRootMatch) {
+            finalUpdatedDocumentXmlForEmbedding = updatedDocumentXmlContent.replace(
+                updatedDocRootMatch[0],
+                `<w:document${originalDocRootMatch[1]}>`
+            );
         }
-      }
-    } else {
-      // 기본값: 문서 끝에 삽입
-      newParagraph = body.insertParagraph("", Word.InsertLocation.end);
     }
-    
-    // 새 단락에 Content Control 적용
-    const contentControl = newParagraph.insertContentControl();
-    contentControl.tag = id;
-    contentControl.title = `paragraph ${id}`;
-    
-    // 단락 속성 적용
-    if (attributes) {
-      await applyParagraphAttributes(context, newParagraph, attributes);
+    const updatedXmlDataContent = `${xmlDataContainerMatch[1]}${finalUpdatedDocumentXmlForEmbedding}${xmlDataContainerMatch[3]}`;
+    return originalFullFlatXml.replace(partMatch[2], updatedXmlDataContent);
+  }
+  return updatedDocumentXmlContent;
+}
+
+function findSdtElementById(xmlDocOrElement: Document | Element, id: string): Element | null {
+    const sdtNodeList = (xmlDocOrElement instanceof Document) ?
+                        xmlDocOrElement.getElementsByTagName('w:sdt') :
+                        (xmlDocOrElement as Element).getElementsByTagName('w:sdt');
+    for (let i = 0; i < sdtNodeList.length; i++) {
+        const sdt = sdtNodeList[i];
+        const sdtPrList = sdt.getElementsByTagName('w:sdtPr');
+        if (sdtPrList.length > 0) {
+            const tagList = sdtPrList[0].getElementsByTagName('w:tag');
+            if (tagList.length > 0 && tagList[0].getAttribute('w:val') === id) {
+                return sdt;
+            }
+        }
     }
-    
-    await context.sync();
-    
-    // 자식 Run 요소 삽입 (있는 경우)
-    for (const key in elementData) {
-      if (key.startsWith('r_') && typeof elementData[key] === 'object') {
-        const runData = elementData[key];
-        
-        if (runData.type === 'run' && runData.attributes) {
-          // Run 삽입 위치 정보 생성 (부모 단락의 Content Control 내부)
-          const runInsertionPosition = {
-            parentId: id,
-            position: 'end' as const,
-            index: -1
-          };
-          
-          await insertRun(context, key, runData.attributes, runInsertionPosition, runData);
+    return null;
+}
+
+function applyPropertiesToXmlElement( /* 이전 답변의 코드 */
+  element: Element,
+  propertiesJson: Record<string, any>,
+  elementConfig: ElementConfig,
+  xmlDoc: Document
+): void {
+  const propContainerKey = Object.keys(elementConfig.children || {}).find(
+    key => (elementConfig.children?.[key] as ElementConfig)?.jsonKey === 'properties' || key === 'properties'
+  );
+
+  if (!propContainerKey || !elementConfig.children?.[propContainerKey]) return;
+  const propContainerConfig = elementConfig.children[propContainerKey] as ElementConfig;
+
+  let propContainerElement: Element | null = null;
+  for (let i = 0; i < element.childNodes.length; i++) {
+    const node = element.childNodes[i];
+    if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === propContainerConfig.xmlTag) {
+      propContainerElement = node as Element;
+      break;
+    }
+  }
+
+  if (propertiesJson && Object.keys(propertiesJson).length > 0) {
+    if (!propContainerElement) {
+      propContainerElement = xmlDoc.createElement(propContainerConfig.xmlTag);
+      element.insertBefore(propContainerElement, element.firstChild);
+    }
+  } else if (propContainerElement) {
+    propContainerElement.remove();
+    return;
+  } else {
+    return;
+  }
+
+  if (!propContainerElement || !propContainerConfig.children) return;
+
+  Array.from(propContainerElement.childNodes).forEach(childNode => {
+    if (childNode.nodeType === Node.ELEMENT_NODE) {
+      const existingLeafElement = childNode as Element;
+      const leafKeyInConfig = Object.keys(propContainerConfig.children!).find(
+        pKey => propContainerConfig.children![pKey].xmlTag === existingLeafElement.tagName
+      );
+      if (leafKeyInConfig) {
+        const jsonKeyForExisting = propContainerConfig.children![leafKeyInConfig].jsonKey || leafKeyInConfig;
+        if (!propertiesJson.hasOwnProperty(jsonKeyForExisting) || propertiesJson[jsonKeyForExisting] === null || propertiesJson[jsonKeyForExisting] === undefined) {
+          existingLeafElement.remove();
         }
       }
     }
-    
-    console.log(`단락 ${id} 삽입 완료`);
-    
-  } catch (error) {
-    console.error(`단락 삽입 실패 (ID: ${id}):`, error);
-    throw error;
-  }
-}
+  });
 
-/**
- * 새 텍스트 Run 삽입
- */
-async function insertRun(
-  context: Word.RequestContext,
-  id: string,
-  attributes: any,
-  insertionPosition: any,
-  elementData: any
-): Promise<void> {
-  try {
-    // 부모 단락의 Content Control 찾기
-    if (!insertionPosition.parentId) {
-      console.error(`Run 요소 ${id}의 부모 ID가 지정되지 않음`);
-      return;
+  for (const propJsonKeyInPatch in propertiesJson) {
+    if (!propertiesJson.hasOwnProperty(propJsonKeyInPatch)) continue;
+    const propValueFromJson = propertiesJson[propJsonKeyInPatch];
+    const leafConfigKey = Object.keys(propContainerConfig.children).find(
+        pKey => (propContainerConfig.children![pKey].jsonKey || pKey) === propJsonKeyInPatch
+    );
+    if (!leafConfigKey) {
+        // console.warn(`No config found for property key: ${propJsonKeyInPatch} in ${propContainerConfig.xmlTag}`);
+        continue;
     }
-    
-    const parentContentControl = await findContentControlById(context, insertionPosition.parentId);
-    
-    if (!parentContentControl) {
-      console.error(`Run 요소 ${id}의 부모 Content Control을 찾을 수 없음: ${insertionPosition.parentId}`);
-      return;
-    }
-    
-    // 텍스트 내용 가져오기
-    const text = attributes['w:t'] || "";
-    
-    // 삽입 위치에 따라 다르게 처리
-    let range: Word.Range;
-    
-    if (insertionPosition.position === 'end') {
-      // 부모 단락 끝에 텍스트 삽입
-      range = parentContentControl.insertText(text, Word.InsertLocation.end);
-    } else if (insertionPosition.position === 'start') {
-      // 부모 단락 시작에 텍스트 삽입
-      range = parentContentControl.insertText(text, Word.InsertLocation.start);
-    } else if (insertionPosition.referenceId) {
-      // 참조 요소 찾기
-      const referenceContentControl = await findContentControlById(context, insertionPosition.referenceId);
-      
-      if (!referenceContentControl) {
-        console.warn(`참조 Run 요소를 찾을 수 없음: ${insertionPosition.referenceId}`);
-        range = parentContentControl.insertText(text, Word.InsertLocation.end);
-      } else {
-        // 참조 요소 위치 기준으로 삽입
-        const refRange = referenceContentControl.getRange();
-        
-        if (insertionPosition.position === 'before') {
-          range = refRange.insertText(text, Word.InsertLocation.before);
-        } else {
-          range = refRange.insertText(text, Word.InsertLocation.after);
+    const leafConfig = propContainerConfig.children[leafConfigKey];
+
+    let leafElement: Element | null = null;
+    for (let i = 0; i < propContainerElement.childNodes.length; i++) {
+        const node = propContainerElement.childNodes[i];
+        if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === leafConfig.xmlTag) {
+            leafElement = node as Element;
+            break;
         }
-      }
-    } else {
-      // 기본값: 부모 단락 끝에 삽입
-      range = parentContentControl.insertText(text, Word.InsertLocation.end);
     }
-    
-    // 삽입된 텍스트에 Content Control 적용
-    const contentControl = range.insertContentControl();
-    contentControl.tag = id;
-    contentControl.title = `run ${id}`;
-    
-    // Run 속성 적용 (텍스트 제외)
-    const formatAttributes = { ...attributes };
-    delete formatAttributes['w:t']; // 텍스트는 이미 처리했으므로 제외
-    
-    if (Object.keys(formatAttributes).length > 0) {
-      await applyRunAttributes(context, range, formatAttributes);
-    }
-    
-    await context.sync();
-    console.log(`Run ${id} 삽입 완료: "${text}"`);
-    
-  } catch (error) {
-    console.error(`Run 삽입 실패 (ID: ${id}):`, error);
-    throw error;
-  }
-}
 
-/**
- * 새 테이블 삽입
- */
-async function insertTable(
-  context: Word.RequestContext,
-  id: string,
-  attributes: any,
-  insertionPosition: any,
-  elementData: any
-): Promise<void> {
-  try {
-    let range: Word.Range;
-    const body = context.document.body;
-    
-    // 삽입 위치에 따라 다르게 처리
-    if (insertionPosition.position === 'end') {
-      range = body.getRange(Word.RangeLocation.end);
-    } else if (insertionPosition.position === 'start') {
-      range = body.getRange(Word.RangeLocation.start);
-    } else if (insertionPosition.referenceId) {
-      // 참조 요소 찾기
-      const referenceContentControl = await findContentControlById(context, insertionPosition.referenceId);
-      
-      if (!referenceContentControl) {
-        console.warn(`참조 요소를 찾을 수 없음: ${insertionPosition.referenceId}`);
-        range = body.getRange(Word.RangeLocation.end);
-      } else {
-        // 참조 요소 위치 기준으로 범위 설정
-        range = referenceContentControl.getRange();
+    if (propValueFromJson !== undefined && propValueFromJson !== null) {
+      if (!leafElement) {
+        leafElement = xmlDoc.createElement(leafConfig.xmlTag);
+        propContainerElement.appendChild(leafElement);
       }
-    } else {
-      // 기본값: 문서 끝에 삽입
-      range = body.getRange(Word.RangeLocation.end);
-    }
-    
-    // 기본 테이블 구조 결정 (행/열 수)
-    let rowCount = 2;
-    let columnCount = 2;
-    
-    // cells 속성에서 실제 크기 확인 (있는 경우)
-    if (elementData.cells) {
-      // 행 수 계산
-      const cellKeys = Object.keys(elementData.cells);
-      if (cellKeys.length > 0) {
-        // 'cell_0_0', 'cell_0_1', ... 형식 예상
-        const rowIndices = new Set<number>();
-        const colIndices = new Set<number>();
-        
-        cellKeys.forEach(cellKey => {
-          const match = cellKey.match(/cell_(\d+)_(\d+)/);
-          if (match) {
-            rowIndices.add(parseInt(match[1]));
-            colIndices.add(parseInt(match[2]));
+      if (leafConfig.parameters) {
+        Array.from(leafElement.attributes).forEach(attr => {
+          if (leafConfig.parameters!.includes(attr.name)) {
+            leafElement!.removeAttribute(attr.name);
           }
         });
-        
-        // Set을 배열로 변환하여 Math.max 사용
-        rowCount = Math.max(...Array.from(rowIndices)) + 1;
-        columnCount = Math.max(...Array.from(colIndices)) + 1;
+      }
+      if (typeof propValueFromJson === 'object' && leafConfig.parameters) {
+        for (const paramFullName of leafConfig.parameters) {
+          const paramKeyInJson = paramFullName.includes(':') ? paramFullName.substring(paramFullName.indexOf(':') + 1) : paramFullName;
+          if (propValueFromJson[paramKeyInJson] !== undefined && propValueFromJson[paramKeyInJson] !== null) {
+            leafElement.setAttribute(paramFullName, String(propValueFromJson[paramKeyInJson]));
+          }
+        }
+      } else if (leafConfig.parameters && leafConfig.parameters.includes('w:val')) {
+        if (propValueFromJson === true && leafConfig.parameters.length === 1 && leafConfig.parameters[0] === 'w:val') {
+          leafElement.removeAttribute('w:val');
+        } else {
+          leafElement.setAttribute('w:val', String(propValueFromJson));
+        }
+      } else if (propValueFromJson === true && (!leafConfig.parameters || leafConfig.parameters.length === 0)) {
+        // Tag exists, no value needed
+      }
+    } else if (leafElement) {
+      leafElement.remove();
+    }
+  }
+}
+
+function createXmlElementFromJson( /* 이전 답변의 수정된 코드 사용 */
+  id: string,
+  itemJson: Record<string, any>,
+  xmlDoc: Document,
+  orderKey: string
+): Element {
+  const elementType = itemJson.type as string;
+  if (!elementType || !ELEMENT_CONFIG[elementType]) {
+    throw new Error(`[createXmlElementFromJson] Unsupported element type: ${itemJson.type} for ID: ${id}. JSON: ${JSON.stringify(itemJson)}`);
+  }
+  const config = ELEMENT_CONFIG[elementType];
+  const contentElement = xmlDoc.createElement(config.xmlTag);
+
+  if (config.parameters) {
+    for (const paramFullName of config.parameters) {
+      const paramKeyInJson = paramFullName.includes(':') ? paramFullName.substring(paramFullName.indexOf(':') + 1) : paramFullName;
+      if (itemJson.hasOwnProperty(paramKeyInJson) && itemJson[paramKeyInJson] !== undefined) {
+        contentElement.setAttribute(paramFullName, String(itemJson[paramKeyInJson]));
       }
     }
-    
-    // 테이블 삽입
-    let newTable: Word.Table;
-    
-    if (insertionPosition.position === 'before') {
-      newTable = range.insertTable(rowCount, columnCount, Word.InsertLocation.before, []);
-    } else if (insertionPosition.position === 'after') {
-      newTable = range.insertTable(rowCount, columnCount, Word.InsertLocation.after, []);
-    } else {
-      // end 또는 기본값
-      newTable = range.insertTable(rowCount, columnCount, Word.InsertLocation.after, []);
+  }
+
+  if (itemJson.properties && typeof itemJson.properties === 'object') {
+    applyPropertiesToXmlElement(contentElement, itemJson.properties, config, xmlDoc);
+  }
+
+  if (itemJson.hasOwnProperty('text') && config.children?.t && config.xmlTag === 'w:r') { // run('w:r')의 text 자식은 't'
+    const textConfig = config.children.t as ElementConfig;
+    const textElement = xmlDoc.createElement(textConfig.xmlTag);
+    if (itemJson.text !== null && itemJson.text !== undefined) {
+        textElement.textContent = String(itemJson.text);
+        if (String(itemJson.text).trim() === "" && String(itemJson.text).length > 0) {
+            textElement.setAttribute('xml:space', 'preserve');
+        } else if (String(itemJson.text) === "") {
+            // <w:t/> 또는 <w:t xml:space="preserve"></w:t> (공백 없는 빈 문자열)
+             textElement.setAttribute('xml:space', 'preserve'); // Word에서 빈 문자열 유지
+        }
+    } else { // text가 null 또는 undefined
+        textElement.setAttribute('xml:space', 'preserve');
+        textElement.textContent = ' '; // 빈 <w:t> 대신 공백 하나를 가진 <w:t>가 더 안정적일 수 있음
     }
-    
-    // 테이블에 Content Control 적용
-    const contentControl = newTable.insertContentControl();
-    contentControl.tag = id;
-    contentControl.title = `table ${id}`;
-    
-    // 테이블 속성 적용
-    if (attributes) {
-      await applyTableAttributes(context, newTable, attributes);
+    contentElement.appendChild(textElement);
+  } else if (itemJson.hasOwnProperty('text') && config.children?.text) { // 일반적인 text 자식 (현재 config에는 없음)
+    // 이 로직은 현재 ELEMENT_CONFIG에 'text'라는 키로 직접 정의된 자식이 없으므로 실행되지 않음
+    const textConfig = config.children.text as ElementConfig;
+    const textElement = xmlDoc.createElement(textConfig.xmlTag);
+    if (itemJson.text !== null && itemJson.text !== undefined) {
+        textElement.textContent = String(itemJson.text);
     }
+    contentElement.appendChild(textElement);
+  }
+
+
+  const childItemKeys = Object.keys(itemJson).filter(
+    key =>
+      key !== 'type' && key !== 'order' && key !== 'properties' && key !== 'text' &&
+      !(config.parameters && config.parameters.map(p => p.includes(':') ? p.substring(p.indexOf(':') + 1) : p).includes(key)) &&
+      itemJson[key] && typeof itemJson[key] === 'object' && ELEMENT_CONFIG[itemJson[key]?.type]
+  );
+
+  childItemKeys.sort((a, b) => (itemJson[a]?.order || '').localeCompare(itemJson[b]?.order || ''));
+
+  for (const childKey of childItemKeys) {
+    const childJson = itemJson[childKey];
+    const childSdtElement = createXmlElementFromJson(childKey, childJson, xmlDoc, childJson.order);
+    contentElement.appendChild(childSdtElement);
+  }
+
+  const sdtElement = xmlDoc.createElement('w:sdt');
+  const sdtPrElement = xmlDoc.createElement('w:sdtPr');
+  const aliasElement = xmlDoc.createElement('w:alias');
+  aliasElement.setAttribute('w:val', `${elementType} ${id}__${orderKey}`);
+  sdtPrElement.appendChild(aliasElement);
+  const tagElement = xmlDoc.createElement('w:tag');
+  tagElement.setAttribute('w:val', id);
+  sdtPrElement.appendChild(tagElement);
+  const idNode = xmlDoc.createElement('w:id');
+  idNode.setAttribute('w:val', String(Math.floor(Math.random() * 1000000000)));
+  sdtPrElement.appendChild(idNode);
+  sdtElement.appendChild(sdtPrElement);
+  const sdtContentElement = xmlDoc.createElement('w:sdtContent');
+  sdtContentElement.appendChild(contentElement);
+  sdtElement.appendChild(sdtContentElement);
+  return sdtElement;
+}
+
+function robustApplyMergePatchRecursive( /* 이전 답변의 코드와 동일 */
+  original: any,
+  patch: any
+): any {
+    if (patch === null) {
+        return undefined;
+    }
+    if (typeof patch !== 'object' || Array.isArray(patch) || patch === null) {
+        return patch;
+    }
+    const SPREADSHEET_TARGET: Record<string, any> = (typeof original === 'object' && original !== null && !Array.isArray(original))
+        ? JSON.parse(JSON.stringify(original)) // Ensure deep copy for modification
+        : {};
+    // Ensure type and order are preserved or taken from patch
+    if (patch.hasOwnProperty('type')) SPREADSHEET_TARGET.type = patch.type;
+    else if (original && original.hasOwnProperty('type')) SPREADSHEET_TARGET.type = original.type;
+
+    if (patch.hasOwnProperty('order')) SPREADSHEET_TARGET.order = patch.order;
+    else if (original && original.hasOwnProperty('order')) SPREADSHEET_TARGET.order = original.order;
     
-    await context.sync();
-    
-    // 테이블 셀 내용 채우기 (있는 경우)
-    if (elementData.cells) {
-      for (const cellKey in elementData.cells) {
-        const match = cellKey.match(/cell_(\d+)_(\d+)/);
-        
-        if (match) {
-          const rowIndex = parseInt(match[1]);
-          const colIndex = parseInt(match[2]);
-          
-          if (rowIndex < rowCount && colIndex < columnCount) {
-            try {
-              // 셀 내용 (단락 ID 목록)
-              const paragraphIds = elementData.cells[cellKey];
-              
-              if (Array.isArray(paragraphIds) && paragraphIds.length > 0) {
-                // 첫 번째 단락만 처리 (예시)
-                const firstParagraphId = paragraphIds[0];
-                
-                if (firstParagraphId && elementData[firstParagraphId]) {
-                  const cell = newTable.getCell(rowIndex, colIndex);
-                  
-                  // 셀 본문 로드
-                  cell.load("body");
-                  await context.sync();
-                  
-                  // 셀의 첫 번째 단락을 Content Control으로 감싸기
-                  const paragraph = cell.body.paragraphs.getFirst();
-                  const cellContentControl = paragraph.insertContentControl();
-                  cellContentControl.tag = firstParagraphId;
-                  cellContentControl.title = `paragraph ${firstParagraphId}`;
-                  
-                  // 단락 속성 적용
-                  if (elementData[firstParagraphId].attributes) {
-                    await applyParagraphAttributes(context, paragraph, elementData[firstParagraphId].attributes);
-                  }
-                  
-                  // 단락 내 런 요소 삽입 (향후 확장)
+    for (const key in patch) {
+        if (!patch.hasOwnProperty(key)) continue;
+        if (key === 'type' || key === 'order') continue; // Already handled
+
+        const patchValue = patch[key];
+        const originalValueForKey = (typeof original === 'object' && original !== null) ? original[key] : undefined;
+
+        if (patchValue === null) { // RFC 7396: If the value is null, the member is removed from the target.
+            delete SPREADSHEET_TARGET[key];
+        } else { // Otherwise, the value is replaced or added.
+            SPREADSHEET_TARGET[key] = robustApplyMergePatchRecursive(originalValueForKey, patchValue);
+        }
+    }
+    // Ensure keys only in original (and not in patch, thus not processed above) are kept if original was an object
+    if(typeof original === 'object' && original !== null && !Array.isArray(original)){
+        for(const originalKey in original){
+            if(original.hasOwnProperty(originalKey) && !patch.hasOwnProperty(originalKey)){
+                 // type and order are already handled with priority to patch or original.
+                 // Other original properties/children not touched by patch should remain.
+                 // This is already covered by SPREADSHEET_TARGET = { ...original } if original is an object.
+                 // However, robustApplyMergePatchRecursive on children might have returned undefined
+                 if (SPREADSHEET_TARGET[originalKey] === undefined && original[originalKey] !== undefined) {
+                    SPREADSHEET_TARGET[originalKey] = JSON.parse(JSON.stringify(original[originalKey]));
+                 }
+            }
+        }
+    }
+    return SPREADSHEET_TARGET;
+}
+
+
+function getElementByPathRecursive(
+  currentSearchRoot: Element,
+  pathSegments: string[], // 찾아야 할 ID들의 배열 (예: ["p_1", "r_1"])
+  pathIndex: number,
+  operationDesc: string
+): Element | null {
+  if (pathIndex >= pathSegments.length) {
+      return currentSearchRoot; // 경로의 모든 ID를 찾았으면 현재 요소가 타겟
+  }
+  const segmentIdToFind = pathSegments[pathIndex];
+  // currentSearchRoot의 직계 자식 중에서 segmentIdToFind를 가진 sdt 찾기
+  let foundSdt: Element | null = null;
+  const childNodes = currentSearchRoot.childNodes;
+  for(let i = 0; i < childNodes.length; i++) {
+      const node = childNodes[i];
+      if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === 'w:sdt') {
+          const sdtCandidate = node as Element;
+          const tagEl = sdtCandidate.getElementsByTagName('w:sdtPr')[0]?.getElementsByTagName('w:tag')[0];
+          if (tagEl && tagEl.getAttribute('w:val') === segmentIdToFind) {
+              foundSdt = sdtCandidate;
+              break;
+          }
+      }
+  }
+
+  if (!foundSdt) {
+      // console.warn(`${operationDesc}: SDT for ID segment '${segmentIdToFind}' in path '${pathSegments.join('/')}' not found directly under parent ${currentSearchRoot.tagName}.`);
+      return null;
+  }
+  const sdtContent = foundSdt.getElementsByTagName('w:sdtContent')[0];
+  if (!sdtContent || !sdtContent.firstElementChild) {
+      // console.warn(`${operationDesc}: sdtContent or actual content element missing for SDT ID '${segmentIdToFind}'.`);
+      return null;
+  }
+  return getElementByPathRecursive(sdtContent.firstElementChild as Element, pathSegments, pathIndex + 1, operationDesc);
+}
+
+function insertSdtInOrder( /* 이전 답변의 코드와 동일 */
+    parentElement: Element,
+    newSdtElement: Element,
+    newOrder: string,
+    xmlDoc: Document
+) {
+    const wordNs = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    const siblings = Array.from(parentElement.children).filter(c => c.tagName === 'w:sdt');
+    // console.log("[DEBUG insertSdtInOrder] Parent:", parentElement.tagName, "New order:", newOrder, "Existing siblings:", siblings.length);
+    let inserted = false;
+    for (const siblingSdt of siblings) {
+        const aliasElement = siblingSdt.getElementsByTagNameNS(wordNs, 'alias')[0] || siblingSdt.getElementsByTagName('w:alias')[0];
+        if (aliasElement) {
+            const aliasVal = aliasElement.getAttribute('w:val');
+            if (aliasVal && aliasVal.includes('__')) {
+                const siblingOrder = aliasVal.substring(aliasVal.lastIndexOf('__') + 2);
+                // console.log(`  Comparing newOrder "${newOrder}" with siblingOrder "${siblingOrder}"`);
+                if (newOrder < siblingOrder) {
+                    parentElement.insertBefore(newSdtElement, siblingSdt);
+                    inserted = true;
+                    // console.log(`  Inserted before sibling with order ${siblingOrder}`);
+                    break;
                 }
-              }
-            } catch (cellError) {
-              console.error(`테이블 셀 (${rowIndex}, ${colIndex}) 설정 오류:`, cellError);
             }
-          }
         }
-      }
     }
-    
-    await context.sync();
-    console.log(`테이블 ${id} 삽입 완료 (${rowCount}행 x ${columnCount}열)`);
-    
-  } catch (error) {
-    console.error(`테이블 삽입 실패 (ID: ${id}):`, error);
-    throw error;
-  }
+    if (!inserted) {
+        parentElement.appendChild(newSdtElement);
+        // console.log("  Appended to end.");
+    }
 }
 
-// findInsertionPosition 함수 반환 타입 명시적 정의
-interface InsertionPosition {
-  parentId?: string;
-  referenceId?: string; 
-  position: 'before' | 'after' | 'start' | 'end';
-  index: number;
-}
 
-/**
- * 요소 삽입 위치 정보 반환
- */
-function findInsertionPosition(
-  id: string,
-  elementType: string,
-  order: string,
-  documentStructure: Record<string, any>
-): InsertionPosition {
-  // 기본 삽입 위치 (문서 끝)
-  let result: InsertionPosition = {
-    position: 'end',
-    index: -1
-  };
-  
-  // 단락 삽입의 경우
-  if (elementType === 'paragraph') {
-    // 최상위 레벨 요소들의 ID와 순서 값 수집
-    const topLevelElements: Array<{ id: string; order: string }> = [];
-    
-    for (const elemId in documentStructure) {
-      const elem = documentStructure[elemId];
-      if (elem.type === 'paragraph' && elem.order) {
-        topLevelElements.push({ id: elemId, order: elem.order });
-      }
-    }
-    
-    // 순서 값 기준으로 정렬
-    topLevelElements.sort((a, b) => a.order.localeCompare(b.order));
-    
-    // 삽입 위치 찾기
-    let insertIndex = topLevelElements.findIndex(elem => elem.order > order);
-    
-    if (insertIndex === -1) {
-      // 모든 요소보다 순서가 크면 끝에 추가
-      result = {
-        position: 'end',
-        index: topLevelElements.length
-      };
-    } else {
-      // 특정 요소 앞에 삽입
-      result = {
-        referenceId: topLevelElements[insertIndex].id,
-        position: 'before',
-        index: insertIndex
-      };
-    }
-    
-    console.log(`단락 삽입 위치 결정: ${result.position}${result.referenceId ? ` (기준: ${result.referenceId})` : ''}, 인덱스: ${result.index}`);
-  }
-  
-  // 나머지 함수 내용 유지...
-  
-  return result;
-}
-
-/**
- * 요소 업데이트 (타입에 따라 적절한 처리)
- */
-async function updateElement(
-  context: Word.RequestContext,
-  id: string,
-  patches: any,
-  currentDoc: Record<string, any>
+// --- Office Add-in Specific Integration ---
+export async function updateDocumentFromPatch(
+  mergePatch: Record<string, any | null>
 ): Promise<void> {
   try {
-    console.log(`Content Control ID: ${id}`);
-    
-    // Content Control 찾기
-    const contentControl = await findContentControlById(context, id);
-    if (!contentControl) {
-      console.warn(`ID가 ${id}인 Content Control을 찾을 수 없습니다.`);
-      return;
-    }
-    
-    // 요소 타입 확인
-    const elementType = getElementTypeFromId(id);
-    const currentElement = currentDoc[id];
-    
-    if (!currentElement) {
-      console.warn(`ID가 ${id}인 요소를 현재 문서에서 찾을 수 없습니다.`);
-      return;
-    }
-    
-    // 요소 타입별 업데이트 처리
-    switch (elementType) {
-      case 'paragraph':
-        await updateParagraph(context, contentControl, patches, currentElement);
-        break;
-        
-      case 'table':
-        await updateTable(context, contentControl, patches, currentElement);
-        break;
-        
-      case 'run':
-        await updateRun(context, contentControl, patches, currentElement);
-        break;
-        
-      case 'drawing':
-      case 'image':
-        await updateDrawing(context, contentControl, patches, currentElement);
-        break;
-        
-      default:
-        console.warn(`지원하지 않는 요소 타입: ${elementType}, ID: ${id}`);
-    }
-    
-    await context.sync();
-    
-  } catch (error) {
-    console.error(`요소 업데이트 실패 (ID: ${id}):`, error);
-    throw error;
-  }
-}
+    await Word.run(async (context: Word.RequestContext) => {
+      console.log("Office Add-in: Document update from merge patch started.");
 
-/**
- * 단락 요소 업데이트
- */
-async function updateParagraph(
-  context: Word.RequestContext,
-  contentControl: Word.ContentControl,
-  patches: any,
-  currentElement: any
-): Promise<void> {
-  try {
-    const paragraph = contentControl.paragraphs.getFirst();
-    
-    // 속성 업데이트
-    if (patches.attributes) {
-      await applyAttributesFromWhitelist(context, paragraph, patches.attributes, 'paragraph');
-    }
-    
-    // Run 요소 업데이트
-    for (const key in patches) {
-      if (key.startsWith('r_')) {
-        const runPatch = patches[key];
-        
-        // null이면 Run 요소 삭제
-        if (runPatch === null) {
-          await deleteRunElement(context, contentControl, key);
-          continue;
-        }
-        
-        // 현재 문단에서 해당 run 찾기
-        const runContentControl = await findContentControlById(context, key);
-        
-        if (runContentControl) {
-          // Run 요소 업데이트
-          await updateRun(context, runContentControl, runPatch, currentElement[key]);
-        } else {
-          console.warn(`Run 요소를 찾을 수 없음: ${key}`);
-        }
-      }
-    }
-    
-    await context.sync();
-  } catch (error) {
-    console.error(`단락 업데이트 실패:`, error);
-    throw error;
-  }
-}
-
-/**
- * 테이블 요소 업데이트
- */
-async function updateTable(
-  context: Word.RequestContext,
-  contentControl: Word.ContentControl,
-  patches: any,
-  currentElement: any
-): Promise<void> {
-  try {
-    const tables = contentControl.tables;
-    tables.load("items");
-    await context.sync();
-    
-    if (tables.items.length === 0) {
-      console.warn("테이블 요소를 찾을 수 없습니다.");
-      return;
-    }
-    
-    const table = tables.items[0];
-    
-    // 속성 업데이트
-    if (patches.attributes) {
-      await applyAttributesFromWhitelist(context, table, patches.attributes, 'table');
-    }
-    
-    // 테이블 내 셀/행 업데이트는 별도 구현 필요 (복잡성 때문에)
-    
-    await context.sync();
-  } catch (error) {
-    console.error(`테이블 업데이트 실패:`, error);
-    throw error;
-  }
-}
-
-/**
- * 그림 요소 업데이트 (drawing 또는 image)
- */
-async function updateDrawing(
-  context: Word.RequestContext,
-  contentControl: Word.ContentControl,
-  patches: any,
-  currentElement: any
-): Promise<void> {
-  try {
-    // 인라인 그림 가져오기
-    const inlinePictures = contentControl.inlinePictures;
-    inlinePictures.load("items");
-    await context.sync();
-    
-    if (inlinePictures.items.length === 0) {
-      console.warn("그림 요소를 찾을 수 없습니다.");
-      return;
-    }
-    
-    const picture = inlinePictures.items[0];
-    
-    // 속성 업데이트
-    if (patches.attributes) {
-      await applyAttributesFromWhitelist(context, picture, patches.attributes, 'drawing');
-    }
-    
-    await context.sync();
-  } catch (error) {
-    console.error(`그림 업데이트 실패:`, error);
-    throw error;
-  }
-}
-
-/**
- * Run 요소 삭제 - 개선된 버전
- */
-async function deleteRunElement(
-  context: Word.RequestContext,
-  paragraphContentControl: Word.ContentControl,
-  runId: string
-): Promise<void> {
-  try {
-    // Run Content Control 찾기
-    const runContentControl = await findContentControlById(context, runId);
-    
-    if (runContentControl) {
-      // 현재 Range 로드
-      const range = runContentControl.getRange();
-      range.load("text,font");
+      const ooxml = context.document.body.getOoxml();
       await context.sync();
+      const fullFlatXml = ooxml.value;
+      const currentDocumentXmlFromOoxml = extractDocumentXml(fullFlatXml);
+
+      const { json: originalJson, xml: documentXmlWithIds } =
+        processDocumentFromConverter(currentDocumentXmlFromOoxml);
       
-      // 빈 문자열로 대체
-      range.insertText("", Word.InsertLocation.replace);
+      console.log("Office Add-in: Original JSON parsed (keys):", Object.keys(originalJson));
+      // console.log("Original JSON (Full):\n", JSON.stringify(originalJson, null, 2));
+      // console.log("Received Merge Patch:\n", JSON.stringify(mergePatch, null, 2));
+      
+      const targetJson = robustApplyMergePatchRecursive(originalJson, mergePatch);
+      for (const key in targetJson) { // robustApplyMergePatchRecursive가 undefined를 반환한 경우 정리
+          if (targetJson.hasOwnProperty(key) && targetJson[key] === undefined) {
+              delete targetJson[key];
+          }
+      }
+
+      console.log("Office Add-in: Target JSON constructed (keys):", Object.keys(targetJson));
+      // console.log("Target JSON (Full for debugging):\n", JSON.stringify(targetJson, null, 2));
+
+      const operations: Operation[] = compare(originalJson, targetJson);
+      console.log("Office Add-in: Generated JSON Patch Operations (count):", operations.length);
+      console.log("Office Add-in: Generated JSON Patch Operations (detailed):\n", JSON.stringify(operations, null, 2));
+      
+      const validOperations = operations.filter(op => typeof op === 'object' && op !== null && op.op) as Operation[];
+      if (validOperations.length !== operations.length) {
+          console.warn("Warning: Invalid operations were filtered out.");
+      }
+
+      if (validOperations.length === 0 && JSON.stringify(originalJson) === JSON.stringify(targetJson)) {
+        console.log("Office Add-in: No effective changes to apply based on the merge patch.");
+        return;
+      }
+
+      const parser = new DOMParser();
+      const xmlDocInstance = parser.parseFromString(documentXmlWithIds, "application/xml");
+      const parsingError = xmlDocInstance.getElementsByTagName("parsererror");
+      if (parsingError.length > 0) {
+          throw new Error("XML parsing error before applying operations: " + (parsingError[0].textContent || "Unknown parsing error"));
+      }
+      
+      applyOperationsDirectlyToXmlDom(validOperations, xmlDocInstance, targetJson, originalJson);
+      
+      const serializer = new XMLSerializer();
+      const updatedDocumentXmlContent = serializer.serializeToString(xmlDocInstance.documentElement);
+      // console.log("Office Add-in: Updated document.xml content:\n", formatXML(updatedDocumentXmlContent)); // formatXML 사용
+
+      const finalFlatOpcXml = replaceOriginalWithUpdated(fullFlatXml, updatedDocumentXmlContent);
+      
+      context.document.body.insertOoxml(finalFlatOpcXml, Word.InsertLocation.replace);
       await context.sync();
-      
-      console.log(`Run 요소 ${runId} 삭제 완료`);
-    } else {
-      console.warn(`삭제할 Run 요소를 찾을 수 없음: ${runId}`);
-    }
-  } catch (error) {
-    console.error(`Run 요소 삭제 실패 (ID: ${runId}):`, error);
-    // 오류를 throw하지 않고 처리 - 다른 요소 업데이트가 계속 진행되도록 함
-  }
-}
 
-/**
- * 단락 속성 적용 (화이트리스트 기반)
- */
-async function applyParagraphAttributes(
-  context: Word.RequestContext,
-  paragraph: Word.Paragraph,
-  attributes: any
-): Promise<void> {
-  try {
-    // TRACKED_ELEMENTS에서 paragraph 타입의 속성 목록 확인
-    const allowedAttrs = TRACKED_ELEMENTS['paragraph'].children;
-    
-    // 정렬 (w:jc)
-    if (attributes['w:jc'] && allowedAttrs['w:jc']) {
-      const alignment = attributes['w:jc']['w:val'];
-      if (alignment) {
-        switch (alignment) {
-          case 'left':
-            paragraph.alignment = Word.Alignment.left;
-            break;
-          case 'center':
-            paragraph.alignment = Word.Alignment.centered;
-            break;
-          case 'right':
-            paragraph.alignment = Word.Alignment.right;
-            break;
-          case 'justify':
-            paragraph.alignment = Word.Alignment.justified;
-            break;
-          // distributed는 Word JS API에서 지원하지 않음
-          case 'distributed':
-            // Word.Alignment.justified로 대체 (가장 유사한 옵션)
-            paragraph.alignment = Word.Alignment.justified;
-            break;
-        }
-      }
-    }
-    
-    // 단락 간격 (w:spacing)
-    if (attributes['w:spacing'] && allowedAttrs['w:spacing']) {
-      const spacing = attributes['w:spacing'];
-      
-      // 줄 간격
-      if (spacing['w:line'] !== undefined) {
-        paragraph.lineSpacing = parseInt(spacing['w:line']) / 240; // Word 단위 변환
-      }
-      
-      // 단락 뒤 간격
-      if (spacing['w:after'] !== undefined) {
-        paragraph.spaceAfter = parseInt(spacing['w:after']) / 20; // Word 단위 변환
-      }
-      
-      // 단락 앞 간격
-      if (spacing['w:before'] !== undefined) {
-        paragraph.spaceBefore = parseInt(spacing['w:before']) / 20; // Word 단위 변환
-      }
-    }
-    
-    // 들여쓰기 (w:ind)
-    if (attributes['w:ind'] && allowedAttrs['w:ind']) {
-      const indent = attributes['w:ind'];
-      
-      // 왼쪽 들여쓰기
-      if (indent['w:left'] !== undefined) {
-        paragraph.leftIndent = parseInt(indent['w:left']) / 20; // Word 단위 변환
-      }
-      
-      // 오른쪽 들여쓰기
-      if (indent['w:right'] !== undefined) {
-        paragraph.rightIndent = parseInt(indent['w:right']) / 20; // Word 단위 변환
-      }
-      
-      // 첫 줄 들여쓰기
-      if (indent['w:firstLine'] !== undefined) {
-        paragraph.firstLineIndent = parseInt(indent['w:firstLine']) / 20; // Word 단위 변환
-      }
-      
-      // 내어쓰기
-      if (indent['w:hanging'] !== undefined) {
-        paragraph.firstLineIndent = -parseInt(indent['w:hanging']) / 20; // Word 단위 변환
-      }
-    }
-  } catch (error) {
-    console.error("단락 속성 적용 실패:", error);
-    throw error;
-  }
-}
-
-/**
- * 테이블 속성 적용 (화이트리스트 기반)
- */
-async function applyTableAttributes(
-  context: Word.RequestContext,
-  table: Word.Table,
-  attributes: any
-): Promise<void> {
-  try {
-    // TRACKED_ELEMENTS에서 table 타입의 속성 목록 확인
-    const allowedAttrs = TRACKED_ELEMENTS['table'].children;
-    
-    // 현재는 Word API에서 테이블 속성을 직접 변경하기 어려움
-    // 추후 필요에 따라 구현
-    console.log("테이블 속성 적용 - API 제한으로 인해 대부분의 속성 변경이 제한됩니다.");
-    
-    // 테이블 너비 등은 Word JavaScript API 2.0에서 지원 예정
-  } catch (error) {
-    console.error("테이블 속성 적용 실패:", error);
-    throw error;
-  }
-}
-
-/**
- * 그림 속성 적용 (화이트리스트 기반)
- */
-async function applyDrawingAttributes(
-  context: Word.RequestContext,
-  picture: Word.InlinePicture,
-  attributes: any
-): Promise<void> {
-  try {
-    // TRACKED_ELEMENTS에서 drawing 타입의 속성 목록 확인
-    const allowedAttrs = TRACKED_ELEMENTS['drawing'].children;
-    
-    // 높이/너비 (wp:extent)
-    if (attributes['wp:extent'] && allowedAttrs['wp:extent']) {
-      const extent = attributes['wp:extent'];
-      
-      // cx는 너비, cy는 높이 (EMU 단위, 1 인치 = 914,400 EMU)
-      if (extent['cx'] !== undefined) {
-        const widthInPoints = parseInt(extent['cx']) / 12700; // EMU → 포인트 변환
-        picture.width = widthInPoints;
-      }
-      
-      if (extent['cy'] !== undefined) {
-        const heightInPoints = parseInt(extent['cy']) / 12700; // EMU → 포인트 변환
-        picture.height = heightInPoints;
-      }
-    }
-    
-    // 설명 (wp:docPr)
-    if (attributes['wp:docPr'] && allowedAttrs['wp:docPr']) {
-      const docPr = attributes['wp:docPr'];
-      
-      if (docPr['descr'] !== undefined) {
-        picture.altTextDescription = docPr['descr'];
-      }
-      
-      if (docPr['name'] !== undefined) {
-        picture.altTextTitle = docPr['name'];
-      }
-    }
-  } catch (error) {
-    console.error("그림 속성 적용 실패:", error);
-    throw error;
-  }
-}
-
-/**
- * Content Control ID로 요소 찾기
- */
-async function findContentControlById(
-  context: Word.RequestContext,
-  id: string
-): Promise<Word.ContentControl | null> {
-  try {
-    // 문서 전체 Content Control 가져오기
-    const contentControls = context.document.contentControls;
-    contentControls.load("items,tag");
-    await context.sync();
-    
-    // ID와 일치하는 Content Control 찾기
-    for (let i = 0; i < contentControls.items.length; i++) {
-      const contentControl = contentControls.items[i];
-      if (contentControl.tag === id) {
-        return contentControl;
-      }
-    }
-    
-    return null;
-  } catch (error) {
-    console.error(`Content Control 검색 실패 (ID: ${id}):`, error);
-    return null;
-  }
-}
-
-/**
- * 요소 삭제 - 오류 처리 강화
- */
-async function deleteElement(
-  context: Word.RequestContext,
-  id: string
-): Promise<void> {
-  try {
-    console.log(`요소 ${id} 삭제 시작`);
-    
-    const contentControl = await findContentControlById(context, id);
-    if (!contentControl) {
-      console.warn(`삭제할 요소를 찾을 수 없음: ${id}`);
-      return;
-    }
-    
-    // 최대한 안전한 삭제 방법 사용
-    try {
-      // 방법: 내용만 삭제하고 컨트롤은 유지 (가장 안전한 방법)
-      // 이 방법은 Word API의 예외 발생을 최소화함
-      const range = contentControl.getRange();
-      
-      // 안전하게 공백으로 대체 (공백 하나)
-      range.insertText(" ", Word.InsertLocation.replace);
-      await context.sync();
-      
-      console.log(`요소 ${id} 내용물 삭제 완료 (공백으로 대체)`);
-    } catch (error) {
-      console.error(`요소 ${id} 삭제 실패:`, error);
-    }
-  } catch (error) {
-    console.error(`요소 ${id} 삭제 프로세스 실패:`, error);
-  }
-}
-
-/**
- * Run 속성 적용 - Null 체크 강화
- */
-async function applyRunAttributes(
-  context: Word.RequestContext,
-  range: Word.Range,
-  attributes: any
-): Promise<void> {
-  try {
-    // 현재 서식 정보 로드
-    range.load("font");
-    await context.sync();
-    
-    // 현재 서식 저장
-    const currentFont = {
-      bold: range.font.bold,
-      italic: range.font.italic,
-      underline: range.font.underline,
-      color: range.font.color,
-      size: range.font.size,
-      name: range.font.name
-    };
-    
-    console.log(`현재 서식 정보:`, currentFont);
-    
-    // TRACKED_ELEMENTS에서 run 타입의 속성 목록 확인
-    const allowedAttrs = TRACKED_ELEMENTS['run'].children;
-    
-    // 굵게 (w:b)
-    if ('w:b' in attributes && allowedAttrs['w:b']) {
-      const isBold = attributes['w:b'] === true || 
-                    (typeof attributes['w:b'] === 'object' && 
-                     attributes['w:b']['w:val'] !== 'false' && 
-                     attributes['w:b']['w:val'] !== '0');
-      range.font.bold = isBold;
-    }
-    
-    // 기울임 (w:i)
-    if ('w:i' in attributes && allowedAttrs['w:i']) {
-      const isItalic = attributes['w:i'] === true || 
-                      (typeof attributes['w:i'] === 'object' && 
-                       attributes['w:i']['w:val'] !== 'false' && 
-                       attributes['w:i']['w:val'] !== '0');
-      range.font.italic = isItalic;
-    }
-    
-    // 밑줄 (w:u) - Null 체크 강화
-    if ('w:u' in attributes && allowedAttrs['w:u']) {
-      let underlineType: Word.UnderlineType | string = "None";
-      
-      if (attributes['w:u'] === true) {
-        underlineType = "Single";
-      } else if (attributes['w:u'] === false || attributes['w:u'] === null) {
-        underlineType = "None";
-      } else if (typeof attributes['w:u'] === 'object' && attributes['w:u']) {
-        // null 체크 추가
-        if (attributes['w:u']['w:val']) {
-          const val = attributes['w:u']['w:val'];
-          // Word JS API에서 지원하는 밑줄 유형으로 매핑
-          switch (val) {
-            case 'single':
-              underlineType = "Single";
-              break;
-            case 'double':
-              underlineType = "Double";
-              break;
-            case 'thick':
-              underlineType = "Thick";
-              break;
-            case 'dotted':
-              underlineType = "Dotted";
-              break;
-            case 'dash':
-            case 'dashed':
-              underlineType = "Dash";
-              break;
-            case 'dotDash':
-              underlineType = "DotDash";
-              break;
-            case 'dotDotDash':
-              underlineType = "DotDotDash";
-              break;
-            case 'wave':
-              underlineType = "Wave";
-              break;
-            case 'none':
-            case 'false':
-            case '0':
-              underlineType = "None";
-              break;
-            default:
-              underlineType = "Single";
-          }
-        } else {
-          // w:val이 없으면 기본값 Single 사용
-          underlineType = "Single";
-        }
-      }
-      
-      // Word.UnderlineType 타입으로 명시적 캐스팅
-      range.font.underline = underlineType as Word.UnderlineType;
-    }
-    
-    // 색상 (w:color) - Null 체크 강화
-    if ('w:color' in attributes && allowedAttrs['w:color']) {
-      if (typeof attributes['w:color'] === 'object' && attributes['w:color'] && attributes['w:color']['w:val']) {
-        range.font.color = attributes['w:color']['w:val'];
-      }
-    }
-    
-    // 글꼴 크기 (w:sz) - Null 체크 강화
-    if ('w:sz' in attributes && allowedAttrs['w:sz']) {
-      if (typeof attributes['w:sz'] === 'object' && attributes['w:sz'] && attributes['w:sz']['w:val']) {
-        // OOXML의 글꼴 크기는 1/2 포인트 단위
-        const fontSize = parseInt(attributes['w:sz']['w:val']) / 2;
-        range.font.size = fontSize;
-      }
-    }
-    
-    // 글꼴 (w:rFonts) - Null 체크 강화
-    if ('w:rFonts' in attributes && allowedAttrs['w:rFonts']) {
-      if (typeof attributes['w:rFonts'] === 'object' && attributes['w:rFonts']) {
-        // ASCII 글꼴
-        if (attributes['w:rFonts']['w:ascii']) {
-          range.font.name = attributes['w:rFonts']['w:ascii'];
-        }
-      }
-    }
-    
-    // 패치에 명시되지 않은 속성은 기존 값 유지
-    if (!('w:b' in attributes) && currentFont.bold !== undefined) range.font.bold = currentFont.bold;
-    if (!('w:i' in attributes) && currentFont.italic !== undefined) range.font.italic = currentFont.italic;
-    if (!('w:u' in attributes) && currentFont.underline !== undefined) range.font.underline = currentFont.underline;
-    if (!('w:color' in attributes) && currentFont.color) range.font.color = currentFont.color;
-    if (!('w:sz' in attributes) && currentFont.size) range.font.size = currentFont.size;
-    if (!('w:rFonts' in attributes) && currentFont.name) range.font.name = currentFont.name;
-    
-  } catch (error) {
-    console.error("Run 속성 적용 실패:", error);
-    // 오류 전파하지 않음 - 프로세스가 계속 진행되도록 함
-  }
-}
-
-/**
- * Run 요소 업데이트 - Content Control 유지하면서 텍스트 변경
- */
-async function updateRun(
-  context: Word.RequestContext,
-  contentControl: Word.ContentControl,
-  patches: any,
-  currentElement: any
-): Promise<void> {
-  try {
-    console.log(`Content Control ID: ${contentControl.tag}`);
-    
-    // 속성 업데이트
-    if (patches.attributes) {
-      try {
-        // 텍스트 변경이 있는지 확인
-        if (patches.attributes['w:t'] !== undefined) {
-          const newText = patches.attributes['w:t'];
-          console.log(`텍스트 업데이트: "${newText}"`);
-          
-          // 중요: 기존 Content Control의 텍스트만 변경하는 안전한 방법
-          contentControl.insertText(newText, Word.InsertLocation.replace);
-          await context.sync();
-          
-          // 포맷 적용을 위한 범위 다시 가져오기
-          const range = contentControl.getRange();
-          range.load("font");
-          await context.sync();
-          
-          // 텍스트 이외의 속성 업데이트
-          const formatAttributes = { ...patches.attributes };
-          delete formatAttributes['w:t']; // 텍스트는 이미 처리했으므로 제외
-          
-          if (Object.keys(formatAttributes).length > 0) {
-            await applyAttributesFromWhitelist(context, range, formatAttributes, 'run');
-          }
-        } else {
-          // 텍스트 변경이 없는 경우 일반 속성만 업데이트
-          const range = contentControl.getRange();
-          await applyAttributesFromWhitelist(context, range, patches.attributes, 'run');
-        }
-      } catch (attributeError) {
-        console.error(`Run 속성 업데이트 오류:`, attributeError);
-      }
-    }
-    
-    await context.sync();
-  } catch (error) {
-    console.error(`Run 업데이트 실패:`, error);
-  }
-}
-/**
- * 화이트리스트를 기반으로 속성 적용 - 예외 처리 강화
- */
-async function applyAttributesFromWhitelist(
-  context: Word.RequestContext,
-  element: any,
-  attributes: any,
-  elementType: string
-): Promise<void> {
-  try {
-    // 화이트리스트에 없는 요소 타입이면 처리하지 않음
-    if (!TRACKED_ELEMENTS[elementType]) {
-      console.warn(`정의되지 않은 요소 타입: ${elementType}`);
-      return;
-    }
-    
-    // 요소 타입별 처리 (화이트리스트 기반)
-    try {
-      if (elementType === 'paragraph') {
-        await applyParagraphAttributes(context, element, attributes);
-      } else if (elementType === 'run') {
-        await applyRunAttributes(context, element, attributes);
-      } else if (elementType === 'table') {
-        await applyTableAttributes(context, element, attributes);
-      } else if (elementType === 'drawing') {
-        await applyDrawingAttributes(context, element, attributes);
-      }
-    } catch (applyError) {
-      console.error(`${elementType} 속성 적용 중 오류:`, applyError);
-      // 오류가 발생해도 계속 진행
-    }
-    
-    await context.sync();
-  } catch (error) {
-    console.error(`속성 적용 실패 (타입: ${elementType}):`, error);
-    // 오류를 throw하지 않음 - 상위 함수에서 처리
-  }
-}
-
-/**
- * 샘플 패치 데이터 제공 - 따옴표 문제 수정
- */
-export function getSamplePatch(): Record<string, any> {
-  return {
-    // 첫 번째 단락 - 제목 수정 및 정렬 변경
-    "p_kq1zBkClrT": {
-      "attributes": {
-        "w:jc": { "w:val": "left" }  // 중앙 정렬에서 왼쪽 정렬로 변경
-      },
-      "r_5zbnXRBI9j": {  // 제목 텍스트 수정
-        "attributes": {
-          "w:t": "Off-Campus 학기제 안내 (2024 개정)",
-          "w:sz": { "w:val": "40" }  // 글꼴 크기 증가 (OOXML 단위)
-        }
-      }
-    },
-    
-    // 두 번째 단락 - 관련 지침 텍스트 업데이트
-    "p_FXWOB8hqZR": {
-      "attributes": {
-        "w:jc": { "w:val": "right" }  // 중앙 정렬에서 오른쪽 정렬로 변경
-      },
-      "r_jIX8EPuJG6": {  // "관련 지침:" 텍스트 굵게 및 색상 변경
-        "attributes": {
-          "w:b": true,  // 굵게 설정
-          "w:color": { "w:val": "2E74B5" }  // 파란색으로 변경
-        }
-      },
-      "r_t50w0mAVg": {  // 지침 텍스트 업데이트
-        "attributes": {
-          "w:t": "학사운영지침 (2024-2025) VIII. Off-Campus 학기제",
-          "w:u": { "w:val": "single" }  // 밑줄 추가
-        }
-      }
-    },
-    
-    // 세 번째 빈 단락 삭제
-    "p_GfKluaDgRHS": null
-  };
-}
-
-/**
- * 패치 변경사항 분석 - 추가/수정/삭제 식별 (중첩 요소 지원)
- */
-function analyzeChanges(
-  patchData: Record<string, any>,
-  documentStructure: Record<string, any>
-): { inserts: string[]; updates: string[]; deletions: string[]; nestedInserts: Array<{parentId: string, childId: string}> } {
-  const inserts: string[] = [];
-  const updates: string[] = [];
-  const deletions: string[] = [];
-  const nestedInserts: Array<{parentId: string, childId: string}> = [];
-  
-  // 최상위 요소 변경사항 분석
-  for (const id in patchData) {
-    if (patchData[id] === null) {
-      deletions.push(id);
-    } else if (!documentStructure[id]) {
-      // 기존 문서에 없는 ID는 삽입으로 처리
-      inserts.push(id);
-    } else {
-      // 기존 문서에 있는 ID는 업데이트로 처리
-      updates.push(id);
-      
-      // 중첩된 요소 분석 (자식 요소)
-      if (typeof patchData[id] === 'object') {
-        for (const childKey in patchData[id]) {
-          // r_로 시작하는 자식 요소 ID 확인 (run 요소 등)
-          if (childKey.startsWith('r_') || 
-              childKey.startsWith('t_') || 
-              childKey.startsWith('i_') || 
-              childKey.startsWith('d_')) {
-            
-            // 요소가 null이면 삭제로 처리
-            if (patchData[id][childKey] === null) {
-              // 부모 요소 업데이트 내에서 자식 요소 삭제 처리
-              // 별도 처리 필요 없음 (updateElement에서 처리)
-            } 
-            // 기존 문서에 없는 자식 요소는 중첩 삽입으로 처리
-            else if (!documentStructure[id][childKey]) {
-              nestedInserts.push({
-                parentId: id,
-                childId: childKey
-              });
-            }
-            // 기존 요소는 부모 업데이트 내에서 자동 처리
-          }
-        }
-      }
-    }
-  }
-  
-  console.log("패치 분석 결과:", {
-    inserts,
-    updates,
-    deletions,
-    nestedInserts
-  });
-  
-  return { inserts, updates, deletions, nestedInserts };
-}
-
-/**
- * 문서 패치 적용 (외부에서 호출하는 주 함수) - 중첩 요소 삽입 지원
- */
-export async function writeDocContent(
-  patchData: Record<string, any>
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    // 현재 문서 상태 가져오기
-    const documentStructure = await updateDocumentStructure();
-    console.log("현재 문서 상태:", documentStructure);
-    
-    // 패치 적용
-    console.log("패치 데이터:", patchData);
-    
-    // 패치 분석 (추가/변경/삭제 요소 식별)
-    const changes = analyzeChanges(patchData, documentStructure);
-    
-    // 변경 적용 결과 추적
-    const results = {
-      success: 0,
-      failed: 0,
-      details: [] as Array<{id: string, operation: string, success: boolean, error?: string}>
-    };
-    
-    // Word 문서 작업 컨텍스트 생성
-    await Word.run(async context => {
-      // 1. 삭제 먼저 처리
-      for (const deleteId of changes.deletions) {
-        try {
-          await deleteElement(context, deleteId);
-          results.success++;
-          results.details.push({
-            id: deleteId,
-            operation: 'delete',
-            success: true
-          });
-        } catch (deleteError) {
-          results.failed++;
-          results.details.push({
-            id: deleteId,
-            operation: 'delete',
-            success: false,
-            error: deleteError instanceof Error ? deleteError.message : String(deleteError)
-          });
-          console.error(`요소 ${deleteId} 삭제 실패:`, deleteError);
-          // 오류가 발생해도 계속 진행
-        }
-      }
-      
-      // 2. 변경 처리
-      for (const updateId of changes.updates) {
-        try {
-          await updateElement(
-            context,
-            updateId,
-            patchData[updateId],
-            documentStructure
-          );
-          results.success++;
-          results.details.push({
-            id: updateId,
-            operation: 'update',
-            success: true
-          });
-        } catch (updateError) {
-          results.failed++;
-          results.details.push({
-            id: updateId,
-            operation: 'update',
-            success: false,
-            error: updateError instanceof Error ? updateError.message : String(updateError)
-          });
-          console.error(`요소 ${updateId} 업데이트 실패:`, updateError);
-          // 오류가 발생해도 계속 진행
-        }
-      }
-      
-      // 3. 새 요소 추가
-      for (const insertId of changes.inserts) {
-        try {
-          await insertNewElement(
-            context,
-            insertId,
-            patchData[insertId],
-            documentStructure
-          );
-          results.success++;
-          results.details.push({
-            id: insertId,
-            operation: 'insert',
-            success: true
-          });
-        } catch (insertError) {
-          results.failed++;
-          results.details.push({
-            id: insertId,
-            operation: 'insert',
-            success: false,
-            error: insertError instanceof Error ? insertError.message : String(insertError)
-          });
-          console.error(`요소 ${insertId} 삽입 실패:`, insertError);
-          // 오류가 발생해도 계속 진행
-        }
-      }
-      
-      // 4. 중첩된 새 요소 추가 (예: 문단 내 새 run 요소)
-      for (const { parentId, childId } of changes.nestedInserts) {
-        try {
-          // 부모 요소 Content Control 찾기
-          const parentContentControl = await findContentControlById(context, parentId);
-          
-          if (!parentContentControl) {
-            console.error(`중첩 요소 삽입 실패: 부모 요소 ${parentId}를 찾을 수 없음`);
-            continue;
-          }
-          
-          // 자식 요소 데이터
-          const childElementData = patchData[parentId][childId];
-          
-          // 자식 요소 타입 확인 (ID 프리픽스로 판단)
-          const childElementType = getElementTypeFromId(childId);
-          
-          // 삽입 위치 결정 (order 속성 기반)
-          const order = childElementData.order || "z"; // 기본값은 가장 마지막
-          
-          // 부모 내 자식 요소들 가져오기
-          const siblings: Array<{ id: string; order: string }> = [];
-          const parentElement = documentStructure[parentId];
-          
-          if (parentElement) {
-            for (const key in parentElement) {
-              if (key.startsWith('r_') && parentElement[key].order) {
-                siblings.push({
-                  id: key,
-                  order: parentElement[key].order
-                });
-              }
-            }
-          }
-          
-          // 순서 값 기준으로 정렬
-          siblings.sort((a, b) => a.order.localeCompare(b.order));
-          
-          // 삽입 위치 찾기
-          let insertIndex = siblings.findIndex(elem => elem.order > order);
-          let referenceId: string | undefined;
-          let position: 'before' | 'after' | 'start' | 'end' = 'end';
-          
-          if (insertIndex === -1) {
-            // 모든 요소보다 순서가 크면 끝에 추가
-            position = 'end';
-          } else if (insertIndex === 0) {
-            // 첫 번째 요소보다 순서가 작으면 시작에 추가
-            position = 'start';
-          } else {
-            // 그 외의 경우, 이전 요소 다음에 추가
-            referenceId = siblings[insertIndex - 1].id;
-            position = 'after';
-          }
-          
-          // 삽입 위치 정보
-          const insertionPosition = {
-            parentId,
-            referenceId,
-            position,
-            index: insertIndex === -1 ? siblings.length : insertIndex
-          };
-          
-          // 자식 요소 타입에 따라 삽입
-          if (childElementType === 'run') {
-            await insertRun(
-              context,
-              childId,
-              childElementData.attributes || {},
-              insertionPosition,
-              childElementData
-            );
-          }
-          // 다른 타입의 중첩 요소에 대한 지원은 필요에 따라 추가
-          
-          results.success++;
-          results.details.push({
-            id: `${parentId}.${childId}`,
-            operation: 'nested-insert',
-            success: true
-          });
-          
-        } catch (nestedInsertError) {
-          results.failed++;
-          results.details.push({
-            id: `${parentId}.${childId}`,
-            operation: 'nested-insert',
-            success: false,
-            error: nestedInsertError instanceof Error ? nestedInsertError.message : String(nestedInsertError)
-          });
-          console.error(`중첩 요소 ${childId} (부모: ${parentId}) 삽입 실패:`, nestedInsertError);
-        }
-      }
-      
-      await context.sync();
+      console.log("Office Add-in: Document successfully updated.");
     });
-    
-    // 결과 로깅
-    console.log(`패치 적용 결과: 성공=${results.success}, 실패=${results.failed}`);
-    if (results.failed > 0) {
-      console.error("실패한 작업:", results.details.filter(d => !d.success));
-    }
-    
-    return { 
-      success: results.failed === 0,
-      error: results.failed > 0 ? `${results.failed}개 작업 실패` : undefined
-    };
   } catch (error) {
-    console.error("문서 내용 편집 실패:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error)
-    };
+    console.error("Office Add-in: Error updating document from merge patch:", error);
+    throw error;
   }
 }
 
-/**
- * 문서 패치 적용 (이전 버전과 호환성 유지)
- */
-export async function applyDocumentPatch(
-  patchData: Record<string, any>
-): Promise<{ success: boolean; error?: string }> {
-  return writeDocContent(patchData);
+// --- XML DOM 직접 수정을 위한 함수 ---
+function applyOperationsDirectlyToXmlDom(
+  operations: Operation[],
+  xmlDoc: Document,
+  targetJsonState: Record<string, any>,
+  originalJsonState: Record<string, any>
+): void {
+  const wordNs = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  const bodyElement = xmlDoc.getElementsByTagNameNS(wordNs, "body")[0] || xmlDoc.getElementsByTagName("w:body")[0];
+  if (!bodyElement) throw new Error("w:body element not found in XML document.");
+
+  let clonedSectPr: Node | null = null;
+  const sectPrNodeList = bodyElement.getElementsByTagNameNS(wordNs, 'sectPr');
+  if (sectPrNodeList.length > 0 && sectPrNodeList[0].parentNode === bodyElement) {
+      clonedSectPr = sectPrNodeList[0].cloneNode(true);
+      sectPrNodeList[0].remove();
+  }
+
+  operations.forEach(op => {
+    console.log(`Applying DOM Op: ${op.op}, Path: ${op.path}`);    
+    try {
+      switch (op.op) {
+        case 'remove':
+          handleXmlDomRemove(op, xmlDoc, bodyElement, originalJsonState);
+          break;
+        case 'add':
+          handleXmlDomAdd(op, xmlDoc, bodyElement, targetJsonState);
+          break;
+        case 'replace':
+          handleXmlDomReplace(op, xmlDoc, bodyElement, targetJsonState, originalJsonState);
+          break;
+        default:
+          console.warn(`Unsupported DOM operation type: ${(op as any).op}`); 
+      }
+    } catch(e) {
+        console.error(`Error applying DOM operation ${JSON.stringify(op)}:`, e);
+    }
+  });
+
+  // 최종 순서 재정렬 및 누락 요소 재생성 (방어적 코딩)
+  const currentSdtElementsInBody = Array.from(bodyElement.children).filter(c => c.tagName === 'w:sdt');
+  const sdtMap = new Map<string, Element>();
+  currentSdtElementsInBody.forEach(sdt => {
+    const tagEl = sdt.getElementsByTagName('w:sdtPr')[0]?.getElementsByTagName('w:tag')[0];
+    if (tagEl) {
+      const val = tagEl.getAttribute('w:val');
+      if (val) sdtMap.set(val, sdt);
+    }
+  });
+  currentSdtElementsInBody.forEach(sdt => sdt.remove());
+
+  const sortedTopLevelTargetIds = Object.keys(targetJsonState)
+    .filter(id => targetJsonState[id] !== null && targetJsonState[id] !== undefined && targetJsonState[id].type)
+    .sort((a, b) => (targetJsonState[a]?.order || "").localeCompare(targetJsonState[b]?.order || ""));
+
+  for (const id of sortedTopLevelTargetIds) {
+    let sdtToAppend = sdtMap.get(id);
+    if (!sdtToAppend) {
+        const itemJson = targetJsonState[id];
+        if (itemJson && itemJson.type && itemJson.order !== undefined) {
+            // console.log(`[DOM Reorder/Finalize] ID ${id} not found in DOM map, creating from targetJson.`);
+            sdtToAppend = createXmlElementFromJson(id, itemJson, xmlDoc, itemJson.order);
+        } else {
+            console.warn(`[DOM Reorder/Finalize] Cannot create SDT for ID ${id}, itemJson invalid in targetJson.`);
+            continue;
+        }
+    }
+    if (sdtToAppend) {
+        bodyElement.appendChild(sdtToAppend);
+    }
+  }
+
+  if (clonedSectPr) {
+    bodyElement.appendChild(clonedSectPr);
+  }
 }
+
+function handleXmlDomRemove(
+  op: RemoveOperation,
+  xmlDoc: Document,
+  bodyElement: Element,
+  originalJsonState: Record<string, any>
+) {
+  const pathSegments = op.path.substring(1).split('/');
+  // console.log(`  [DOM Remove] Path segments: ${pathSegments.join(' -> ')}`);
+  
+  if (pathSegments.length === 1) { // 최상위 요소 삭제
+      const sdtElement = findSdtElementById(bodyElement, pathSegments[0]);
+      if (sdtElement && sdtElement.parentNode === bodyElement) sdtElement.remove();
+      else console.warn(`Remove Op: Top-level SDT for ID ${pathSegments[0]} not found or not direct child of body.`);
+  } else { 
+      const keyToRemove = pathSegments[pathSegments.length - 1];
+      const elementPathSegments = pathSegments.slice(0, pathSegments[pathSegments.length - 2] === 'properties' ? -2 : -1);
+      
+      const actualElementToModify = getElementByPathRecursive(bodyElement, elementPathSegments, 0, "Remove target element search");
+      if (!actualElementToModify) {
+           console.warn(`Remove Op: Target element for path '${elementPathSegments.join('/')}' not found in XML DOM.`);
+           return;
+      }
+
+      let jsonNodeForElement = originalJsonState;
+      elementPathSegments.forEach(seg => { if(jsonNodeForElement && jsonNodeForElement.hasOwnProperty(seg)) jsonNodeForElement = jsonNodeForElement[seg]; else jsonNodeForElement = null; });
+      
+      if (!jsonNodeForElement || !jsonNodeForElement.type) {
+          console.warn(`Remove Op: Cannot get JSON definition or type for element at path ${elementPathSegments.join('/')}`);
+          return;
+      }
+      const elementConfig = ELEMENT_CONFIG[jsonNodeForElement.type];
+      if (!elementConfig) { console.warn(`Remove Op: No ELEMENT_CONFIG for type ${jsonNodeForElement.type}`); return; }
+
+      if (keyToRemove === 'text' && elementConfig.children?.text) {
+          const textXmlTag = (elementConfig.xmlTag === 'w:r' && elementConfig.children.t) ? elementConfig.children.t.xmlTag : elementConfig.children.text.xmlTag;
+          const textNodes = actualElementToModify.getElementsByTagName(textXmlTag);
+          if (textNodes.length > 0 && textNodes[0].parentNode === actualElementToModify) textNodes[0].remove();
+      } else if (pathSegments[pathSegments.length - 2] === 'properties' && elementConfig.children?.properties) {
+          const propContainerConfig = elementConfig.children.properties as ElementConfig;
+          const propContainerElement = actualElementToModify.getElementsByTagName(propContainerConfig.xmlTag)[0];
+          if (propContainerElement) {
+              const leafConfig = Object.values(propContainerConfig.children || {}).find(
+                  (lc: any) => (lc.jsonKey || lc.xmlTag.split(':').pop()) === keyToRemove
+              ) as ElementConfig | undefined;
+              if (leafConfig) {
+                  const leafNodes = propContainerElement.getElementsByTagName(leafConfig.xmlTag);
+                  if (leafNodes.length > 0 && leafNodes[0].parentNode === propContainerElement) leafNodes[0].remove();
+              } else {
+                  console.warn(`Remove Op: No leaf config for property '${keyToRemove}' in properties of ${elementConfig.xmlTag}`);
+              }
+          }
+      } else if (elementConfig.parameters?.find(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToRemove)) {
+          const paramFullName = elementConfig.parameters.find(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToRemove);
+          if(paramFullName) actualElementToModify.removeAttribute(paramFullName);
+      } else { // 자식 구조 요소(SDT) 삭제
+          const childSdtToRemove = findSdtElementById(actualElementToModify, keyToRemove);
+          if (childSdtToRemove && childSdtToRemove.parentNode === actualElementToModify) childSdtToRemove.remove();
+          else console.warn(`Remove Op: Child SDT '${keyToRemove}' not found directly under ${actualElementToModify.tagName} (ID: ${elementPathSegments.pop()}).`);
+      }
+  }
+}
+
+function handleXmlDomAdd(
+  op: AddOperation<any>,
+  xmlDoc: Document,
+  bodyElement: Element,
+  targetJsonState: Record<string, any>
+) {
+  const pathSegments = op.path.substring(1).split('/');
+  const valueToAdd = op.value;
+  // console.log(`  [DOM Add] Path: ${op.path}, Value:`, JSON.stringify(valueToAdd));
+
+  const lastSegment = pathSegments[pathSegments.length - 1];
+  const secondLastSegment = pathSegments.length > 1 ? pathSegments[pathSegments.length - 2] : null;
+
+  let elementPathSegments = [...pathSegments]; // 기본적으로 전체 경로가 요소 ID를 가리킴
+  let operationSubType: 'structural' | 'text' | 'propertyKey' | 'propertiesObject' = 'structural';
+
+  if (lastSegment === 'text') {
+      operationSubType = 'text';
+      elementPathSegments = pathSegments.slice(0, -1);
+  } else if (lastSegment === 'properties' && typeof valueToAdd === 'object') {
+      operationSubType = 'propertiesObject'; // properties 객체 전체를 추가/교체
+      elementPathSegments = pathSegments.slice(0, -1);
+  } else if (secondLastSegment === 'properties') {
+      operationSubType = 'propertyKey'; // properties 내부의 특정 키 추가
+      elementPathSegments = pathSegments.slice(0, -2);
+  }
+  // 그 외: path의 마지막 세그먼트가 새 구조적 요소의 ID (operationSubType = 'structural' 유지)
+
+  let actualElementToModify: Element | null = bodyElement; // 기본값은 body (최상위 요소 추가 시)
+  if (elementPathSegments.length > 0) { // 최상위 요소가 아닌 경우에만 경로 탐색
+      actualElementToModify = getElementByPathRecursive(bodyElement, elementPathSegments, 0, `Add target element search for ${elementPathSegments.join('/')}`);
+  }
+
+  if (!actualElementToModify) {
+      console.warn(`Add Op: Could not find target/parent XML element at path '${elementPathSegments.join('/')}' for operation on '${lastSegment}'.`);
+      return;
+  }
+
+  // targetJsonState에서 실제 조작 대상 요소의 전체 JSON 정의를 가져옴
+  let jsonNodeForElement = targetJsonState;
+  elementPathSegments.forEach(seg => { if(jsonNodeForElement) jsonNodeForElement = jsonNodeForElement[seg]; else jsonNodeForElement = null; });
+
+  if (operationSubType === 'structural') {
+      if (typeof valueToAdd === 'object' && valueToAdd.type && valueToAdd.order !== undefined) {
+          const newSdtElement = createXmlElementFromJson(lastSegment, valueToAdd, xmlDoc, valueToAdd.order);
+          insertSdtInOrder(actualElementToModify, newSdtElement, valueToAdd.order, xmlDoc); // actualElementToModify는 이때 부모
+      } else {
+          console.warn(`Add Op (Structural): Invalid JSON for new element '${lastSegment}'. Missing type/order. Value:`, valueToAdd);
+      }
+  } else { // Text 또는 Property 관련 작업
+      if (!jsonNodeForElement || !jsonNodeForElement.type) {
+          console.warn(`Add Op: Cannot determine type for element at path ${elementPathSegments.join('/')}.`);
+          return;
+      }
+      const elementConfig = ELEMENT_CONFIG[jsonNodeForElement.type];
+      if (!elementConfig) {
+           console.warn(`Add Op: No ELEMENT_CONFIG for type ${jsonNodeForElement.type}.`);
+           return;
+      }
+
+      if (operationSubType === 'text') {
+          const textConfig = (elementConfig.xmlTag === 'w:r' && elementConfig.children?.t) ? elementConfig.children.t : elementConfig.children?.text;
+          if (textConfig) {
+              const oldTextNodes = actualElementToModify.getElementsByTagName(textConfig.xmlTag);
+              for(let i=0; i<oldTextNodes.length; i++) { if(oldTextNodes[i].parentNode === actualElementToModify) oldTextNodes[i].remove(); }
+
+              const textElement = xmlDoc.createElement(textConfig.xmlTag);
+              if (valueToAdd !== null && valueToAdd !== undefined) {
+                  textElement.textContent = String(valueToAdd);
+                  if (String(valueToAdd) === "") textElement.setAttribute('xml:space', 'preserve');
+              }
+              actualElementToModify.appendChild(textElement);
+          }
+      } else if (operationSubType === 'propertiesObject' || operationSubType === 'propertyKey') {
+          // targetJson에서 항상 최신 properties 객체 전체를 가져와서 적용
+          const fullPropertiesJson = jsonNodeForElement.properties;
+          if (fullPropertiesJson && typeof fullPropertiesJson === 'object') {
+              applyPropertiesToXmlElement(actualElementToModify, fullPropertiesJson, elementConfig, xmlDoc);
+          } else if (operationSubType === 'propertiesObject' && valueToAdd && typeof valueToAdd === 'object'){
+              // properties 객체 자체가 추가되는 경우 (원래 properties가 없었을 때)
+              applyPropertiesToXmlElement(actualElementToModify, valueToAdd, elementConfig, xmlDoc);
+          }
+          else {
+              console.warn(`Add Op (Property): Expected full properties object for ${actualElementToModify.tagName} at path ${elementPathSegments.join('/')}/properties, but targetJson has:`, fullPropertiesJson);
+          }
+      } else {
+           console.warn(`Add Op: Unhandled non-structural addition for key '${lastSegment}' under element type '${elementConfig.xmlTag}'. Path: ${op.path}.`);
+      }
+  }
+}
+
+// service.ts
+
+// ... (다른 함수들은 이전 답변과 동일하게 유지) ...
+
+function handleXmlDomReplace(
+  op: ReplaceOperation<any>,
+  xmlDoc: Document,
+  bodyElement: Element,
+  targetJsonState: Record<string, any>,
+  originalJsonState: Record<string, any>
+) {
+  const pathSegments = op.path.substring(1).split('/');
+  const newJsonValueFromOp = op.value;
+  // console.log(`  [DOM Replace] Path: ${op.path}, New value:`, newJsonValueFromOp);
+
+  const keyToReplace = pathSegments[pathSegments.length - 1];
+  let elementPathSegments = [...pathSegments];
+  // ❗ 변수명 일치: operationType -> operationSubType
+  let operationSubType: 'structural' | 'text' | 'propertyKey' | 'propertiesObject' | 'directParameter' = 'structural';
+
+  if (pathSegments.length > 1) {
+      if (keyToReplace === 'text') {
+          operationSubType = 'text';
+          elementPathSegments = pathSegments.slice(0, -1);
+      } else if (pathSegments[pathSegments.length - 2] === 'properties') {
+          operationSubType = 'propertyKey';
+          elementPathSegments = pathSegments.slice(0, -2);
+      } else if (keyToReplace === 'properties') {
+          operationSubType = 'propertiesObject';
+          elementPathSegments = pathSegments.slice(0, -1);
+      }
+      // directParameter에 대한 operationSubType 결정 로직 추가 가능 (필요하다면)
+      else if (ELEMENT_CONFIG[originalJsonState[elementPathSegments.slice(0, -1).join('/')]?.type]?.parameters?.some(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToReplace)) {
+        operationSubType = 'directParameter';
+        elementPathSegments = pathSegments.slice(0, -1);
+      }
+  }
+  // console.log(`  [DOM Replace] Element Path: ${elementPathSegments.join(' -> ')}, OpSubType: ${operationSubType}, Key: ${keyToReplace}`);
+
+  const actualElementToModify = getElementByPathRecursive(bodyElement, elementPathSegments, 0, `Replace target element search for path: ${elementPathSegments.join('/')}`);
+
+  // ❗ 변수명 일치: operationType -> operationSubType
+  if (!actualElementToModify && !(operationSubType === 'structural' && elementPathSegments.length === 0 && pathSegments.length === 1) ) {
+      console.warn(`Replace Op: Could not find target XML element at path '${elementPathSegments.join('/')}' to replace '${keyToReplace}'.`);
+      return;
+  }
+  
+  let originalJsonNodeForElement = originalJsonState;
+  elementPathSegments.forEach(seg => { if(originalJsonNodeForElement && originalJsonNodeForElement.hasOwnProperty(seg)) originalJsonNodeForElement = originalJsonNodeForElement[seg]; else originalJsonNodeForElement = null; });
+  
+  // ❗ 변수명 일치: operationType -> operationSubType
+  if (operationSubType === 'structural') {
+      if (typeof newJsonValueFromOp === 'object' && newJsonValueFromOp !== null && newJsonValueFromOp.type && newJsonValueFromOp.order !== undefined) {
+          let parentForSdtReplace: Element | null = bodyElement;
+           if (elementPathSegments.length > 0 && keyToReplace !== elementPathSegments[elementPathSegments.length-1] ){
+               parentForSdtReplace = actualElementToModify;
+          }
+
+          if (parentForSdtReplace) {
+              const oldSdt = findSdtElementById(parentForSdtReplace, keyToReplace);
+              if (oldSdt && oldSdt.parentNode === parentForSdtReplace) oldSdt.remove();
+              
+              const newSdt = createXmlElementFromJson(keyToReplace, newJsonValueFromOp, xmlDoc, newJsonValueFromOp.order);
+              insertSdtInOrder(parentForSdtReplace, newSdt, newJsonValueFromOp.order, xmlDoc);
+          } else {
+              console.warn(`Replace Op (Structural): Could not determine parent for replacing SDT ${keyToReplace}.`);
+          }
+      } else {
+          console.warn(`Replace Op (Structural): Invalid JSON for replacement element ${keyToReplace}. Value:`, newJsonValueFromOp);
+      }
+  // ❗ 변수명 일치: operationType -> operationSubType (else if 조건에서도)
+  } else if (actualElementToModify && originalJsonNodeForElement && originalJsonNodeForElement.type) {
+      const elementConfig = ELEMENT_CONFIG[originalJsonNodeForElement.type];
+      if (!elementConfig) {
+           console.warn(`Replace Op: No ELEMENT_CONFIG for type ${originalJsonNodeForElement.type} at path ${elementPathSegments.join('/')}.`);
+           return;
+      }
+
+      if (operationSubType === 'text') { // ❗ 변수명 일치
+          const textConfig = (elementConfig.xmlTag === 'w:r' && elementConfig.children?.t) ? elementConfig.children.t : elementConfig.children?.text;
+          if(textConfig){
+              let textNode = actualElementToModify.getElementsByTagName(textConfig.xmlTag)[0];
+              if (newJsonValueFromOp === null || newJsonValueFromOp === undefined) {
+                  if(textNode && textNode.parentNode === actualElementToModify) textNode.remove();
+              } else {
+                  if (!textNode || textNode.parentNode !== actualElementToModify) {
+                      const oldTextNodes = actualElementToModify.getElementsByTagName(textConfig.xmlTag);
+                      for(let i=0; i<oldTextNodes.length; i++) { if(oldTextNodes[i].parentNode === actualElementToModify) oldTextNodes[i].remove(); }
+                      textNode = xmlDoc.createElement(textConfig.xmlTag);
+                      actualElementToModify.appendChild(textNode);
+                  }
+                  textNode.textContent = String(newJsonValueFromOp);
+                  if (String(newJsonValueFromOp) === "") textNode.setAttribute('xml:space', 'preserve');
+                  else textNode.removeAttribute('xml:space');
+              }
+          } else {
+               console.warn(`Replace Op: No text config for element type ${elementConfig.xmlTag} (ID: ${elementPathSegments.join('/')})`);
+          }
+      } else if (operationSubType === 'propertyKey' || operationSubType === 'propertiesObject') { // ❗ 변수명 일치
+          let targetPropertiesContainer = targetJsonState;
+          elementPathSegments.forEach(seg => {if(targetPropertiesContainer) targetPropertiesContainer = targetPropertiesContainer[seg]; else targetPropertiesContainer = null; });
+          
+          const fullPropertiesJson = targetPropertiesContainer?.properties;
+          if (fullPropertiesJson && typeof fullPropertiesJson === 'object') {
+               applyPropertiesToXmlElement(actualElementToModify, fullPropertiesJson, elementConfig, xmlDoc);
+          } else if ( (fullPropertiesJson === null || fullPropertiesJson === undefined) && operationSubType === 'propertiesObject' ) {  // ❗ 변수명 일치
+               applyPropertiesToXmlElement(actualElementToModify, {}, elementConfig, xmlDoc);
+          }
+          else {
+               console.warn(`Replace Op: Could not get updated properties object or invalid type from targetJson for element ${elementPathSegments.join('/')}. Properties in target:`, fullPropertiesJson);
+          }
+      } else if (operationSubType === 'directParameter') { // ❗ 변수명 일치
+          const paramFullName = elementConfig.parameters?.find(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToReplace);
+          if (paramFullName) {
+              if (newJsonValueFromOp === null || newJsonValueFromOp === undefined) {
+                  actualElementToModify.removeAttribute(paramFullName);
+              } else {
+                  actualElementToModify.setAttribute(paramFullName, String(newJsonValueFromOp));
+              }
+          }
+      } else {
+          console.warn(`Replace Op: Unhandled non-structural replacement for key '${keyToReplace}' under element type '${elementConfig.xmlTag}'. Path: ${op.path}. OpSubType: ${operationSubType}`);
+      }
+  } else if (!actualElementToModify && operationSubType !== 'structural' as string) { // ❗ 변수명 일치 (그리고 이 조건은 이제 TypeScript 오류 없이 유효)
+      console.warn(`Replace Op: Target element for property/text replace not found at ${elementPathSegments.join('/')}`);
+  }
+}
+
+// ... (나머지 service.ts 코드는 이전 답변과 동일하게 유지)

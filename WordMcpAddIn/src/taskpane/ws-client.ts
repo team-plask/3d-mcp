@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { updateDocumentStructure } from './document';
-import { writeDocContent } from './service';
+import { updateDocumentFromPatch as writeDoc } from './service';
 
 // Role definitions
 const Roles = ["user", "model", "process"] as const;
@@ -274,8 +274,8 @@ export class WebSocketClient {
         if (!args.patch || typeof args.patch !== 'object') {
           throw new Error("Valid patch data is required");
         }
-        
-        const result = await writeDocContent(args.patch);
+        console.log("Applying patch:", args.patch);
+        const result = await writeDoc(args.patch);
         setTimeout(() => this.syncDocument(), 500);
         return result;
       }

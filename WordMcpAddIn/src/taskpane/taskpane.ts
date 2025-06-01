@@ -1,6 +1,6 @@
 import { WebSocketClient } from './ws-client';
 import { updateDocumentStructure } from './document';
-import { applyDocumentPatch } from './service';
+import { updateDocumentFromPatch as writeDoc } from './service';
 import './taskpane.css';
 
 let wsClient: WebSocketClient | null = null;
@@ -153,30 +153,78 @@ async function handleApplyPatch(): Promise<void> {
     updateResultDisplay('WebSocket not connected');
     return;
   }
-  
-  const patchTextarea = $('patchTextarea') as HTMLTextAreaElement;
+
+  const patchTextarea = $('patchTextarea') as HTMLTextAreaElement | null;
   if (!patchTextarea || !patchTextarea.value.trim()) {
-    updateResultDisplay('No patch data provided');
+    updateResultDisplay({ warning: 'No patch data provided in textarea.' });
     return;
   }
-  
+  const patchText = patchTextarea.value.trim(); // Get the text
+
+  updateResultDisplay('⏳ Applying patch...');
+  console.log("[DEBUG] Text to be parsed by JSON.parse():", patchText); // <--- ADD THIS LINE
+
   try {
-    // Parse the patch JSON
-    const patch = JSON.parse(patchTextarea.value);
-    
-    // Apply the patch using the WebSocket client
-    const result = await wsClient.writeDocument(patch);
-    
+    const mergePatchData: Record<string, any | null> = JSON.parse(patchText); // This is line 165 (or around it)
+
+    if (Object.keys(mergePatchData).length === 0) {
+        updateResultDisplay({ info: 'No changes to apply (empty patch object).' });
+        return;
+    }
+
+    // Assuming wsClient.writeDocument or a similar function handles the patch
+    // if (wsClient) {
+    //   const toolResponse = await wsClient.writeDocument(mergePatchData);
+    //   // ... (handle toolResponse)
+    //    if (toolResponse.error) {
+    //      throw new Error(toolResponse.error);
+    //    }
+    //    if (toolResponse.success) {
+    //        updateResultDisplay({
+    //            status: 'Patch successfully processed by server.',
+    //            details: toolResponse.data
+    //        });
+    //    } else {
+    //        updateResultDisplay({
+    //            error: 'Server indicated failure in applying patch.',
+    //            details: toolResponse.error
+    //        });
+    //    }
+    // } else if (!wsClient) {
+    //     // If not using WebSocket or not initialized, try local application via service.ts
+    //     // This assumes 'writeDoc' (updateDocumentFromPatch) is imported from your service.ts
+    //     // import { updateDocumentFromPatch as writeDoc } from './service';
+    await writeDoc(mergePatchData); // writeDoc is from service.ts
     updateResultDisplay({
-      status: 'Patch applied successfully',
-      result
+      status: 'Local document patch applied successfully.',
+      message: 'Document has been updated. Consider syncing with server if applicable.'
     });
+      if (wsClient) {
+        console.log("Patch applied locally, attempting to sync with server...");
+        await handleSync(); 
+      } else {
+        console.warn("WebSocket not connected or initialized; server sync skipped after local patch.");
+         }
+    // } else {
+    //   updateResultDisplay({ error: 'Cannot apply patch: Client not properly initialized.' });
+    //   return;
+    // }
+
   } catch (error) {
-    console.error('Failed to apply patch:', error);
-    updateResultDisplay({
-      error: 'Failed to apply patch',
-      details: error instanceof Error ? error.message : String(error)
-    });
+    console.error('Failed to parse or apply patch:', error);
+    // If it's a JSON.parse error, the raw text will be logged above
+    if (error instanceof SyntaxError && error.message.includes("JSON Parse error")) {
+         updateResultDisplay({
+           error: 'Failed to apply patch: Invalid JSON format.',
+           details: `Error: ${error.message}. Problematic text logged in console.`,
+           attemptedText: patchText // Show the problematic text in UI if desired (can be long)
+         });
+    } else {
+        updateResultDisplay({
+          error: 'Failed to apply patch',
+          details: error instanceof Error ? error.message : String(error)
+        });
+    }
   }
 }
 

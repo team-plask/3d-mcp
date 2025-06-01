@@ -1,7 +1,6 @@
 import { 
   processDocument as processDocumentOriginal,
   extractJsonFromContentControls,
-  optimizeTableStructures
 } from './converter';
 import { applyPatch, Operation } from 'fast-json-patch';
 import { normalizeOoxml } from '../xml-converter/normalizer';
@@ -196,16 +195,13 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       console.log("기존 문서 구조 JSON 로드 완료");
       console.log("기존 문서 구조 JSON:\n", JSON.stringify(existingJson, null, 2));
       
-      const { json: originalJson, xml: updatedXmlWithIds } = processDocumentOriginal(docXml, existingJson);
+      const { json: originalJson, xml: updatedXmlWithIds } = processDocumentOriginal(normalizedXml, existingJson);
       
       // 로깅
       const mappingString = JSON.stringify(originalJson, null, 2);
       console.log('문서 구조 JSON\n', mappingString);
       console.log('업데이트된 Document XML:\n', formatXML(updatedXmlWithIds));
       console.log("문서 구조 분석 및 매핑 완료");
-      
-      const optimizedXml = optimizeTableStructures(updatedXmlWithIds);
-      console.log("테이블 구조 최적화 완료");
 
       // 5. 전체 Flat OPC에 업데이트된 XML 적용
       const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, updatedXmlWithIds);
