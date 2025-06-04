@@ -12,6 +12,7 @@ import {
   ElementConfig,
   TAG_TO_TYPE,
   processDocument as processDocumentFromConverter,
+  extractJsonFromContentControls
 } from './converter';
 import { formatXML } from './document';
 
@@ -188,89 +189,127 @@ function applyPropertiesToXmlElement( /* 이전 답변의 코드 */
   }
 }
 
-function createXmlElementFromJson( /* 이전 답변의 수정된 코드 사용 */
+// service.ts
+
+function createXmlElementFromJson(
   id: string,
   itemJson: Record<string, any>,
   xmlDoc: Document,
-  orderKey: string
+  orderKey: string // orderKey는 SDT alias에 사용됨
 ): Element {
   const elementType = itemJson.type as string;
   if (!elementType || !ELEMENT_CONFIG[elementType]) {
     throw new Error(`[createXmlElementFromJson] Unsupported element type: ${itemJson.type} for ID: ${id}. JSON: ${JSON.stringify(itemJson)}`);
   }
   const config = ELEMENT_CONFIG[elementType];
-  const contentElement = xmlDoc.createElement(config.xmlTag);
+  const contentElement = xmlDoc.createElement(config.xmlTag); // 예: <w:p> 또는 <w:r>
 
+  // Direct parameters on the content element itself (e.g., w:rsidR on w:p)
   if (config.parameters) {
     for (const paramFullName of config.parameters) {
       const paramKeyInJson = paramFullName.includes(':') ? paramFullName.substring(paramFullName.indexOf(':') + 1) : paramFullName;
-      if (itemJson.hasOwnProperty(paramKeyInJson) && itemJson[paramKeyInJson] !== undefined) {
+      if (itemJson.hasOwnProperty(paramKeyInJson) && itemJson[paramKeyInJson] !== undefined && itemJson[paramKeyInJson] !== null) {
         contentElement.setAttribute(paramFullName, String(itemJson[paramKeyInJson]));
       }
     }
   }
 
+  // <w:pPr> or <w:rPr>
   if (itemJson.properties && typeof itemJson.properties === 'object') {
     applyPropertiesToXmlElement(contentElement, itemJson.properties, config, xmlDoc);
+
+    // ❗ 언어 설정 (w:lang) 명시적으로 추가 (w:rPr 내부에)
+    if (config.xmlTag === 'w:r' && itemJson.properties.lang) {
+      let rPrElement = contentElement.getElementsByTagName('w:rPr')[0];
+      if (!rPrElement) { // rPr이 없으면 생성
+        rPrElement = xmlDoc.createElement('w:rPr');
+        contentElement.insertBefore(rPrElement, contentElement.firstChild);
+      }
+      // 기존 lang 요소 제거 후 새로 추가 (혹은 업데이트)
+      const existingLangNodes = Array.from(rPrElement.getElementsByTagName('w:lang'));
+      existingLangNodes.forEach(node => rPrElement.removeChild(node));
+
+      const langElement = xmlDoc.createElement('w:lang');
+      const langCode = String(itemJson.properties.lang); // 예: "ko-KR", "en-US"
+      langElement.setAttribute('w:val', langCode);
+      // Word는 종종 동아시아 언어에 대해 w:eastAsia 속성도 사용합니다.
+      // 필요에 따라 더 구체적인 로직 추가 가능 (예: 언어 코드에 따라 w:eastAsia, w:bidi 등 설정)
+      if (langCode.toLowerCase().startsWith('ko') || langCode.toLowerCase().startsWith('ja') || langCode.toLowerCase().startsWith('zh')) {
+          langElement.setAttribute('w:eastAsia', langCode);
+      }
+      rPrElement.appendChild(langElement);
+    }
   }
 
-  if (itemJson.hasOwnProperty('text') && config.children?.t && config.xmlTag === 'w:r') { // run('w:r')의 text 자식은 't'
+  // ❗ <w:r>의 <w:t> 생성 시, 텍스트 분리 방지 및 띄어쓰기 보존
+  if (itemJson.hasOwnProperty('text') && config.children?.t && config.xmlTag === 'w:r') {
     const textConfig = config.children.t as ElementConfig;
-    const textElement = xmlDoc.createElement(textConfig.xmlTag);
+    const textElement = xmlDoc.createElement(textConfig.xmlTag); // 단일 <w:t> 생성
+
     if (itemJson.text !== null && itemJson.text !== undefined) {
-        textElement.textContent = String(itemJson.text);
-        if (String(itemJson.text).trim() === "" && String(itemJson.text).length > 0) {
-            textElement.setAttribute('xml:space', 'preserve');
-        } else if (String(itemJson.text) === "") {
-            // <w:t/> 또는 <w:t xml:space="preserve"></w:t> (공백 없는 빈 문자열)
-             textElement.setAttribute('xml:space', 'preserve'); // Word에서 빈 문자열 유지
-        }
-    } else { // text가 null 또는 undefined
+      const textContentStr = String(itemJson.text);
+      textElement.textContent = textContentStr; // 📌 전체 문자열을 한 번에 할당
+
+      // 띄어쓰기 보존 로직 강화
+      if (textContentStr === "" ||
+          textContentStr.startsWith(" ") ||
+          textContentStr.endsWith(" ") ||
+          textContentStr.includes("  ")) {
         textElement.setAttribute('xml:space', 'preserve');
-        textElement.textContent = ' '; // 빈 <w:t> 대신 공백 하나를 가진 <w:t>가 더 안정적일 수 있음
+      } else {
+        textElement.removeAttribute('xml:space');
+      }
+    } else { // text가 null 또는 undefined (예: 빈 run 표현)
+      textElement.textContent = ''; // 빈 내용을 표현
+      textElement.setAttribute('xml:space', 'preserve'); // Word에서 빈 <w:t/>를 유지
     }
-    contentElement.appendChild(textElement);
-  } else if (itemJson.hasOwnProperty('text') && config.children?.text) { // 일반적인 text 자식 (현재 config에는 없음)
-    // 이 로직은 현재 ELEMENT_CONFIG에 'text'라는 키로 직접 정의된 자식이 없으므로 실행되지 않음
-    const textConfig = config.children.text as ElementConfig;
-    const textElement = xmlDoc.createElement(textConfig.xmlTag);
-    if (itemJson.text !== null && itemJson.text !== undefined) {
-        textElement.textContent = String(itemJson.text);
-    }
-    contentElement.appendChild(textElement);
+    contentElement.appendChild(textElement); // <w:r>에 단일 <w:t> 추가
   }
+  // (config.children.text 에 대한 부분은 현재 ELEMENT_CONFIG 구조상 사용되지 않으므로 생략 가능)
 
 
+  // 자식 요소들 (예: 단락 내의 런들, 표 내의 행들 등) 처리
+  // ❗ 재귀 호출 관련: run 타입의 경우, 'text' 속성이 처리되었으므로,
+  // itemJson에 'text' 외의 다른 키로 자식 run 객체들이 정의되어 있지 않다면,
+  // childItemKeys는 비어있거나 다른 타입의 자식(예: w:drawing)을 가리킬 것입니다.
+  // 만약 'text'와 'childrenRuns' 같은 속성이 동시에 존재하고 다르게 처리해야 한다면,
+  // ELEMENT_CONFIG와 이 로직의 수정이 필요합니다.
+  // 현재는 'text'가 우선시되고, 그 외 객체 타입 자식들은 아래에서 처리됩니다.
   const childItemKeys = Object.keys(itemJson).filter(
     key =>
-      key !== 'type' && key !== 'order' && key !== 'properties' && key !== 'text' &&
+      key !== 'type' && key !== 'order' && key !== 'properties' && key !== 'text' && // 'text'는 위에서 처리됨
       !(config.parameters && config.parameters.map(p => p.includes(':') ? p.substring(p.indexOf(':') + 1) : p).includes(key)) &&
-      itemJson[key] && typeof itemJson[key] === 'object' && ELEMENT_CONFIG[itemJson[key]?.type]
+      itemJson[key] && typeof itemJson[key] === 'object' && ELEMENT_CONFIG[itemJson[key]?.type] // 자식도 type이 정의된 요소여야 함
   );
 
   childItemKeys.sort((a, b) => (itemJson[a]?.order || '').localeCompare(itemJson[b]?.order || ''));
 
   for (const childKey of childItemKeys) {
     const childJson = itemJson[childKey];
+    // 자식 요소도 SDT로 감싸서 생성 (현재 로직 유지)
     const childSdtElement = createXmlElementFromJson(childKey, childJson, xmlDoc, childJson.order);
-    contentElement.appendChild(childSdtElement);
+    contentElement.appendChild(childSdtElement); // 부모의 contentElement에 추가 (예: <w:p> 안에 <w:sdt> for run)
   }
 
+  // 현재 요소를 SDT로 감싸는 로직
   const sdtElement = xmlDoc.createElement('w:sdt');
   const sdtPrElement = xmlDoc.createElement('w:sdtPr');
   const aliasElement = xmlDoc.createElement('w:alias');
+  // orderKey는 SDT alias에 사용 (예: run r_DyXFLajGfx__a0)
   aliasElement.setAttribute('w:val', `${elementType} ${id}__${orderKey}`);
   sdtPrElement.appendChild(aliasElement);
   const tagElement = xmlDoc.createElement('w:tag');
   tagElement.setAttribute('w:val', id);
   sdtPrElement.appendChild(tagElement);
   const idNode = xmlDoc.createElement('w:id');
-  idNode.setAttribute('w:val', String(Math.floor(Math.random() * 1000000000)));
+  idNode.setAttribute('w:val', String(Math.floor(Math.random() * 1000000000))); // 고유 ID 생성
   sdtPrElement.appendChild(idNode);
   sdtElement.appendChild(sdtPrElement);
+
   const sdtContentElement = xmlDoc.createElement('w:sdtContent');
-  sdtContentElement.appendChild(contentElement);
+  sdtContentElement.appendChild(contentElement); // 실제 내용(<w:p>, <w:r> 등)을 sdtContent에 추가
   sdtElement.appendChild(sdtContentElement);
+
   return sdtElement;
 }
 
@@ -411,7 +450,7 @@ export async function updateDocumentFromPatch(
       const { json: originalJson, xml: documentXmlWithIds } =
         processDocumentFromConverter(currentDocumentXmlFromOoxml);
       
-      console.log("Office Add-in: Original JSON parsed (keys):", Object.keys(originalJson));
+      console.log("Office Add-in: Original JSON parsed:", originalJson);
       // console.log("Original JSON (Full):\n", JSON.stringify(originalJson, null, 2));
       // console.log("Received Merge Patch:\n", JSON.stringify(mergePatch, null, 2));
       
@@ -422,7 +461,7 @@ export async function updateDocumentFromPatch(
           }
       }
 
-      console.log("Office Add-in: Target JSON constructed (keys):", Object.keys(targetJson));
+      console.log("Office Add-in: Target JSON constructed:", targetJson);
       // console.log("Target JSON (Full for debugging):\n", JSON.stringify(targetJson, null, 2));
 
       const operations: Operation[] = compare(originalJson, targetJson);
@@ -450,7 +489,7 @@ export async function updateDocumentFromPatch(
       
       const serializer = new XMLSerializer();
       const updatedDocumentXmlContent = serializer.serializeToString(xmlDocInstance.documentElement);
-      // console.log("Office Add-in: Updated document.xml content:\n", formatXML(updatedDocumentXmlContent)); // formatXML 사용
+      console.log("Office Add-in: Updated document.xml content:\n", formatXML(updatedDocumentXmlContent)); // formatXML 사용
 
       const finalFlatOpcXml = replaceOriginalWithUpdated(fullFlatXml, updatedDocumentXmlContent);
       
@@ -458,6 +497,16 @@ export async function updateDocumentFromPatch(
       await context.sync();
 
       console.log("Office Add-in: Document successfully updated.");
+
+      const updatedFlat = context.document.body.getOoxml();
+      await context.sync();
+      const finalDocXml = extractDocumentXml(updatedFlat.value);
+      console.log("Patch 후 최종 적용된 Document XML:\n", formatXML(finalDocXml));
+      
+      // 9. 최종 XML에서 다시 JSON 구조 추출 (중요 변경점!)
+      const finalXmlDoc = new DOMParser().parseFromString(finalDocXml, "text/xml");
+      const finalJson = extractJsonFromContentControls(finalXmlDoc);
+      console.log("Patch 후 최종 문서에서 추출한 JSON 구조:\n", JSON.stringify(finalJson, null, 2));
     });
   } catch (error) {
     console.error("Office Add-in: Error updating document from merge patch:", error);
@@ -527,12 +576,14 @@ function applyOperationsDirectlyToXmlDom(
         if (itemJson && itemJson.type && itemJson.order !== undefined) {
             // console.log(`[DOM Reorder/Finalize] ID ${id} not found in DOM map, creating from targetJson.`);
             sdtToAppend = createXmlElementFromJson(id, itemJson, xmlDoc, itemJson.order);
+            console.log("sdtToAppend", sdtToAppend);
         } else {
             console.warn(`[DOM Reorder/Finalize] Cannot create SDT for ID ${id}, itemJson invalid in targetJson.`);
             continue;
         }
     }
     if (sdtToAppend) {
+        console.log("sdtToAppend:", sdtToAppend);
         bodyElement.appendChild(sdtToAppend);
     }
   }
@@ -560,6 +611,7 @@ function handleXmlDomRemove(
       const elementPathSegments = pathSegments.slice(0, pathSegments[pathSegments.length - 2] === 'properties' ? -2 : -1);
       
       const actualElementToModify = getElementByPathRecursive(bodyElement, elementPathSegments, 0, "Remove target element search");
+      console.log("actualElementToModify:", actualElementToModify ? actualElementToModify : "null");
       if (!actualElementToModify) {
            console.warn(`Remove Op: Target element for path '${elementPathSegments.join('/')}' not found in XML DOM.`);
            return;
@@ -699,6 +751,8 @@ function handleXmlDomAdd(
 
 // ... (다른 함수들은 이전 답변과 동일하게 유지) ...
 
+// service.ts
+
 function handleXmlDomReplace(
   op: ReplaceOperation<any>,
   xmlDoc: Document,
@@ -708,118 +762,160 @@ function handleXmlDomReplace(
 ) {
   const pathSegments = op.path.substring(1).split('/');
   const newJsonValueFromOp = op.value;
-  // console.log(`  [DOM Replace] Path: ${op.path}, New value:`, newJsonValueFromOp);
 
   const keyToReplace = pathSegments[pathSegments.length - 1];
   let elementPathSegments = [...pathSegments];
-  // ❗ 변수명 일치: operationType -> operationSubType
   let operationSubType: 'structural' | 'text' | 'propertyKey' | 'propertiesObject' | 'directParameter' = 'structural';
 
   if (pathSegments.length > 1) {
-      if (keyToReplace === 'text') {
-          operationSubType = 'text';
-          elementPathSegments = pathSegments.slice(0, -1);
-      } else if (pathSegments[pathSegments.length - 2] === 'properties') {
-          operationSubType = 'propertyKey';
-          elementPathSegments = pathSegments.slice(0, -2);
-      } else if (keyToReplace === 'properties') {
-          operationSubType = 'propertiesObject';
-          elementPathSegments = pathSegments.slice(0, -1);
+    if (keyToReplace === 'text') {
+      operationSubType = 'text';
+      elementPathSegments = pathSegments.slice(0, -1);
+    } else if (pathSegments[pathSegments.length - 2] === 'properties') {
+      operationSubType = 'propertyKey';
+      elementPathSegments = pathSegments.slice(0, -2);
+    } else if (keyToReplace === 'properties') {
+      operationSubType = 'propertiesObject';
+      elementPathSegments = pathSegments.slice(0, -1);
+    } else {
+      // originalJsonState를 사용하여 부모 JSON 노드와 ELEMENT_CONFIG를 통해 directParameter 여부 확인
+      let parentJsonNode = originalJsonState;
+      const parentPathSegments = pathSegments.slice(0, -1); // 부모 요소까지의 경로
+      for (const seg of parentPathSegments) {
+        if (parentJsonNode && typeof parentJsonNode === 'object' && parentJsonNode.hasOwnProperty(seg)) {
+          parentJsonNode = parentJsonNode[seg];
+        } else {
+          parentJsonNode = null;
+          break;
+        }
       }
-      // directParameter에 대한 operationSubType 결정 로직 추가 가능 (필요하다면)
-      else if (ELEMENT_CONFIG[originalJsonState[elementPathSegments.slice(0, -1).join('/')]?.type]?.parameters?.some(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToReplace)) {
+      if (parentJsonNode && parentJsonNode.type && ELEMENT_CONFIG[parentJsonNode.type]?.parameters?.some(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToReplace)) {
         operationSubType = 'directParameter';
-        elementPathSegments = pathSegments.slice(0, -1);
+        elementPathSegments = pathSegments.slice(0, -1); // 실제 수정 대상은 부모 요소
       }
+    }
   }
-  // console.log(`  [DOM Replace] Element Path: ${elementPathSegments.join(' -> ')}, OpSubType: ${operationSubType}, Key: ${keyToReplace}`);
 
-  const actualElementToModify = getElementByPathRecursive(bodyElement, elementPathSegments, 0, `Replace target element search for path: ${elementPathSegments.join('/')}`);
+  const actualElementToModify = (operationSubType === 'structural' && elementPathSegments.length === 0 && pathSegments.length === 1)
+    ? bodyElement
+    : getElementByPathRecursive(bodyElement, elementPathSegments, 0, `Replace target for ${op.path}`);
 
-  // ❗ 변수명 일치: operationType -> operationSubType
-  if (!actualElementToModify && !(operationSubType === 'structural' && elementPathSegments.length === 0 && pathSegments.length === 1) ) {
-      console.warn(`Replace Op: Could not find target XML element at path '${elementPathSegments.join('/')}' to replace '${keyToReplace}'.`);
-      return;
+  if (!actualElementToModify && !(operationSubType === 'structural' && elementPathSegments.length === 0 && pathSegments.length === 1)) {
+    console.warn(`Replace Op: Could not find target XML element at path '${elementPathSegments.join('/')}' to replace '${keyToReplace}'.`);
+    return;
   }
-  
+
   let originalJsonNodeForElement = originalJsonState;
-  elementPathSegments.forEach(seg => { if(originalJsonNodeForElement && originalJsonNodeForElement.hasOwnProperty(seg)) originalJsonNodeForElement = originalJsonNodeForElement[seg]; else originalJsonNodeForElement = null; });
-  
-  // ❗ 변수명 일치: operationType -> operationSubType
+  elementPathSegments.forEach(seg => { if (originalJsonNodeForElement && originalJsonNodeForElement.hasOwnProperty(seg)) originalJsonNodeForElement = originalJsonNodeForElement[seg]; else originalJsonNodeForElement = null; });
+
   if (operationSubType === 'structural') {
-      if (typeof newJsonValueFromOp === 'object' && newJsonValueFromOp !== null && newJsonValueFromOp.type && newJsonValueFromOp.order !== undefined) {
-          let parentForSdtReplace: Element | null = bodyElement;
-           if (elementPathSegments.length > 0 && keyToReplace !== elementPathSegments[elementPathSegments.length-1] ){
-               parentForSdtReplace = actualElementToModify;
-          }
+    // ... (이전과 동일한 구조적 교체 로직) ...
+    if (typeof newJsonValueFromOp === 'object' && newJsonValueFromOp !== null && newJsonValueFromOp.type && newJsonValueFromOp.order !== undefined) {
+        let parentForSdtReplace: Element | null = bodyElement;
+        // pathSegments.length === 1 이면 최상위 요소, keyToReplace가 ID. 부모는 bodyElement
+        // pathSegments.length > 1 이면 elementPathSegments가 부모를 가리키고, keyToReplace가 자식 SDT의 ID.
+        if (elementPathSegments.length > 0 && pathSegments.length > 1) { // 최상위가 아닌 중첩된 요소의 교체
+             parentForSdtReplace = actualElementToModify; // 이 때 actualElementToModify는 부모의 content element
+        }
 
-          if (parentForSdtReplace) {
-              const oldSdt = findSdtElementById(parentForSdtReplace, keyToReplace);
-              if (oldSdt && oldSdt.parentNode === parentForSdtReplace) oldSdt.remove();
-              
-              const newSdt = createXmlElementFromJson(keyToReplace, newJsonValueFromOp, xmlDoc, newJsonValueFromOp.order);
-              insertSdtInOrder(parentForSdtReplace, newSdt, newJsonValueFromOp.order, xmlDoc);
-          } else {
-              console.warn(`Replace Op (Structural): Could not determine parent for replacing SDT ${keyToReplace}.`);
-          }
-      } else {
-          console.warn(`Replace Op (Structural): Invalid JSON for replacement element ${keyToReplace}. Value:`, newJsonValueFromOp);
-      }
-  // ❗ 변수명 일치: operationType -> operationSubType (else if 조건에서도)
+        if (parentForSdtReplace) {
+            const oldSdt = findSdtElementById(parentForSdtReplace, keyToReplace); // keyToReplace는 교체될 SDT의 ID
+            if (oldSdt && oldSdt.parentNode === parentForSdtReplace) oldSdt.remove();
+            
+            const newSdt = createXmlElementFromJson(keyToReplace, newJsonValueFromOp, xmlDoc, newJsonValueFromOp.order);
+            insertSdtInOrder(parentForSdtReplace, newSdt, newJsonValueFromOp.order, xmlDoc);
+        } else {
+            console.warn(`Replace Op (Structural): Could not determine parent for replacing SDT ${keyToReplace}.`);
+        }
+    } else if (newJsonValueFromOp === null) { // 값이 null이면 해당 구조적 요소 삭제
+        let parentForSdtRemove: Element | null = bodyElement;
+         if (elementPathSegments.length > 0 && pathSegments.length > 1) {
+            parentForSdtRemove = actualElementToModify;
+        }
+        if(parentForSdtRemove){
+            const oldSdt = findSdtElementById(parentForSdtRemove, keyToReplace);
+            if (oldSdt && oldSdt.parentNode === parentForSdtRemove) oldSdt.remove();
+        }
+    } else {
+        console.warn(`Replace Op (Structural): Invalid JSON for replacement element ${keyToReplace}. Value:`, newJsonValueFromOp);
+    }
   } else if (actualElementToModify && originalJsonNodeForElement && originalJsonNodeForElement.type) {
-      const elementConfig = ELEMENT_CONFIG[originalJsonNodeForElement.type];
-      if (!elementConfig) {
-           console.warn(`Replace Op: No ELEMENT_CONFIG for type ${originalJsonNodeForElement.type} at path ${elementPathSegments.join('/')}.`);
-           return;
-      }
+    const elementConfig = ELEMENT_CONFIG[originalJsonNodeForElement.type];
+    if (!elementConfig) {
+      console.warn(`Replace Op: No ELEMENT_CONFIG for type ${originalJsonNodeForElement.type} at path ${elementPathSegments.join('/')}.`);
+      return;
+    }
 
-      if (operationSubType === 'text') { // ❗ 변수명 일치
-          const textConfig = (elementConfig.xmlTag === 'w:r' && elementConfig.children?.t) ? elementConfig.children.t : elementConfig.children?.text;
-          if(textConfig){
-              let textNode = actualElementToModify.getElementsByTagName(textConfig.xmlTag)[0];
-              if (newJsonValueFromOp === null || newJsonValueFromOp === undefined) {
-                  if(textNode && textNode.parentNode === actualElementToModify) textNode.remove();
-              } else {
-                  if (!textNode || textNode.parentNode !== actualElementToModify) {
-                      const oldTextNodes = actualElementToModify.getElementsByTagName(textConfig.xmlTag);
-                      for(let i=0; i<oldTextNodes.length; i++) { if(oldTextNodes[i].parentNode === actualElementToModify) oldTextNodes[i].remove(); }
-                      textNode = xmlDoc.createElement(textConfig.xmlTag);
-                      actualElementToModify.appendChild(textNode);
-                  }
-                  textNode.textContent = String(newJsonValueFromOp);
-                  if (String(newJsonValueFromOp) === "") textNode.setAttribute('xml:space', 'preserve');
-                  else textNode.removeAttribute('xml:space');
-              }
+    if (operationSubType === 'text') {
+      // ❗ **텍스트 분리 방지 및 띄어쓰기 보존 강화된 로직**
+      if (actualElementToModify.tagName === 'w:r') {
+        const runElement = actualElementToModify as Element;
+
+        // 1. 해당 <w:r> 내부의 기존 <w:t> 요소들을 모두 제거합니다.
+        const existingTextNodes = Array.from(runElement.getElementsByTagName('w:t'));
+        existingTextNodes.forEach(node => {
+          if (node.parentNode === runElement) {
+            runElement.removeChild(node);
+          }
+        });
+
+        // 2. newJsonValueFromOp (새로운 텍스트 값)이 null이나 undefined가 아니면 처리합니다.
+        if (newJsonValueFromOp !== null && newJsonValueFromOp !== undefined) {
+          // 3. 단 하나의 새로운 <w:t> 요소를 생성합니다.
+          const newTextNode = xmlDoc.createElement('w:t');
+          const textContentStr = String(newJsonValueFromOp);
+          newTextNode.textContent = textContentStr; // 📌 문자열 전체를 할당 (분리 X)
+
+          // 4. xml:space="preserve" 속성을 정확히 설정합니다.
+          if (textContentStr === "" || // 빈 문자열
+              textContentStr.startsWith(" ") || // 앞 공백
+              textContentStr.endsWith(" ") ||   // 뒤 공백
+              textContentStr.includes("  ")) {  // 내부 연속 공백 (2칸 이상)
+            newTextNode.setAttribute('xml:space', 'preserve');
           } else {
-               console.warn(`Replace Op: No text config for element type ${elementConfig.xmlTag} (ID: ${elementPathSegments.join('/')})`);
+            newTextNode.removeAttribute('xml:space'); // 필요 없는 경우 명시적 제거
           }
-      } else if (operationSubType === 'propertyKey' || operationSubType === 'propertiesObject') { // ❗ 변수명 일치
-          let targetPropertiesContainer = targetJsonState;
-          elementPathSegments.forEach(seg => {if(targetPropertiesContainer) targetPropertiesContainer = targetPropertiesContainer[seg]; else targetPropertiesContainer = null; });
-          
-          const fullPropertiesJson = targetPropertiesContainer?.properties;
-          if (fullPropertiesJson && typeof fullPropertiesJson === 'object') {
-               applyPropertiesToXmlElement(actualElementToModify, fullPropertiesJson, elementConfig, xmlDoc);
-          } else if ( (fullPropertiesJson === null || fullPropertiesJson === undefined) && operationSubType === 'propertiesObject' ) {  // ❗ 변수명 일치
-               applyPropertiesToXmlElement(actualElementToModify, {}, elementConfig, xmlDoc);
+
+          // 5. 생성된 <w:t>를 <w:r>에 추가합니다 (보통 <w:rPr> 바로 뒤).
+          const rPrElement = runElement.getElementsByTagName('w:rPr')[0];
+          if (rPrElement) {
+            runElement.insertBefore(newTextNode, rPrElement.nextSibling);
+          } else {
+            runElement.insertBefore(newTextNode, runElement.firstChild);
           }
-          else {
-               console.warn(`Replace Op: Could not get updated properties object or invalid type from targetJson for element ${elementPathSegments.join('/')}. Properties in target:`, fullPropertiesJson);
-          }
-      } else if (operationSubType === 'directParameter') { // ❗ 변수명 일치
-          const paramFullName = elementConfig.parameters?.find(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToReplace);
-          if (paramFullName) {
-              if (newJsonValueFromOp === null || newJsonValueFromOp === undefined) {
-                  actualElementToModify.removeAttribute(paramFullName);
-              } else {
-                  actualElementToModify.setAttribute(paramFullName, String(newJsonValueFromOp));
-              }
-          }
+        }
+        // newJsonValueFromOp이 null 또는 undefined이면, 기존 <w:t>는 이미 제거되었으므로 텍스트 없는 <w:r>이 됩니다.
       } else {
-          console.warn(`Replace Op: Unhandled non-structural replacement for key '${keyToReplace}' under element type '${elementConfig.xmlTag}'. Path: ${op.path}. OpSubType: ${operationSubType}`);
+        console.warn(`Replace Op (text): actualElementToModify target for text is not <w:r> but <${actualElementToModify.tagName}> for path ${op.path}. This run's text will not be updated as expected.`);
       }
-  } else if (!actualElementToModify && operationSubType !== 'structural' as string) { // ❗ 변수명 일치 (그리고 이 조건은 이제 TypeScript 오류 없이 유효)
-      console.warn(`Replace Op: Target element for property/text replace not found at ${elementPathSegments.join('/')}`);
+    } else if (operationSubType === 'propertiesObject' || operationSubType === 'propertyKey') {
+      // ... (이전과 동일한 프로퍼티 처리 로직, targetJsonState에서 최신 properties 가져와 applyPropertiesToXmlElement 호출) ...
+      let targetPropertiesContainer = targetJsonState;
+      elementPathSegments.forEach(seg => {if(targetPropertiesContainer) targetPropertiesContainer = targetPropertiesContainer[seg]; else targetPropertiesContainer = null; });
+      
+      const fullPropertiesJson = targetPropertiesContainer?.properties;
+      if (fullPropertiesJson && typeof fullPropertiesJson === 'object') {
+           applyPropertiesToXmlElement(actualElementToModify, fullPropertiesJson, elementConfig, xmlDoc);
+      } else if ( (fullPropertiesJson === null || fullPropertiesJson === undefined || Object.keys(fullPropertiesJson || {}).length === 0) && operationSubType === 'propertiesObject' ) {
+           applyPropertiesToXmlElement(actualElementToModify, {}, elementConfig, xmlDoc); // 빈 객체로 프로퍼티 제거
+      }
+      else {
+           console.warn(`Replace Op: Could not get updated properties object or invalid type from targetJson for element ${elementPathSegments.join('/')}. Properties in target:`, fullPropertiesJson);
+      }
+    } else if (operationSubType === 'directParameter') {
+      const paramFullName = elementConfig.parameters?.find(p => (p.includes(':') ? p.substring(p.indexOf(':') + 1) : p) === keyToReplace);
+      if (paramFullName) {
+        if (newJsonValueFromOp === null || newJsonValueFromOp === undefined) {
+          actualElementToModify.removeAttribute(paramFullName);
+        } else {
+          actualElementToModify.setAttribute(paramFullName, String(newJsonValueFromOp));
+        }
+      }
+    } else {
+      console.warn(`Replace Op: Unhandled non-structural replacement for key '${keyToReplace}' under element type '${elementConfig.xmlTag}'. Path: ${op.path}. OpSubType: ${operationSubType}`);
+    }
+  } else if (operationSubType !== 'structural' as string) {
+    console.warn(`Replace Op: Target element for property/text replace not found at ${elementPathSegments.join('/')} or originalJsonNode not available.`);
   }
 }
 

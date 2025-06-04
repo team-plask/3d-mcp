@@ -170,9 +170,15 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
     try {
       console.log("=== 문서 구조 업데이트 시작 ===");
       
+      let flat;
       // 1. 원본 OOXML 가져오기
-      const flat = ctx.document.body.getOoxml();
-      await ctx.sync();
+      try {
+        flat = ctx.document.body.getOoxml();
+        await ctx.sync();
+        console.log("원본 OOXML 로드 완료");
+      } catch (error) {
+        console.error("OOXML 로드 실패:", error);
+      }
       const fullFlatXml = flat.value;
       console.log("원본 Flat OPC 로드");
 
@@ -200,8 +206,6 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
       // 로깅
       const mappingString = JSON.stringify(originalJson, null, 2);
       console.log('문서 구조 JSON\n', mappingString);
-      console.log('업데이트된 Document XML:\n', formatXML(updatedXmlWithIds));
-      console.log("문서 구조 분석 및 매핑 완료");
 
       // 5. 전체 Flat OPC에 업데이트된 XML 적용
       const updatedFlatOpc = replaceOriginalWithUpdated(fullFlatXml, updatedXmlWithIds);
@@ -213,6 +217,8 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
         console.warn("업데이트된 XML에 유효성 문제가 있을 수 있습니다.");
       }
       
+      console.log('업데이트된 Document XML:\n', formatXML(updatedXmlWithIds));
+      console.log("문서 구조 분석 및 매핑 완료");
       // 7. 문서에 XML 적용 시도
       try {
         // 문서에 XML 적용 부분 수정
@@ -221,7 +227,7 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
         console.log("OOXML 삽입 성공");
         
         // 7.1 모든 ContentControl 숨김 처리
-        await hideAllContentControls(ctx);
+        // await hideAllContentControls(ctx);
         console.log("모든 ContentControl 숨김 처리 완료");
       } catch (error) {
         console.error("OOXML 삽입 또는 ContentControl 숨김 처리 실패:", error);
@@ -229,6 +235,7 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
 
       // 8. 최종 적용된 상태 확인
       const updatedFlat = ctx.document.body.getOoxml();
+      console.log("최종 OOXML 상태 확인 중...");
       await ctx.sync();
       const finalDocXml = extractDocumentXml(updatedFlat.value);
       console.log("최종 적용된 Document XML:\n", formatXML(finalDocXml));
@@ -313,7 +320,7 @@ async function hideAllContentControls(context: Word.RequestContext): Promise<voi
     // 각 ContentControl의 appearance 속성을 hidden으로 설정
     for (let i = 0; i < contentControls.items.length; i++) {
       const control = contentControls.items[i];
-      control.appearance = Word.ContentControlAppearance.boundingBox;
+      control.appearance = Word.ContentControlAppearance.hidden;
     }
     
     // 변경사항 동기화
