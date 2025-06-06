@@ -77,12 +77,14 @@ export interface ElementConfig {
     listItems?: Array<{ displayText: string; value: string }>;
     // 기타 다른 SDT 종류에 대한 설정 추가 가능
   };
+  requiresPrwWrapper?: boolean; // P(aragraph) R(un) Wrapper
 }
 
 export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
   paragraph: {
     type: 'structural',
     xmlTag: 'w:p',
+    requiresPrwWrapper: true, // ❗ 행(row)을 SDT로 감싸지 않고 암시적으로 처리
     sdtType: 'block',
     children: {
       pPr: {
@@ -170,7 +172,8 @@ export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
         }
       }
       // <w:tr> 자식 설정은 여기서 직접 다루지 않음
-    }
+    },
+    requiresPrwWrapper: true, // 👈 이 줄 추가
   },
   tableCell: {
     type: 'structural',
@@ -286,7 +289,8 @@ export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
           }
         }
       }
-    }
+    },
+    requiresPrwWrapper: true, // 👈 이 줄 추가
   },
 };
 
@@ -318,6 +322,32 @@ export function processDocument(
   };
 }
 
+/**
+ * 테이블과 같은 블록 요소 앞에 삽입할 더미 단락을 생성합니다.
+ * Word가 최적화 과정에서 제거하지 않도록 공백 텍스트를 포함합니다.
+ * @param xmlDoc - XML Document 객체
+ * @returns 생성된 <w:p> 요소
+ */
+function createDummyParagraph(xmlDoc: Document): Element {
+  const pElement = xmlDoc.createElement("w:p");
+  const pPrElement = xmlDoc.createElement("w:pPr");
+  
+  // 높이를 최소화하는 빈 단락 속성
+  const spacing = xmlDoc.createElement("w:spacing");
+  spacing.setAttribute("w:after", "0");
+  spacing.setAttribute("w:line", "0");
+  pPrElement.appendChild(spacing);
+  
+  const rPrElement = xmlDoc.createElement("w:rPr");
+  const sz = xmlDoc.createElement("w:sz");
+  sz.setAttribute("w:val", "2"); // 1pt 크기
+  rPrElement.appendChild(sz);
+  pPrElement.appendChild(rPrElement);
+
+  pElement.appendChild(pPrElement);
+  return pElement;
+}
+
 function applyContentControlsToDocument(xmlDoc: Document): Document {
   const wrappedElements = new Set<Element>();
 
@@ -338,18 +368,61 @@ function applyContentControlsToDocument(xmlDoc: Document): Document {
   if (xmlDoc.documentElement) { // body보다 상위인 documentElement에서 시작
     findExistingWrappedElementsRecursive(xmlDoc.documentElement);
   }
-
-
   let elementsToWrap = collectTargetElementsRecursive(xmlDoc, wrappedElements);
   elementsToWrap = elementsToWrap.filter(item => !wrappedElements.has(item.element) && !isDirectlyInsideSdtContent(item.element));
+  
   elementsToWrap.sort((a, b) => b.depth - a.depth);
 
-  for (const { element, type } of elementsToWrap) {
-    const id = `${type.charAt(0)}_${shortid.generate()}`;
-    wrapWithContentControl(element, id, type);
+  const alreadyHandled = new Set<Element>();
+
+  for (const item of elementsToWrap) {
+    if (alreadyHandled.has(item.element)) {
+      continue;
+    }
+
+    const { element, type } = item;
+    const config = ELEMENT_CONFIG[type];
+
+    // ❗ [핵심 수정] 테이블 등 특정 요소를 처리하는 새로운 방식
+    if (config?.requiresPrwWrapper) {
+      const parent = element.parentNode;
+      if (!parent) {
+        console.warn(`Cannot wrap <${element.nodeName}> because it has no parent. Skipping.`);
+        continue;
+      }
+      
+      console.log(`[Group Wrapping] Applying group wrap for <${element.nodeName}> with dummy paragraph at the end.`);
+
+      // 1. 더미 단락을 생성하고 테이블 *뒤에* 삽입합니다.
+      const dummyP = createDummyParagraph(xmlDoc);
+      // element.nextSibling이 null이면 맨 뒤에 추가됩니다.
+      parent.insertBefore(dummyP, element.nextSibling);
+
+      // 2. 메인 요소(테이블)를 기준으로 <w:sdt>를 생성합니다.
+      const id = `${type.charAt(0)}_${shortid.generate()}`;
+      const sdtWrapper = wrapWithContentControl(element, id, type)!; // 이제 테이블을 직접 감쌉니다.
+
+      if (sdtWrapper) {
+        const sdtContent = sdtWrapper.getElementsByTagName("w:sdtContent")[0];
+        if (sdtContent) {
+          // 3. 더미 단락을 생성된 <w:sdt>의 sdtContent 안으로 이동시킵니다.
+          // appendChild는 노드를 현재 위치에서 제거하고 새 위치로 이동시킵니다.
+          sdtContent.appendChild(dummyP);
+
+          // 4. 이 작업으로 처리된 요소들을 등록하여 중복 작업을 방지합니다.
+          alreadyHandled.add(element); // 테이블
+          alreadyHandled.add(dummyP);  // 더미 단락
+        }
+      }
+    } else {
+      // 일반적인 p, r 요소 처리
+      const id = `${type.charAt(0)}_${shortid.generate()}`;
+      wrapWithContentControl(element, id, type);
+      alreadyHandled.add(element);
+    }
   }
 
-  console.log(`Wrapped ${elementsToWrap.length} elements with content controls.`);
+  console.log(`Wrapped ${alreadyHandled.size} elements with content controls.`);
   assignOrderToContentControls(xmlDoc);
   return xmlDoc;
 }
@@ -360,6 +433,7 @@ function collectTargetElementsRecursive(
   depth = 0,
   collected: Array<{element: Element, type: string, depth: number}> = []
 ): Array<{element: Element, type: string, depth: number}> {
+  console.log("initialElementsToExclude", initialElementsToExclude);
   const rootNode = (xmlDocOrElement as Document).documentElement || xmlDocOrElement as Element;
 
   function traverse(node: Node, currentDepth: number) {
@@ -372,19 +446,31 @@ function collectTargetElementsRecursive(
         }
         return;
       }
-
       const elementType = TAG_TO_TYPE[element.nodeName];
-      // ❗ <w:tr>은 TAG_TO_TYPE에 없으므로 elementType이 undefined가 되어 SDT 대상에서 제외됨
       if (elementType && CONTENT_CONTROL_ELEMENTS.includes(elementType)) {
-        if (!initialElementsToExclude.has(element) && !isDirectlyInsideSdtContent(element)) {
-          collected.push({ element, type: elementType, depth: currentDepth });
+        
+        // ❗ 수정된 로직: 모든 대상 타입을 검사하고, 특정 조건일 때만 제외합니다.
+        let shouldBeSkipped = false;
+        
+        // 1. 이미 감싸여 있거나 sdtContent 바로 아래 있는 경우 건너뛰기
+        if (initialElementsToExclude.has(element) || isDirectlyInsideSdtContent(element)) {
+          console.log(`Skipping <${element.nodeName}> (ID: ${element.id}) - already wrapped or inside sdtContent.`); 
+            shouldBeSkipped = true;
+        }
+
+        // 2. 단락 타입인데 비어있는 경우 건너뛰기
+        // if (!shouldBeSkipped && elementType === 'paragraph' && isParagraphEmpty(element)) {
+        //     shouldBeSkipped = true;
+        // }
+
+        // ✅ 최종적으로 건너뛸 필요가 없는 요소만 수집
+        if (!shouldBeSkipped) {
+            collected.push({ element, type: elementType, depth: currentDepth });
         }
       }
 
-      if (element.nodeName !== "w:sdt") { 
-        for (let i = 0; i < element.childNodes.length; i++) {
-          traverse(element.childNodes[i], currentDepth + 1);
-        }
+      for (let i = 0; i < element.childNodes.length; i++) {
+        traverse(element.childNodes[i], currentDepth + 1);
       }
     }
   }
@@ -394,6 +480,21 @@ function collectTargetElementsRecursive(
   }
   return collected;
 }
+
+/**
+ * <w:p> 요소가 비어 있는지 확인합니다.
+ * <w:pPr> 외에 다른 자식 요소(특히 <w:r>)가 없으면 빈 것으로 간주합니다.
+ */
+// function isParagraphEmpty(pElement: Element): boolean {
+//   for (let i = 0; i < pElement.childNodes.length; i++) {
+//     const child = pElement.childNodes[i];
+//     // <w:pPr>는 단락 속성이므로 무시하고, 다른 요소(주로 <w:r>)가 있는지 확인
+//     if (child.nodeType === Node.ELEMENT_NODE && child.nodeName !== 'w:pPr') {
+//       return false; // 내용이 있는 요소 발견
+//     }
+//   }
+//   return true; // 내용이 있는 요소를 찾지 못함
+// }
 
 function isDirectlyInsideSdtContent(element: Element): boolean {
     return element.parentNode?.nodeName === 'w:sdtContent';
@@ -406,20 +507,20 @@ function wrapWithContentControl(element: Element, id: string, type: string): Ele
     return null;
   }
 
-  const sdtElement = xmlDoc.createElementNS(NS_W, "sdt");
-  const sdtPrElement = xmlDoc.createElementNS(NS_W, "sdtPr");
+  const sdtElement = xmlDoc.createElementNS(NS_W, "w:sdt");
+  const sdtPrElement = xmlDoc.createElementNS(NS_W, "w:sdtPr");
 
   // XSD 순서에 따라 요소 추가 시도 (rPr가 가장 먼저지만, 현재는 생성 로직 없음)
 
-  const aliasElement = xmlDoc.createElementNS(NS_W, "alias");
+  const aliasElement = xmlDoc.createElementNS(NS_W, "w:alias");
   aliasElement.setAttributeNS(NS_W, "w:val", `${type} ${id}`);
   sdtPrElement.appendChild(aliasElement);
 
-  const tagElement = xmlDoc.createElementNS(NS_W, "tag");
+  const tagElement = xmlDoc.createElementNS(NS_W, "w:tag");
   tagElement.setAttributeNS(NS_W, "w:val", id);
   sdtPrElement.appendChild(tagElement);
 
-  const idElementNode = xmlDoc.createElementNS(NS_W, "id");
+  const idElementNode = xmlDoc.createElementNS(NS_W, "w:id");
   const wordInternalId = Math.floor(Math.random() * (2**31 - 1)) * (Math.random() < 0.5 ? 1 : -1);
   idElementNode.setAttributeNS(NS_W, "w:val", String(wordInternalId));
   sdtPrElement.appendChild(idElementNode);
@@ -429,9 +530,9 @@ function wrapWithContentControl(element: Element, id: string, type: string): Ele
   //     lockElement.setAttributeNS(NS_W, "w:val", "sdtLocked"); 
   //     sdtPrElement.appendChild(lockElement);
 
-  const showingPlcHdrElement = xmlDoc.createElementNS(NS_W, "showingPlcHdr");
-  showingPlcHdrElement.setAttributeNS(NS_W, "w:val", "1"); // 또는 "true"
-  sdtPrElement.appendChild(showingPlcHdrElement);
+  // const showingPlcHdrElement = xmlDoc.createElementNS(NS_W, "showingPlcHdr");
+  // showingPlcHdrElement.setAttributeNS(NS_W, "w:val", "1"); // 또는 "true"
+  // sdtPrElement.appendChild(showingPlcHdrElement);
 
   // (XSD에 따라 dataBinding, label, tabIndex 등이 이 위치에 올 수 있음)
 
@@ -454,7 +555,7 @@ function wrapWithContentControl(element: Element, id: string, type: string): Ele
       if (sdtTypeIdentifier === 'text' && elementSpecificConfig.sdtSpecificConfig.text) {
         const textConf = elementSpecificConfig.sdtSpecificConfig.text;
         if (textConf.multiLine !== undefined) {
-          const multiLineEl = xmlDoc.createElementNS(NS_W, "multiLine");
+          const multiLineEl = xmlDoc.createElementNS(NS_W, "w:multiLine");
           multiLineEl.setAttributeNS(NS_W, "w:val", textConf.multiLine ? "1" : "0");
           choiceElement.appendChild(multiLineEl);
         }
@@ -462,27 +563,27 @@ function wrapWithContentControl(element: Element, id: string, type: string): Ele
       } else if (sdtTypeIdentifier === 'date' && elementSpecificConfig.sdtSpecificConfig.date) {
         const dateConf = elementSpecificConfig.sdtSpecificConfig.date;
         if (dateConf.dateFormat) {
-          const dateFormatEl = xmlDoc.createElementNS(NS_W, "dateFormat");
+          const dateFormatEl = xmlDoc.createElementNS(NS_W, "w:dateFormat");
           dateFormatEl.setAttributeNS(NS_W, "w:val", dateConf.dateFormat);
           choiceElement.appendChild(dateFormatEl);
         }
         if (dateConf.lid) {
-          const lidEl = xmlDoc.createElementNS(NS_W, "lid");
+          const lidEl = xmlDoc.createElementNS(NS_W, "w:lid");
           lidEl.setAttributeNS(NS_W, "w:val", dateConf.lid);
           choiceElement.appendChild(lidEl);
         }
         if (dateConf.storeMappedDataAs) {
-          const storeMappedDataAsEl = xmlDoc.createElementNS(NS_W, "storeMappedDataAs");
+          const storeMappedDataAsEl = xmlDoc.createElementNS(NS_W, "w:storeMappedDataAs");
           storeMappedDataAsEl.setAttributeNS(NS_W, "w:val", dateConf.storeMappedDataAs);
           choiceElement.appendChild(storeMappedDataAsEl);
         }
         if (dateConf.calendar) {
-          const calendarEl = xmlDoc.createElementNS(NS_W, "calendar");
+          const calendarEl = xmlDoc.createElementNS(NS_W, "w:calendar");
           calendarEl.setAttributeNS(NS_W, "w:val", dateConf.calendar);
           choiceElement.appendChild(calendarEl);
         }
         if (dateConf.fullDate) { // CT_SdtDate의 fullDate는 xsd:dateTime 타입
-            const fullDateEl = xmlDoc.createElementNS(NS_W, "fullDate");
+            const fullDateEl = xmlDoc.createElementNS(NS_W, "w:fullDate");
             fullDateEl.setAttributeNS(NS_W, "w:val", dateConf.fullDate); // 예: "2025-06-04T00:00:00Z"
             choiceElement.appendChild(fullDateEl);
         }
@@ -496,7 +597,7 @@ function wrapWithContentControl(element: Element, id: string, type: string): Ele
   sdtElement.appendChild(sdtPrElement);
 
   // --- <w:sdtContent> 생성 및 원래 요소 삽입 ---
-  const sdtContentElement = xmlDoc.createElementNS(NS_W, "sdtContent");
+  const sdtContentElement = xmlDoc.createElementNS(NS_W, "w:sdtContent");
   if (element.parentNode) { // 안전하게 부모가 있는지 확인 후 replaceChild 호출
     element.parentNode.replaceChild(sdtElement, element);
   } else {
@@ -541,6 +642,7 @@ export function extractJsonFromContentControls(
     if (!(contentNode && contentNode.firstElementChild)) continue;
     
     const actualElement = contentNode.firstElementChild as Element;
+    // console.log(`Processing element with ID: ${id}, Type: ${actualElement.nodeName}`);
     const elementType = TAG_TO_TYPE[actualElement.nodeName];
 
     if (!elementType) {
@@ -559,7 +661,7 @@ export function extractJsonFromContentControls(
 
     let elementJson: any = {
       type: elementType,
-      id: id, 
+      // id: id, 
       ...extractedData
     };
 
@@ -573,7 +675,7 @@ export function extractJsonFromContentControls(
     resultJson[id] = elementJson;
   }
   
-  buildHierarchyStructure(resultJson, idElementMap, xmlDoc);
+  buildHierarchyStructure(resultJson, xmlDoc);
   return resultJson;
 }
 
@@ -800,27 +902,30 @@ function extractLeafData(element: Element, config: ElementConfig): any {
   return null; 
 }
 
-
 function buildHierarchyStructure(
   resultJson: Record<string, any>,
-  idElementMap: Map<string, Element>,
-  xmlDoc: Document
+  xmlDoc: Document // 또는 idElementMap, 현재 로직에서는 xmlDoc으로 SDT를 다시 찾는 것으로 보임
 ): void {
   const childToParentMap = new Map<string, string>(); // childSdtId -> parentSdtId
   const allSdtElements = Array.from(xmlDoc.getElementsByTagNameNS(NS_W, "sdt"));
 
   for (const sdtElement of allSdtElements) {
-    const tagElements = sdtElement.getElementsByTagNameNS(NS_W, "tag");
-    if (!(tagElements.length > 0 && tagElements[0].hasAttributeNS(NS_W, "val"))) continue;
+    const sdtPr = sdtElement.getElementsByTagNameNS(NS_W, "w:sdtPr")[0];
+    if (!sdtPr) continue;
+    const tagElements = sdtPr.getElementsByTagNameNS(NS_W, "w:tag");
+    if (!(tagElements.length > 0 && tagElements[0].hasAttributeNS(NS_W, "w:val"))) continue;
     
-    const currentSdtId = tagElements[0].getAttributeNS(NS_W, "val")!;
+    const currentSdtId = tagElements[0].getAttributeNS(NS_W, "w:val")!;
     if (!resultJson[currentSdtId]) continue;
 
-    // DOM 트리 상의 부모 SDT 찾기
     let parentNode = sdtElement.parentNode;
     let parentSdtElement: Element | null = null;
-    while (parentNode && parentNode !== xmlDoc.documentElement && parentNode !== xmlDoc) { // xmlDoc.documentElement까지 탐색
-        if (parentNode.nodeName === 'w:sdt') {
+    while (parentNode && parentNode !== xmlDoc.documentElement && parentNode !== xmlDoc) {
+        // 부모 SDT를 찾을 때, 실제 콘텐츠 요소(<w:p>, <w:r> 등)의 부모 SDT를 찾아야 함
+        // 현재 로직은 SDT의 부모 SDT를 찾고 있음. 이는 중첩 SDT 구조에서는 맞음.
+        if (parentNode.nodeType === Node.ELEMENT_NODE && 
+            (parentNode as Element).localName === 'w:sdt' && 
+            (parentNode as Element).namespaceURI === NS_W) {
             parentSdtElement = parentNode as Element;
             break;
         }
@@ -828,11 +933,14 @@ function buildHierarchyStructure(
     }
 
     if (parentSdtElement) {
-        const parentTagElements = parentSdtElement.getElementsByTagNameNS(NS_W, 'tag');
-        if (parentTagElements.length > 0 && parentTagElements[0].hasAttributeNS(NS_W, 'val')) {
-            const parentSdtId = parentTagElements[0].getAttributeNS(NS_W, 'val')!;
-            if (resultJson[parentSdtId]) { // 부모 SDT가 resultJson에 있는지 확인
-                childToParentMap.set(currentSdtId, parentSdtId);
+        const parentSdtPr = parentSdtElement.getElementsByTagNameNS(NS_W, 'w:sdtPr')[0];
+        if (parentSdtPr) {
+            const parentTagElements = parentSdtPr.getElementsByTagNameNS(NS_W, 'w:tag');
+            if (parentTagElements.length > 0 && parentTagElements[0].hasAttributeNS(NS_W, 'w:val')) {
+                const parentSdtId = parentTagElements[0].getAttributeNS(NS_W, 'w:val')!;
+                if (resultJson[parentSdtId]) { 
+                    childToParentMap.set(currentSdtId, parentSdtId);
+                }
             }
         }
     }
@@ -841,13 +949,13 @@ function buildHierarchyStructure(
   const parentToChildrenOrderMap = new Map<string, {id: string, order: string}[]>();
   childToParentMap.forEach((parentId, childId) => {
     const childObj = resultJson[childId];
-    if (childObj && childObj.order !== undefined) {
+    if (childObj && childObj.order !== undefined) { 
         if (!parentToChildrenOrderMap.has(parentId)) parentToChildrenOrderMap.set(parentId, []);
         parentToChildrenOrderMap.get(parentId)!.push({id: childId, order: childObj.order});
-    } else if (childObj) {
+    } else if (childObj) { // order가 없는 경우 대비 (예: healing으로 인해 alias가 없을 때)
         if (!parentToChildrenOrderMap.has(parentId)) parentToChildrenOrderMap.set(parentId, []);
-        // console.warn(`Child object ${childId} is missing 'order' property. Assigning empty order for hierarchy build.`);
-        parentToChildrenOrderMap.get(parentId)!.push({id: childId, order: shortid.generate()}); // Fallback to a generated order
+        // console.warn(`[buildHierarchyStructure] Child object ${childId} is missing 'order'. Using fallback.`);
+        parentToChildrenOrderMap.get(parentId)!.push({id: childId, order: shortid.generate()}); 
     }
   });
 
@@ -856,18 +964,48 @@ function buildHierarchyStructure(
   parentToChildrenOrderMap.forEach((sortedChildren, parentId) => {
     const parentObj = resultJson[parentId];
     if (parentObj) {
-      if (parentObj.type !== 'table') { // 테이블은 'rows' 배열로 셀을 관리하므로 content에 직접 넣지 않음
-        parentObj.content = parentObj.content || {};
+      // ❗ 핵심 수정: 'content' 객체 없이 부모 객체에 자식 ID를 키로 하여 직접 할당
+      // 테이블 행과 셀은 이미 extractTableDataWithImplicitRows에서 처리되므로, 일반적인 경우에만 적용.
+      if (parentObj.type !== 'table' && parentObj.type !== 'tableRow') { 
         sortedChildren.forEach(childInfo => {
           const childJson = resultJson[childInfo.id];
           if (childJson) {
-            parentObj.content[childInfo.id] = childJson;
-            delete resultJson[childInfo.id]; // 최상위에서 제거 (계층구조로 이동)
+            parentObj[childInfo.id] = childJson; // 부모 객체에 직접 자식 추가
+            delete resultJson[childInfo.id];     // 최상위 resultJson에서 자식 제거
           }
         });
       }
-      // 테이블의 경우, 셀 SDT들은 resultJson 최상위에 그대로 두고,
-      // table.rows[...].cells 배열에 ID로 참조.
+      // 기존 'content' 필드가 있다면 삭제 (선택적)
+      // if (parentObj.content && Object.keys(parentObj.content).length === 0) {
+      //   delete parentObj.content;
+      // } else if (parentObj.content && Object.keys(parentObj.content).length > 0 && parentObj.type !== 'table' && parentObj.type !== 'tableRow') {
+      //   // 만약 content 필드가 이미 존재하고, 위 로직에서 parentObj[childInfo.id]로 옮겼다면, 기존 content는 비워야 함.
+      //   // 하지만 위 로직은 parentObj.content를 사용하지 않으므로, 이 부분은 필요 없을 수 있음.
+      //   // 혹시 모를 이전 로직의 잔재를 위해 남겨둘 수 있으나, 깔끔하게 하려면 parentObj.content 사용 자체를 없애야 함.
+      // }
+    }
+  });
+
+  // 테이블 행 객체를 테이블의 rows 배열에 ID 대신 실제 객체로 채우고, 최상위에서 행 객체 제거
+  // (이 로직은 extractTableDataWithImplicitRows가 rows 배열에 row JSON 객체를 직접 넣는다면 필요 없어지거나 수정되어야 함)
+  // 현재 extractTableDataWithImplicitRows는 rows 배열에 conceptualRowId를 넣고, resultJson에 row 객체를 저장함.
+  // 따라서 이 로직은 그 row 객체를 table.rows 안으로 옮기는 역할을 함.
+  Object.keys(resultJson).forEach(key => {
+    if (resultJson[key]?.type === 'table') {
+      const tableJson = resultJson[key];
+      if (tableJson.rows && Array.isArray(tableJson.rows)) {
+        // tableJson.rows에는 conceptualRowId들이 문자열로 들어있음 (extractTableDataWithImplicitRows 현재 로직 기준)
+        tableJson.rows = tableJson.rows.map((rowIdOrConceptualId: any) => {
+          // rowIdOrConceptualId가 실제 row 객체가 아니고 문자열 ID라면
+          if (typeof rowIdOrConceptualId === 'string' && resultJson[rowIdOrConceptualId] && resultJson[rowIdOrConceptualId].type === 'tableRow') {
+            const rowObject = resultJson[rowIdOrConceptualId];
+            delete resultJson[rowIdOrConceptualId]; // 최상위에서 행 객체 제거
+            return rowObject; // 실제 행 객체로 교체
+          }
+          // 이미 객체이거나(이전 로직의 잔재 또는 다른 흐름), 찾을 수 없는 경우
+          return rowIdOrConceptualId; 
+        }).filter((row: any) => row && typeof row === 'object'); // 유효한 객체만 남김
+      }
     }
   });
 }
@@ -946,7 +1084,7 @@ function setOrderToSdtAlias(sdtElement: Element, order: string, xmlDoc: Document
   let aliasElement = sdtPr.getElementsByTagNameNS(NS_W, "alias")[0];
   // console.log("aliasElement:", aliasElement);
   if (!aliasElement) {
-    aliasElement = xmlDoc.createElementNS(NS_W, "alias");
+    aliasElement = xmlDoc.createElementNS(NS_W, "w:alias");
     // <w:alias>는 보통 <w:sdtPr>의 첫 번째 자식 또는 <w:docPartObj> 뒤 등에 위치합니다.
     // 여기서는 간단히 마지막에 추가하거나, 필요시 순서 조정 로직 추가.
     sdtPr.appendChild(aliasElement); 

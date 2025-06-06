@@ -157,10 +157,10 @@ export class WebSocketClient {
     });
   }
 
-  async syncDocument(): Promise<void> {
+  async syncDocument(inputData?: any): Promise<void> {
     try {
-      const documentStructure = await updateDocumentStructure();
-      
+      let documentStructure = inputData || await updateDocumentStructure();
+
       const result = await this.send<"UPDATE">({
         role: "process",
         command: "UPDATE",
@@ -276,6 +276,7 @@ export class WebSocketClient {
         }
         console.log("Applying patch:", args.patch);
         const result = await writeDoc(args.patch);
+        this.syncDocument(result); // Ensure document is synced after writing
         setTimeout(() => this.syncDocument(), 500);
         return result;
       }
