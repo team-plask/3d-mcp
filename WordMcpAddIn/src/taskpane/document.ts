@@ -120,7 +120,7 @@ export function replaceOriginalWithUpdated(originalXml: string, updatedXml: stri
 /**
  * document.xml 파트 추출 함수
  */
-function extractDocumentXml(flatXml: string): string {
+export function extractDocumentXml(flatXml: string): string {
   if (flatXml.indexOf('<pkg:package') === -1) {
     return flatXml.trim();
   }

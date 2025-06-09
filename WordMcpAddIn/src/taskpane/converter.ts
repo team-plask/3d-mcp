@@ -44,6 +44,7 @@ export const DEFAULT_SDT_IDENTIFIER_BY_ELEMENT_TYPE: Record<string, string> = {
   hyperlink: 'richText',
   drawing: 'picture', 
 };
+
 export const UNIVERSAL_DEFAULT_SDT_IDENTIFIER = 'richText'; // 최후의 기본 SDT 종류 식별자
 
 export interface ElementConfig {
@@ -175,6 +176,38 @@ export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
     },
     requiresPrwWrapper: true, // 👈 이 줄 추가
   },
+  tableRow: {
+    type: 'structural', // 행 자체는 구조적 요소
+    xmlTag: 'w:tr',
+    children: {
+        properties: {
+            type: 'property',
+            xmlTag: 'w:trPr', // 행 속성은 <w:trPr> 안에 정의됨
+            jsonKey: 'properties',
+            children: {
+                // 여기에 추가하고 싶은 행 속성을 정의합니다.
+                trHeight: {
+                    type: 'leaf',
+                    xmlTag: 'w:trHeight',
+                    jsonKey: 'height', // JSON에서 사용할 키 이름
+                    parameters: ['w:val', 'w:hRule'] // <w:trHeight>가 가질 수 있는 XML 속성들
+                },
+                cantSplit: { // 예: 행 나눠짐 방지
+                    type: 'leaf',
+                    xmlTag: 'w:cantSplit',
+                    jsonKey: 'cantSplit',
+                    parameters: ['w:val']
+                },
+                tblHeader: { // 예: 머리글 행 반복
+                    type: 'leaf',
+                    xmlTag: 'w:tblHeader',
+                    jsonKey: 'isHeader',
+                    parameters: [] // <w:tblHeader/> 처럼 속성 없이 존재만으로 의미를 가짐
+                }
+            }
+        }
+    }
+  },
   tableCell: {
     type: 'structural',
     xmlTag: 'w:tc',
@@ -290,7 +323,7 @@ export const ELEMENT_CONFIG: Record<string, ElementConfig> = {
         }
       }
     },
-    requiresPrwWrapper: true, // 👈 이 줄 추가
+    // requiresPrwWrapper: true,
   },
 };
 
@@ -302,6 +335,7 @@ export const TAG_TO_TYPE: Record<string, string> = {
 // CONTENT_CONTROL_ELEMENTS는 TAG_TO_TYPE에 따라 자동으로 업데이트됨
 const CONTENT_CONTROL_ELEMENTS = Object.values(TAG_TO_TYPE);
 
+
 export function processDocument(
   xmlString: string,
   existingJson: Record<string, any> = {}
@@ -309,11 +343,17 @@ export function processDocument(
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, "text/xml");
 
+  // 1. 콘텐츠 컨트롤 적용 및 순서 부여
   const xmlDocWithControls = applyContentControlsToDocument(xmlDoc);
+  
+  // 2. 순서 할당 (계층적으로)
+  assignOrderToContentControls(xmlDocWithControls);
 
+  // 3. XML 문자열로 변환
   const xmlSerializer = new XMLSerializer();
   const updatedXmlString = xmlSerializer.serializeToString(xmlDocWithControls);
   
+  // 4. JSON 추출 및 계층화
   const resultJson = extractJsonFromContentControls(xmlDocWithControls, existingJson);
 
   return {
@@ -328,22 +368,19 @@ export function processDocument(
  * @param xmlDoc - XML Document 객체
  * @returns 생성된 <w:p> 요소
  */
-function createDummyParagraph(xmlDoc: Document): Element {
-  const pElement = xmlDoc.createElement("w:p");
-  const pPrElement = xmlDoc.createElement("w:pPr");
-  
-  // 높이를 최소화하는 빈 단락 속성
-  const spacing = xmlDoc.createElement("w:spacing");
+export function createDummyParagraph(xmlDoc: Document): Element {
+  const pElement = xmlDoc.createElementNS(NS_W, "p");
+  const pPrElement = xmlDoc.createElementNS(NS_W, "pPr");
+  const spacing = xmlDoc.createElementNS(NS_W, "spacing");
   spacing.setAttribute("w:after", "0");
   spacing.setAttribute("w:line", "0");
-  pPrElement.appendChild(spacing);
-  
-  const rPrElement = xmlDoc.createElement("w:rPr");
-  const sz = xmlDoc.createElement("w:sz");
-  sz.setAttribute("w:val", "2"); // 1pt 크기
-  rPrElement.appendChild(sz);
-  pPrElement.appendChild(rPrElement);
+  const rPrElement = xmlDoc.createElementNS(NS_W, "rPr");
+  const sz = xmlDoc.createElementNS(NS_W, "sz");
+  sz.setAttribute("w:val", "2");
 
+  rPrElement.appendChild(sz);
+  pPrElement.appendChild(spacing);
+  pPrElement.appendChild(rPrElement);
   pElement.appendChild(pPrElement);
   return pElement;
 }
@@ -454,7 +491,7 @@ function collectTargetElementsRecursive(
         
         // 1. 이미 감싸여 있거나 sdtContent 바로 아래 있는 경우 건너뛰기
         if (initialElementsToExclude.has(element) || isDirectlyInsideSdtContent(element)) {
-          console.log(`Skipping <${element.nodeName}> (ID: ${element.id}) - already wrapped or inside sdtContent.`); 
+          // console.log(`Skipping <${element.nodeName}> (ID: ${element.id}) - already wrapped or inside sdtContent.`); 
             shouldBeSkipped = true;
         }
 
@@ -480,21 +517,6 @@ function collectTargetElementsRecursive(
   }
   return collected;
 }
-
-/**
- * <w:p> 요소가 비어 있는지 확인합니다.
- * <w:pPr> 외에 다른 자식 요소(특히 <w:r>)가 없으면 빈 것으로 간주합니다.
- */
-// function isParagraphEmpty(pElement: Element): boolean {
-//   for (let i = 0; i < pElement.childNodes.length; i++) {
-//     const child = pElement.childNodes[i];
-//     // <w:pPr>는 단락 속성이므로 무시하고, 다른 요소(주로 <w:r>)가 있는지 확인
-//     if (child.nodeType === Node.ELEMENT_NODE && child.nodeName !== 'w:pPr') {
-//       return false; // 내용이 있는 요소 발견
-//     }
-//   }
-//   return true; // 내용이 있는 요소를 찾지 못함
-// }
 
 function isDirectlyInsideSdtContent(element: Element): boolean {
     return element.parentNode?.nodeName === 'w:sdtContent';
@@ -524,19 +546,6 @@ function wrapWithContentControl(element: Element, id: string, type: string): Ele
   const wordInternalId = Math.floor(Math.random() * (2**31 - 1)) * (Math.random() < 0.5 ? 1 : -1);
   idElementNode.setAttributeNS(NS_W, "w:val", String(wordInternalId));
   sdtPrElement.appendChild(idElementNode);
-
-  // (XSD에 따라 lock, placeholder, temporary 등이 이 위치에 올 수 있음)
-  // 예: const lockElement = xmlDoc.createElementNS(NS_W, "lock");
-  //     lockElement.setAttributeNS(NS_W, "w:val", "sdtLocked"); 
-  //     sdtPrElement.appendChild(lockElement);
-
-  // const showingPlcHdrElement = xmlDoc.createElementNS(NS_W, "showingPlcHdr");
-  // showingPlcHdrElement.setAttributeNS(NS_W, "w:val", "1"); // 또는 "true"
-  // sdtPrElement.appendChild(showingPlcHdrElement);
-
-  // (XSD에 따라 dataBinding, label, tabIndex 등이 이 위치에 올 수 있음)
-
-  // --- <w:sdtType> 요소는 제공된 XSD 스키마에 없으므로 생성하지 않음 ---
 
   // --- XSD <choice> 블록에 해당하는 특정 종류 태그 추가 ---
   const elementSpecificConfig = ELEMENT_CONFIG[type];
@@ -904,219 +913,145 @@ function extractLeafData(element: Element, config: ElementConfig): any {
 
 function buildHierarchyStructure(
   resultJson: Record<string, any>,
-  xmlDoc: Document // 또는 idElementMap, 현재 로직에서는 xmlDoc으로 SDT를 다시 찾는 것으로 보임
+  xmlDoc: Document
 ): void {
-  const childToParentMap = new Map<string, string>(); // childSdtId -> parentSdtId
-  const allSdtElements = Array.from(xmlDoc.getElementsByTagNameNS(NS_W, "sdt"));
+  const childToParentMap = new Map<string, string>();
+  const allSdtElements = Array.from(xmlDoc.getElementsByTagName("w:sdt"));
 
+  // 1. 모든 SDT를 순회하며 부모-자식 관계 맵을 생성합니다. (기존 로직 유지)
   for (const sdtElement of allSdtElements) {
-    const sdtPr = sdtElement.getElementsByTagNameNS(NS_W, "w:sdtPr")[0];
+    const sdtPr = sdtElement.getElementsByTagName("w:sdtPr")[0];
     if (!sdtPr) continue;
-    const tagElements = sdtPr.getElementsByTagNameNS(NS_W, "w:tag");
-    if (!(tagElements.length > 0 && tagElements[0].hasAttributeNS(NS_W, "w:val"))) continue;
-    
-    const currentSdtId = tagElements[0].getAttributeNS(NS_W, "w:val")!;
+    const tagEl = sdtPr.getElementsByTagName("w:tag")[0];
+    if (!tagEl?.getAttribute("w:val")) continue;
+
+    const currentSdtId = tagEl.getAttribute("w:val")!;
     if (!resultJson[currentSdtId]) continue;
 
-    let parentNode = sdtElement.parentNode;
-    let parentSdtElement: Element | null = null;
-    while (parentNode && parentNode !== xmlDoc.documentElement && parentNode !== xmlDoc) {
-        // 부모 SDT를 찾을 때, 실제 콘텐츠 요소(<w:p>, <w:r> 등)의 부모 SDT를 찾아야 함
-        // 현재 로직은 SDT의 부모 SDT를 찾고 있음. 이는 중첩 SDT 구조에서는 맞음.
-        if (parentNode.nodeType === Node.ELEMENT_NODE && 
-            (parentNode as Element).localName === 'w:sdt' && 
-            (parentNode as Element).namespaceURI === NS_W) {
-            parentSdtElement = parentNode as Element;
+    let searchNode = sdtElement.parentNode;
+    while (searchNode && searchNode.nodeName !== 'w:body' && searchNode !== xmlDoc.documentElement) {
+      if (searchNode.nodeName === 'w:sdt') {
+        const parentSdtElement = searchNode as Element;
+        const parentTagEl = parentSdtElement.getElementsByTagName("w:sdtPr")[0]?.getElementsByTagName("w:tag")[0];
+        if (parentTagEl?.getAttribute("w:val")) {
+          const parentSdtId = parentTagEl.getAttribute("w:val")!;
+          if (resultJson[parentSdtId]) {
+            childToParentMap.set(currentSdtId, parentSdtId);
             break;
+          }
         }
-        parentNode = parentNode.parentNode;
-    }
-
-    if (parentSdtElement) {
-        const parentSdtPr = parentSdtElement.getElementsByTagNameNS(NS_W, 'w:sdtPr')[0];
-        if (parentSdtPr) {
-            const parentTagElements = parentSdtPr.getElementsByTagNameNS(NS_W, 'w:tag');
-            if (parentTagElements.length > 0 && parentTagElements[0].hasAttributeNS(NS_W, 'w:val')) {
-                const parentSdtId = parentTagElements[0].getAttributeNS(NS_W, 'w:val')!;
-                if (resultJson[parentSdtId]) { 
-                    childToParentMap.set(currentSdtId, parentSdtId);
-                }
-            }
-        }
+      }
+      searchNode = searchNode.parentNode;
     }
   }
-  
-  const parentToChildrenOrderMap = new Map<string, {id: string, order: string}[]>();
+
+  // 2. 부모 ID를 기준으로 자식들을 그룹화하고 순서에 맞게 정렬합니다. (기존 로직 유지)
+  const parentToChildrenOrderMap = new Map<string, { id: string; order: string }[]>();
   childToParentMap.forEach((parentId, childId) => {
     const childObj = resultJson[childId];
-    if (childObj && childObj.order !== undefined) { 
-        if (!parentToChildrenOrderMap.has(parentId)) parentToChildrenOrderMap.set(parentId, []);
-        parentToChildrenOrderMap.get(parentId)!.push({id: childId, order: childObj.order});
-    } else if (childObj) { // order가 없는 경우 대비 (예: healing으로 인해 alias가 없을 때)
-        if (!parentToChildrenOrderMap.has(parentId)) parentToChildrenOrderMap.set(parentId, []);
-        // console.warn(`[buildHierarchyStructure] Child object ${childId} is missing 'order'. Using fallback.`);
-        parentToChildrenOrderMap.get(parentId)!.push({id: childId, order: shortid.generate()}); 
+    if (childObj?.order) {
+      if (!parentToChildrenOrderMap.has(parentId)) parentToChildrenOrderMap.set(parentId, []);
+      parentToChildrenOrderMap.get(parentId)!.push({ id: childId, order: childObj.order });
     }
   });
-
   parentToChildrenOrderMap.forEach(children => children.sort((a, b) => a.order.localeCompare(b.order)));
-  
+
+  // ❗ [핵심 수정] 1단계: 모든 계층 구조를 먼저 만듭니다. (삭제는 아직 안 함)
   parentToChildrenOrderMap.forEach((sortedChildren, parentId) => {
     const parentObj = resultJson[parentId];
-    if (parentObj) {
-      // ❗ 핵심 수정: 'content' 객체 없이 부모 객체에 자식 ID를 키로 하여 직접 할당
-      // 테이블 행과 셀은 이미 extractTableDataWithImplicitRows에서 처리되므로, 일반적인 경우에만 적용.
-      if (parentObj.type !== 'table' && parentObj.type !== 'tableRow') { 
-        sortedChildren.forEach(childInfo => {
-          const childJson = resultJson[childInfo.id];
-          if (childJson) {
-            parentObj[childInfo.id] = childJson; // 부모 객체에 직접 자식 추가
-            delete resultJson[childInfo.id];     // 최상위 resultJson에서 자식 제거
-          }
-        });
+    if (!parentObj) return;
+
+    // 모든 타입을 동일하게 처리: 부모 객체에 자식 ID를 키로 하여 자식 객체를 추가.
+    sortedChildren.forEach(childInfo => {
+      const childJson = resultJson[childInfo.id];
+      if (childJson) {
+        parentObj[childInfo.id] = childJson;
       }
-      // 기존 'content' 필드가 있다면 삭제 (선택적)
-      // if (parentObj.content && Object.keys(parentObj.content).length === 0) {
-      //   delete parentObj.content;
-      // } else if (parentObj.content && Object.keys(parentObj.content).length > 0 && parentObj.type !== 'table' && parentObj.type !== 'tableRow') {
-      //   // 만약 content 필드가 이미 존재하고, 위 로직에서 parentObj[childInfo.id]로 옮겼다면, 기존 content는 비워야 함.
-      //   // 하지만 위 로직은 parentObj.content를 사용하지 않으므로, 이 부분은 필요 없을 수 있음.
-      //   // 혹시 모를 이전 로직의 잔재를 위해 남겨둘 수 있으나, 깔끔하게 하려면 parentObj.content 사용 자체를 없애야 함.
-      // }
-    }
+    });
   });
 
-  // 테이블 행 객체를 테이블의 rows 배열에 ID 대신 실제 객체로 채우고, 최상위에서 행 객체 제거
-  // (이 로직은 extractTableDataWithImplicitRows가 rows 배열에 row JSON 객체를 직접 넣는다면 필요 없어지거나 수정되어야 함)
-  // 현재 extractTableDataWithImplicitRows는 rows 배열에 conceptualRowId를 넣고, resultJson에 row 객체를 저장함.
-  // 따라서 이 로직은 그 row 객체를 table.rows 안으로 옮기는 역할을 함.
-  Object.keys(resultJson).forEach(key => {
-    if (resultJson[key]?.type === 'table') {
-      const tableJson = resultJson[key];
-      if (tableJson.rows && Array.isArray(tableJson.rows)) {
-        // tableJson.rows에는 conceptualRowId들이 문자열로 들어있음 (extractTableDataWithImplicitRows 현재 로직 기준)
-        tableJson.rows = tableJson.rows.map((rowIdOrConceptualId: any) => {
-          // rowIdOrConceptualId가 실제 row 객체가 아니고 문자열 ID라면
-          if (typeof rowIdOrConceptualId === 'string' && resultJson[rowIdOrConceptualId] && resultJson[rowIdOrConceptualId].type === 'tableRow') {
-            const rowObject = resultJson[rowIdOrConceptualId];
-            delete resultJson[rowIdOrConceptualId]; // 최상위에서 행 객체 제거
-            return rowObject; // 실제 행 객체로 교체
-          }
-          // 이미 객체이거나(이전 로직의 잔재 또는 다른 흐름), 찾을 수 없는 경우
-          return rowIdOrConceptualId; 
-        }).filter((row: any) => row && typeof row === 'object'); // 유효한 객체만 남김
-      }
-    }
+  // ❗ [핵심 수정] 2단계: 모든 계층화가 끝난 후, 최상위 레벨에서 자식들을 한 번에 정리합니다.
+  childToParentMap.forEach((parentId, childId) => {
+    // 부모가 있는 자식(childId)은 이제 최상위 레벨에 있을 필요가 없으므로 제거합니다.
+    delete resultJson[childId];
   });
 }
 
-
 function assignOrderToContentControls(xmlDoc: Document): void {
-  // console.log("xmlDoc", xmlDoc);
-  const bodyElements = xmlDoc.getElementsByTagNameNS(NS_W, "body");
-  if (bodyElements.length === 0) return;
-  const body = bodyElements[0];
+  const body = xmlDoc.getElementsByTagName("w:body")[0];
+  if (!body) return;
 
-  // currentParentSdtOrderKey는 현재 부모 SDT의 order key (계층적 order 생성 시 사용 가능, 현재는 사용 안함)
-  function processElementAndItsDirectSdtChildren(currentElement: Element): void {
+  /**
+   * 모든 요소를 깊이 우선으로 순회하며 각 레벨의 직계 자식 SDT에 순서를 할당합니다.
+   * @param currentElement 현재 탐색 중인 요소
+   */
+  function processElement(currentElement: Element) {
+    // 1. 현재 요소의 직계 자식인 <w:sdt>들을 찾습니다.
     const directChildSdts: Element[] = [];
-
-    // 현재 요소(currentElement)의 직접 자식들 중에서 <w:sdt>만 수집
-    // console.log(`Processing element <${currentElement.childNodes.length}> for direct child SDTs`);
     for (let i = 0; i < currentElement.childNodes.length; i++) {
       const childNode = currentElement.childNodes[i];
-      // console.log(`Child node ${i}: <${childNode.nodeName}>`);
-      if (childNode.nodeType === Node.ELEMENT_NODE && childNode.nodeName === 'sdt') {
+      if (childNode.nodeType === Node.ELEMENT_NODE && childNode.nodeName === 'w:sdt') {
         directChildSdts.push(childNode as Element);
       }
     }
 
-    // 수집된 직접 자식 <w:sdt>들에 대해 순서 할당
-    // console.log(`Found ${directChildSdts.length} direct child SDTs for element <${currentElement.nodeName}>`);
+    // 2. 찾은 직계 자식 <w:sdt>들에게 순서대로 order 값을 할당합니다.
     if (directChildSdts.length > 0) {
-      // console.log(`Processing ${directChildSdts.length} direct child SDTs for element <${currentElement.nodeName}>`);
       const orders = generateNKeysBetween(null, null, directChildSdts.length);
       directChildSdts.forEach((sdt, index) => {
         setOrderToSdtAlias(sdt, orders[index], xmlDoc);
-        
-        // 이 SDT의 내용물에 대해 다시 재귀
-        const sdtContent = sdt.getElementsByTagNameNS(NS_W, 'sdtContent')[0];
-        if (sdtContent && sdtContent.firstElementChild) {
-          processElementAndItsDirectSdtChildren(sdtContent.firstElementChild as Element);
-        }
       });
     }
     
-    // 만약 currentElement가 <w:tr>이나 <w:tc>처럼 SDT가 아니지만 그 안에 SDT를 가질 수 있는 요소라면,
-    // 그 자식들에 대해서도 재귀적으로 processElementAndItsDirectSdtChildren를 호출할 필요가 있음.
-    // 하지만 위 로직에서 sdtContent.firstElementChild에 대해 재귀하므로,
-    // <w:tbl> -> <w:tr> -> <w:tc> -> <w:p> -> <w:r> 와 같은 경로로 자연스럽게 처리될 것임.
-    // 단, <w:tr>은 SDT로 감싸이지 않으므로, <w:tbl>의 sdtContent.firstElementChild인 <w:tbl> 요소에 대해
-    // processElementAndItsDirectSdtChildren가 호출될 때, <w:tbl>의 자식 <w:tr>들에 대해
-    // processElementAndItsDirectSdtChildren(trElement)를 명시적으로 호출해줘야 함.
-
-    if (currentElement.nodeName === 'w:tbl') {
-        const trElements: Element[] = [];
-        for (let i = 0; i < currentElement.childNodes.length; i++) {
-            const node = currentElement.childNodes[i];
-            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === 'w:tr') {
-                trElements.push(node as Element);
-            }
+    // 3. ❗ 핵심: 현재 요소의 모든 자식 요소를 순회하며 재귀 호출합니다.
+    // 이렇게 하면 <sdt> 안에 있는 <p>, <r>, <tc> 등 모든 요소 내부로 탐색이 이어집니다.
+    for (let i = 0; i < currentElement.childNodes.length; i++) {
+        const childNode = currentElement.childNodes[i];
+        if (childNode.nodeType === Node.ELEMENT_NODE) {
+            processElement(childNode as Element);
         }
-        trElements.forEach(tr => {
-            processElementAndItsDirectSdtChildren(tr); // 각 <w:tr> 내부의 셀 <w:sdt> 처리 위임
-        });
     }
-    // <w:tc>나 <w:p>의 경우, 그 자식 <w:sdt>들은 위 directChildSdts 루프에서 처리됨.
   }
 
-  processElementAndItsDirectSdtChildren(body);
+  processElement(body);
 }
 
-// setOrderToSdtAlias 함수는 이전과 동일하게 유지
-// (단, aliasElement가 null일 때 sdtPr에 appendChild 하기 전에, sdtPr의 다른 자식 요소들과의 순서를 고려하는 것이 더 좋을 수 있습니다.)
 function setOrderToSdtAlias(sdtElement: Element, order: string, xmlDoc: Document): void {
-  // console.log("sdtElement:", sdtElement);
-  // console.log(`Setting order ${order} for SDT with ID: ${sdtElement.getAttributeNS(NS_W, "id")}`);
-  const sdtPr = sdtElement.getElementsByTagNameNS(NS_W, "sdtPr")[0];
+  const sdtPr = sdtElement.getElementsByTagName("w:sdtPr")[0];
   if (!sdtPr) return;
 
-  let aliasElement = sdtPr.getElementsByTagNameNS(NS_W, "alias")[0];
-  // console.log("aliasElement:", aliasElement);
-  if (!aliasElement) {
-    aliasElement = xmlDoc.createElementNS(NS_W, "w:alias");
-    // <w:alias>는 보통 <w:sdtPr>의 첫 번째 자식 또는 <w:docPartObj> 뒤 등에 위치합니다.
-    // 여기서는 간단히 마지막에 추가하거나, 필요시 순서 조정 로직 추가.
-    sdtPr.appendChild(aliasElement); 
-  }
-
-  const currentAliasValue = aliasElement.getAttributeNS(NS_W, "val") || "";
+  let aliasElement = sdtPr.getElementsByTagName("w:alias")[0];
   
-  if (currentAliasValue.includes("__")) {
-    // console.log(`Current alias value "${currentAliasValue}" already has an order suffix. Updating...`);
-    const baseValue = currentAliasValue.substring(0, currentAliasValue.lastIndexOf("__"));
-    aliasElement.setAttributeNS(NS_W, "w:val", `${baseValue}__${order}`);
-  } else { 
-    const tagElement = sdtPr.getElementsByTagNameNS(NS_W, "tag")[0];
-    let baseAlias = currentAliasValue; 
-    // console.log("tagElement:", tagElement);
-
-    if (!baseAlias && tagElement && tagElement.hasAttributeNS(NS_W, "val")) {
-        const tagVal = tagElement.getAttributeNS(NS_W, "val")!;
-        const typePrefix = tagVal.split('_')[0];
-        let resolvedTypeName = typePrefix; 
-        const sdtContent = sdtElement.getElementsByTagNameNS(NS_W, 'sdtContent')[0];
-        if (sdtContent && sdtContent.firstElementChild) {
-            resolvedTypeName = TAG_TO_TYPE[sdtContent.firstElementChild.nodeName] || typePrefix;
-        }
-        baseAlias = `${resolvedTypeName} ${tagVal}`;
-    } else if (!baseAlias) {
-        const idAttrNode = sdtPr.getElementsByTagNameNS(NS_W, "id")[0];
-        const idAttr = idAttrNode ? idAttrNode.getAttributeNS(NS_W, "val") : null;
-        baseAlias = `unknown ${idAttr || shortid.generate()}`;
-    }
-    aliasElement.setAttributeNS(NS_W, "w:val", `${baseAlias}__${order}`);
+  if (!aliasElement) {
+    aliasElement = xmlDoc.createElement("w:alias");
+    // alias는 sdtPr의 다른 요소들보다 앞에 오는 경향이 있으므로 맨 앞에 삽입
+    sdtPr.insertBefore(aliasElement, sdtPr.firstChild); 
   }
+
+  let currentAliasValue = aliasElement.getAttribute("w:val") || "";
+  
+  // 기존에 order 정보(__)가 있다면, 순수 alias 값만 남김
+  if (currentAliasValue.includes("__")) {
+    currentAliasValue = currentAliasValue.substring(0, currentAliasValue.lastIndexOf("__"));
+  }
+  
+  // ✅ 수정: 기본 alias 값이 비어있다면 tag 값으로 확실하게 재생성
+  if (!currentAliasValue) {
+      const tagElement = sdtPr.getElementsByTagName("w:tag")[0];
+      const tagVal = tagElement?.getAttribute("w:val");
+      if (tagVal) {
+          const sdtContent = sdtElement.getElementsByTagName('w:sdtContent')[0];
+          const mainContentElement = sdtContent?.firstElementChild;
+          const resolvedTypeName = mainContentElement ? (TAG_TO_TYPE[mainContentElement.nodeName] || 'unknown') : 'unknown';
+          currentAliasValue = `${resolvedTypeName} ${tagVal}`;
+      } else {
+          // 최후의 수단으로 임의의 값을 생성
+          currentAliasValue = `unknown ${shortid.generate()}`;
+      }
+  }
+
+  // 최종적으로 "기본 alias 값__order" 형식으로 설정
+  aliasElement.setAttribute("w:val", `${currentAliasValue}__${order}`);
 }
 
 // mergeElementData 함수는 이전과 동일하게 유지
