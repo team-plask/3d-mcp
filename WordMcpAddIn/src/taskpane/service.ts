@@ -187,13 +187,16 @@ function createXmlElementFromJson(
   orderKey: string
 ): Element {
   const elementType = itemJson.type as string;
+  console.log("elementType", elementType, "itemJson", itemJson);
   if (!elementType || !ELEMENT_CONFIG[elementType]) {
     throw new Error(`[createXmlElementFromJson] Unsupported element type: ${itemJson.type} for ID: ${id}.`);
   }
   const config = ELEMENT_CONFIG[elementType];
-  const contentElement = xmlDoc.createElement(config.xmlTag);
+  
+  // [네임스페이스 수정] createElementNS를 사용하여 올바른 네임스페이스로 요소를 생성합니다.
+  const contentElement = xmlDoc.createElementNS(NS_W, config.xmlTag);
 
-  // 파라미터, 속성, 텍스트 적용 (기존 로직 유지)
+  // 속성 적용
   if (config.parameters) {
     for (const paramFullName of config.parameters) {
       const paramKeyInJson = paramFullName.split(':').pop()!;
@@ -202,56 +205,56 @@ function createXmlElementFromJson(
       }
     }
   }
+  // properties 적용
   if (itemJson.properties && typeof itemJson.properties === 'object') {
     applyPropertiesToXmlElement(contentElement, itemJson.properties, config, xmlDoc);
   } else if (config.xmlTag === 'w:p' && !contentElement.querySelector("pPr")) {
-    contentElement.insertBefore(xmlDoc.createElement("w:pPr"), contentElement.firstChild);
+    contentElement.insertBefore(xmlDoc.createElementNS(NS_W, "w:pPr"), contentElement.firstChild);
   }
-  if (itemJson.hasOwnProperty('text') && config.children?.t && config.xmlTag === 'w:r') {
-    const textElement = xmlDoc.createElement("w:t");
-    const textContentStr = String(itemJson.text || "");
+  // text 적용
+  if (itemJson.text !== undefined && config.children?.t && config.xmlTag === 'w:r') {
+    const textElement = xmlDoc.createElementNS(NS_W, "w:t");
+    const textContentStr = String(itemJson.text);
     textElement.textContent = textContentStr;
-    if (!textContentStr || textContentStr.startsWith(" ") || textContentStr.endsWith(" ")) {
-      textElement.setAttribute('xml:space', 'preserve');
+    if (textContentStr.startsWith(" ") || textContentStr.endsWith(" ")) {
+      textElement.setAttributeNS("http://www.w3.org/XML/1998/namespace", 'xml:space', 'preserve');
     }
     contentElement.appendChild(textElement);
   }
 
-  // ✅ [핵심 수정] 자식 요소를 생성하는 로직 개선
   // 테이블의 경우 'rows' 배열을 특별히 처리합니다.
-  if (elementType === 'table' && itemJson.rows && Array.isArray(itemJson.rows)) {
-    // tblGrid는 rows보다 먼저 와야 할 수 있으므로, 먼저 처리
-    if(itemJson.grid) {
-        const gridConfig = ELEMENT_CONFIG.table.children!.tblGrid as ElementConfig;
-        const gridElement = xmlDoc.createElement(gridConfig.xmlTag);
-        if (itemJson.grid.columns && Array.isArray(itemJson.grid.columns)) {
-            itemJson.grid.columns.forEach((col: any) => {
-                const colEl = xmlDoc.createElement("w:gridCol");
-                colEl.setAttribute("w:w", col.w);
-                gridElement.appendChild(colEl);
-            });
-        }
+  if (elementType === 'table') {
+    // [핵심 로직 수정] 테이블의 행과 셀을 올바른 방식으로 생성합니다.
+    if (itemJson.grid?.columns) {
+        const gridElement = xmlDoc.createElementNS(NS_W, 'w:tblGrid');
+        itemJson.grid.columns.forEach((col: any) => {
+            const colEl = xmlDoc.createElementNS(NS_W, "w:gridCol");
+            colEl.setAttribute("w:w", col.w);
+            gridElement.appendChild(colEl);
+        });
         contentElement.appendChild(gridElement);
     }
       
-    itemJson.rows.forEach((rowJson: any) => {
-      const trElement = xmlDoc.createElement('w:tr'); // <w:tr> 생성
-      if (rowJson.properties) {
-          applyPropertiesToXmlElement(trElement, rowJson.properties, { type: 'structural', xmlTag: 'w:tr', children: { properties: { type: 'property', xmlTag: 'w:trPr', children: { height: {type: 'leaf', xmlTag: 'w:trHeight', parameters: ['w:val', 'w:hRule']} } }}}, xmlDoc);
-      }
-
-      // rowJson의 자식들 중 cell들을 찾아서 재귀적으로 생성
-      const cellKeys = Object.keys(rowJson).filter(k => rowJson[k]?.type === 'tableCell');
-      cellKeys.sort((a, b) => (rowJson[a].order || '').localeCompare(rowJson[b].order || ''));
-      
-      cellKeys.forEach(cellKey => {
-        const cellJson = rowJson[cellKey];
-        // 셀에 대한 SDT를 재귀적으로 생성
-        const cellSdt = createXmlElementFromJson(cellKey, cellJson, xmlDoc, cellJson.order);
-        trElement.appendChild(cellSdt);
-      });
-      contentElement.appendChild(trElement);
-    });
+    if (Array.isArray(itemJson.rows)) {
+        itemJson.rows.forEach((rowJson: any) => {
+            const trElement = xmlDoc.createElementNS(NS_W, 'w:tr');
+            if (rowJson.properties && ELEMENT_CONFIG.tableRow) {
+                applyPropertiesToXmlElement(trElement, rowJson.properties, ELEMENT_CONFIG.tableRow, xmlDoc);
+            }
+            
+            if (Array.isArray(rowJson.cells)) {
+                rowJson.cells.forEach((cellId: string) => {
+                    // 테이블 JSON(itemJson)에서 cellId로 셀의 전체 정의를 찾습니다.
+                    const cellJson = itemJson[cellId];
+                    if (cellJson) {
+                        const cellSdt = createXmlElementFromJson(cellId, cellJson, xmlDoc, cellJson.order || 'a0');
+                        trElement.appendChild(cellSdt);
+                    }
+                });
+            }
+            contentElement.appendChild(trElement);
+        });
+    }
   } else {
     // 그 외 일반적인 자식 요소 처리
     const childItemKeys = Object.keys(itemJson).filter(key =>
@@ -259,10 +262,13 @@ function createXmlElementFromJson(
         !(config.parameters?.map(p => p.split(':').pop()).includes(key)) &&
         itemJson[key] && typeof itemJson[key] === 'object' && itemJson[key].type
     );
+
     childItemKeys.sort((a, b) => (itemJson[a]?.order || '').localeCompare(itemJson[b]?.order || ''));
+    
     childItemKeys.forEach(childKey => {
       const childJson = itemJson[childKey];
-      const childSdtElement = createXmlElementFromJson(childKey, childJson, xmlDoc, childJson.order);
+      const childOrder = childJson.order || 'a0'; // 자식의 order가 없으면 기본값 사용
+      const childSdtElement = createXmlElementFromJson(childKey, childJson, xmlDoc, childOrder);
       contentElement.appendChild(childSdtElement);
     });
   }
@@ -308,11 +314,9 @@ function createXmlElementFromJson(
   }
 
   sdtElement.appendChild(sdtContentElement);
-
+  console.log("sdtElement", sdtElement)
   return sdtElement;
 }
-
-// service.ts
 
 /**
  * 재귀적으로 객체를 탐색하여 특정 ID를 가진 자식 객체를 찾습니다.
@@ -683,32 +687,42 @@ function applyOperationsDirectlyToXmlDom(
   targetJsonState: Record<string, any>,
   originalJsonState: Record<string, any>
 ): void {
-  const wordNs = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-  const bodyElement = xmlDoc.getElementsByTagName("w:body")[0] || xmlDoc.getElementsByTagName("w:body")[0];
+  const bodyElement = xmlDoc.getElementsByTagNameNS(NS_W, "body")[0];
   if (!bodyElement) throw new Error("w:body element not found in XML document.");
 
+  // [수정] 'clonedSectPr' 변수 선언 추가
   let clonedSectPr: Node | null = null;
-  const sectPrNodeList = bodyElement.getElementsByTagName("w:sectPr");
+  const sectPrNodeList = bodyElement.getElementsByTagNameNS(NS_W, "sectPr");
   if (sectPrNodeList.length > 0 && sectPrNodeList[0].parentNode === bodyElement) {
       clonedSectPr = sectPrNodeList[0].cloneNode(true);
       sectPrNodeList[0].remove();
   }
 
-  const definitionOps: Operation[] = []; // 셀, 단락 등 정의 추가/변경 오퍼레이션
-  const tableStructureOps: Operation[] = []; // 테이블 행/셀 구조 변경 오퍼레이션
-  operations.forEach(op => {
-    if (op.path.includes('/rows/')) {
-      tableStructureOps.push(op);
-    } else {
-      definitionOps.push(op);
-    }
-  });
+  const tableSyncJobs = new Map<string, Operation[]>();
+  const otherOps: Operation[] = [];
 
-  console.log("--- Phase 1: Applying Definition Operations ---");
-  definitionOps.forEach(op => {
+  // [개선] findTableIdInPath 로직 단순화
+  const findTableIdInPath = (path: string): string | null => {
+    const segments = path.substring(1).split('/');
+    // 수정: 세그먼트 자체가 테이블의 ID이거나, targetJsonState에서 타입이 테이블인 경우를 모두 찾음
+    return segments.find(seg => targetJsonState[seg]?.type === 'table') || null;
+  };
+
+  for (const op of operations) {
+    const tableId = findTableIdInPath(op.path);
+    if (tableId) {
+      if (!tableSyncJobs.has(tableId)) tableSyncJobs.set(tableId, []);
+      tableSyncJobs.get(tableId)!.push(op);
+    } else {
+      otherOps.push(op);
+    }
+  }
+
+  // --- 1단계: 테이블과 무관한 일반적인 오퍼레이션 처리 ---
+  console.log("--- Phase 1: Applying Generic Operations ---");
+  otherOps.forEach(op => {
     console.log(`Applying DEF Op: ${op.op}, Path: ${op.path}`);
     try {
-      // 제네릭 핸들러 호출
       switch (op.op) {
         case 'remove':
           handleXmlDomRemove(op, xmlDoc, bodyElement, originalJsonState);
@@ -728,146 +742,105 @@ function applyOperationsDirectlyToXmlDom(
   });
 
 
-  // --- 2단계: 테이블 구조(Structure) 관련 오퍼레이션 처리 ---
-  console.log("--- Phase 2: Applying Table Structure Operations ---");
-  tableStructureOps.forEach(op => {
-      console.log(`Applying TBL_STRUCT Op: ${op.op}, Path: ${op.path}`);
-      try {
-        handleTableRowOrCellModification(op, xmlDoc, targetJsonState);
-      } catch (e) {
-        console.error(`Error applying table structure operation ${JSON.stringify(op)}:`, e);
+  // --- 2단계: 테이블별로 재조정 작업 실행 ---
+  console.log("--- Phase 2: Syncing Tables ---");
+  // [수정] for...of 대신 forEach를 사용하여 TS 호환성 문제 해결
+  tableSyncJobs.forEach((ops, tableId) => {
+    console.log(`Syncing table '${tableId}' based on ${ops.length} related operations.`);
+    syncTableFromState(tableId, xmlDoc, targetJsonState, bodyElement);
+  });
+
+  // [개선] 최종 순서 재정렬 로직 수정
+  // 이미 올바르게 자리를 잡은 테이블은 건드리지 않고,
+  // 나머지 최상위 요소들의 순서만 맞추거나 누락된 것을 추가합니다.
+  const finalTopLevelIds = Object.keys(targetJsonState).filter(id => !findObjectInNestedJson(targetJsonState, id));
+  
+  const finalSdtMap = new Map<string, Element>();
+  Array.from(bodyElement.children).filter(c => c.tagName === 'w:sdt').forEach(sdt => {
+      const tagEl = (sdt as Element).getElementsByTagNameNS(NS_W, 'tag')[0];
+      const id = tagEl?.getAttribute('w:val');
+      if (id) finalSdtMap.set(id, sdt as Element);
+  });
+  
+  const sortedTopLevelTargetIds = finalTopLevelIds
+    .filter(id => targetJsonState[id]?.type) // 유효한 타입이 있는 요소만
+    .sort((a, b) => (targetJsonState[a]?.order || "").localeCompare(targetJsonState[b]?.order || ""));
+
+  // 기존 요소를 모두 지우기보다, 순서에 맞게 재배치하거나 새로 추가
+  sortedTopLevelTargetIds.forEach(id => {
+      const sdtElement = finalSdtMap.get(id);
+      if (sdtElement) {
+          bodyElement.appendChild(sdtElement); // 순서대로 다시 붙여넣기
+      } else {
+          // 1단계에서 추가되지 않은 요소(예: 빈 문서에 새로 추가)가 있다면 여기서 생성
+          const itemJson = targetJsonState[id];
+          if (itemJson) {
+              const newSdt = createXmlElementFromJson(id, itemJson, xmlDoc, itemJson.order);
+              bodyElement.appendChild(newSdt);
+          }
       }
   });
 
-  // 최종 순서 재정렬 및 누락 요소 재생성 (방어적 코딩)
-  const currentSdtElementsInBody = Array.from(bodyElement.children).filter(c => c.tagName === 'w:sdt');
-  const sdtMap = new Map<string, Element>();
-  currentSdtElementsInBody.forEach(sdt => {
-    const tagEl = sdt.getElementsByTagName('w:sdtPr')[0]?.getElementsByTagName('w:tag')[0];
-    if (tagEl) {
-      const val = tagEl.getAttribute('w:val');
-      if (val) sdtMap.set(val, sdt);
-    }
-  });
-  currentSdtElementsInBody.forEach(sdt => sdt.remove());
-
-  const sortedTopLevelTargetIds = Object.keys(targetJsonState)
-    .filter(id => targetJsonState[id] !== null && targetJsonState[id] !== undefined && targetJsonState[id].type)
-    .sort((a, b) => (targetJsonState[a]?.order || "").localeCompare(targetJsonState[b]?.order || ""));
-  
-  console.log("sortedTopLevelTargetIds:", sortedTopLevelTargetIds);
-  for (const id of sortedTopLevelTargetIds) {
-    let sdtToAppend = sdtMap.get(id);
-    if (!sdtToAppend) {
-        const itemJson = targetJsonState[id];
-        if (itemJson && itemJson.type && itemJson.order !== undefined) {
-            // console.log(`[DOM Reorder/Finalize] ID ${id} not found in DOM map, creating from targetJson.`);
-            sdtToAppend = createXmlElementFromJson(id, itemJson, xmlDoc, itemJson.order);
-            // console.log("sdtToAppend", sdtToAppend);
-        } else {
-            console.warn(`[DOM Reorder/Finalize] Cannot create SDT for ID ${id}, itemJson invalid in targetJson.`);
-            continue;
-        }
-    }
-    if (sdtToAppend) {
-        // console.log("sdtToAppend:", sdtToAppend);
-        bodyElement.appendChild(sdtToAppend);
-    }
-  }
 
   if (clonedSectPr) {
     bodyElement.appendChild(clonedSectPr);
   }
 }
 
-// service.ts 에 새로 추가될 함수
-
-/**
- * 테이블의 행(row) 또는 셀(cell) 관련 JSON Patch 오퍼레이션을 처리합니다.
- * @param op - 처리할 JSON Patch 오퍼레이션
- * @param xmlDoc - 전체 XML 문서 객체
- * @param targetJsonState - 최종적으로 만들어져야 할 완전한 JSON 상태
- */
-function handleTableRowOrCellModification(
-  op: Operation,
+function syncTableFromState(
+  tableId: string,
   xmlDoc: Document,
-  targetJsonState: Record<string, any>
+  targetJsonState: Record<string, any>,
+  bodyElement: Element
 ) {
-  const pathSegments = op.path.substring(1).split('/');
-  const tableId = pathSegments.find(seg => seg.startsWith('t_'));
-  if (!tableId) return;
+  const tableJson = findObjectInNestedJson(targetJsonState, tableId);
 
-  const tableElement = findElementBySdtId(xmlDoc, tableId, "Table modification target search");
-  if (!tableElement || tableElement.tagName.toLowerCase() !== 'w:tbl') {
-    console.warn(`Table modification failed: Table with ID '${tableId}' not found.`);
+  if (!tableJson) {
+    const sdtToRemove = findSdtElementById(xmlDoc.documentElement, tableId);
+    if (sdtToRemove) sdtToRemove.remove();
+    return;
+  }
+  
+  let tableSdt = findSdtElementById(xmlDoc.documentElement, tableId);
+  
+  // 테이블 SDT가 없다면, 뼈대만 있는 테이블을 새로 생성하여 DOM에 추가
+  if (!tableSdt) {
+    tableSdt = createXmlElementFromJson(tableId, tableJson, xmlDoc, tableJson.order);
+    insertSdtInOrder(bodyElement, tableSdt, tableJson.order, xmlDoc);
+  }
+
+  const tableElement = tableSdt.getElementsByTagNameNS(NS_W, 'tbl')[0];
+  if (!tableElement) {
+    console.error(`Could not find or create <w:tbl> for table ID '${tableId}'`);
     return;
   }
 
-  const rowsPathIndex = pathSegments.indexOf('rows');
-  if (rowsPathIndex === -1) return;
+  // [핵심] 기존 행(<w:tr>)들을 모두 삭제하여 테이블 내용을 비움
+  const existingTrs = Array.from(tableElement.getElementsByTagNameNS(NS_W, 'tr'));
+  existingTrs.forEach(tr => tr.remove());
+  
+  // `targetJsonState`를 기준으로 행과 셀을 새로 만듦
+  if (Array.isArray(tableJson.rows)) {
+    tableJson.rows.forEach((rowJson: any) => {
+      const trElement = xmlDoc.createElementNS(NS_W, 'tr');
 
-  const rowIndex = parseInt(pathSegments[rowsPathIndex + 1], 10);
-  const allTrs = Array.from(tableElement.getElementsByTagNameNS(NS_W, 'tr'));
-
-  // 행 추가 로직
-  if (op.op === 'add' && pathSegments[rowsPathIndex + 1] !== undefined && pathSegments.length === rowsPathIndex + 2) {
-    const newRowJson = op.value as { id: string, cells: string[], properties?: any, order: string };
-    const newTr = xmlDoc.createElementNS(NS_W, 'tr');
-    
-    // 새 행의 속성 적용 (예: trHeight)
-    if(newRowJson.properties) {
-        // applyPropertiesToXmlElement 헬퍼를 tr에 맞게 활용
-    }
-
-    // 새 행에 포함될 셀들을 생성하여 추가
-    newRowJson.cells.forEach(cellId => {
-      const tableJson = findObjectInNestedJson(targetJsonState, tableId);
-      const cellJson = tableJson ? tableJson[cellId] : null;
-      if (cellJson) {
-        const cellSdt = createXmlElementFromJson(cellId, cellJson, xmlDoc, cellJson.order);
-        newTr.appendChild(cellSdt);
-      } else {
-        console.warn(`Definition for cell '${cellId}' not found in targetJson for table '${tableId}'`);
+      // 행 속성 적용
+      if (rowJson.properties && ELEMENT_CONFIG.tableRow) {
+        applyPropertiesToXmlElement(trElement, rowJson.properties, ELEMENT_CONFIG.tableRow, xmlDoc);
       }
+      
+      // 셀 생성 및 추가
+      if (Array.isArray(rowJson.cells)) {
+        rowJson.cells.forEach((cellId: string) => {
+          const cellJson = tableJson[cellId]; // 테이블 JSON 객체 내에서 셀 정의를 찾음
+          if (cellJson) {
+            const cellSdt = createXmlElementFromJson(cellId, cellJson, xmlDoc, cellJson.order);
+            trElement.appendChild(cellSdt);
+          }
+        });
+      }
+      tableElement.appendChild(trElement);
     });
-
-    // 테이블의 올바른 위치에 새 tr 삽입
-    if (allTrs[rowIndex - 1]) {
-      allTrs[rowIndex - 1].after(newTr);
-    } else {
-      tableElement.appendChild(newTr);
-    }
-
-  } else if (op.op === 'replace' && pathSegments[rowsPathIndex + 2] === 'cells') {
-    // 사례: 셀 교체 (path: /.../rows/0/cells/0)
-    const cellIndex = parseInt(pathSegments[rowsPathIndex + 3], 10);
-    const targetTr = allTrs[rowIndex];
-    if (!targetTr) {
-      console.warn(`Table modification failed: Row at index ${rowIndex} not found.`);
-      return;
-    }
-    const allCellSdts = Array.from(targetTr.getElementsByTagName('w:sdt'));
-    const oldCellSdt = allCellSdts[cellIndex];
-    if (!oldCellSdt) {
-       console.warn(`Table modification failed: Cell at index ${cellIndex} in row ${rowIndex} not found.`);
-       return;
-    }
-    
-    const newCellId = op.value as string;
-    const newCellJson = findObjectInNestedJson(targetJsonState, newCellId);
-    if(newCellJson){
-      const newCellSdt = createXmlElementFromJson(newCellId, newCellJson, xmlDoc, newCellJson.order);
-      oldCellSdt.replaceWith(newCellSdt);
-    }
-  } else if (op.op === 'remove') {
-    // 사례: 행 삭제 (path: /.../rows/0)
-    const trToRemove = allTrs[rowIndex];
-    if (trToRemove) {
-      trToRemove.remove();
-    }
-  } else {
-    // 기타: row의 id 변경 등. 이런 경우는 보통 DOM 조작이 필요 없음.
-    console.log(`Table property modification on path '${op.path}'. No DOM change needed.`);
   }
 }
 
@@ -1020,7 +993,7 @@ function handleXmlDomAdd(
 
     if (operationSubType === 'text') {
       const textConfig = (elementConfig.xmlTag === 'w:r' && elementConfig.children?.t) ? elementConfig.children.t : elementConfig.children?.text;
-      if (textConfig && actualElementToModify.localName === 'r') { // 실제 조작 대상이 <w:r>인지 확인
+      if (textConfig && actualElementToModify.localName === 'w:r') { // 실제 조작 대상이 <w:r>인지 확인
         // 기존 <w:t> 요소들을 모두 제거 (네임스페이스 접두사 사용)
         const existingTextElements = Array.from(actualElementToModify.getElementsByTagName(textConfig.xmlTag)); // "w:t"
         existingTextElements.forEach(node => {
@@ -1169,7 +1142,7 @@ function handleXmlDomReplace(
 
     if (operationSubType === 'text') {
       // actualElementToModify는 <w:r> 요소를 가리켜야 함
-      if (actualElementToModify.localName === 'r' && actualElementToModify.namespaceURI === NS_W) {
+      if (actualElementToModify.localName === 'w:r' && actualElementToModify.namespaceURI === NS_W) {
         const runElement = actualElementToModify;
 
         // 기존 <w:t> 요소들 모두 제거

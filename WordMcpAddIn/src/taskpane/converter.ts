@@ -346,13 +346,14 @@ export function processDocument(
   // 1. 콘텐츠 컨트롤 적용 및 순서 부여
   const xmlDocWithControls = applyContentControlsToDocument(xmlDoc);
   
+  console.log("xmlDocWithControls", xmlDocWithControls);
   // 2. 순서 할당 (계층적으로)
   assignOrderToContentControls(xmlDocWithControls);
 
   // 3. XML 문자열로 변환
   const xmlSerializer = new XMLSerializer();
   const updatedXmlString = xmlSerializer.serializeToString(xmlDocWithControls);
-  
+  console.log("updatedXmlString", updatedXmlString);
   // 4. JSON 추출 및 계층화
   const resultJson = extractJsonFromContentControls(xmlDocWithControls, existingJson);
 
@@ -369,13 +370,13 @@ export function processDocument(
  * @returns 생성된 <w:p> 요소
  */
 export function createDummyParagraph(xmlDoc: Document): Element {
-  const pElement = xmlDoc.createElementNS(NS_W, "p");
-  const pPrElement = xmlDoc.createElementNS(NS_W, "pPr");
-  const spacing = xmlDoc.createElementNS(NS_W, "spacing");
+  const pElement = xmlDoc.createElementNS(NS_W, "w:p");
+  const pPrElement = xmlDoc.createElementNS(NS_W, "w:pPr");
+  const spacing = xmlDoc.createElementNS(NS_W, "w:spacing");
   spacing.setAttribute("w:after", "0");
   spacing.setAttribute("w:line", "0");
-  const rPrElement = xmlDoc.createElementNS(NS_W, "rPr");
-  const sz = xmlDoc.createElementNS(NS_W, "sz");
+  const rPrElement = xmlDoc.createElementNS(NS_W, "w:rPr");
+  const sz = xmlDoc.createElementNS(NS_W, "w:sz");
   sz.setAttribute("w:val", "2");
 
   rPrElement.appendChild(sz);

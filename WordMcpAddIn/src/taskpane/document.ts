@@ -256,41 +256,6 @@ export async function updateDocumentStructure(): Promise<Record<string, any>> {
 }
 
 /**
- * 원본 문서 구조 JSON 추출 함수
- * 문서 수정 없이 JSON 구조만 반환
- */
-export async function exportDocumentStructureJson(): Promise<Record<string, any>> {
-  return Word.run(async ctx => {
-    // 1. 원본 OOXML 가져오기
-    const flat = ctx.document.body.getOoxml();
-    await ctx.sync();
-    const fullFlatXml = flat.value;
-
-    // 2. document.xml 파트 추출
-    const docXml = extractDocumentXml(fullFlatXml);
-
-    // 3. 정규화 (옵션)
-    let normalizedXml = docXml;
-    if (typeof normalizeOoxml === 'function') {
-      try {
-        normalizedXml = await normalizeOoxml(docXml, 'assets/normalize-runs.sef.json');
-      } catch (error) {
-        console.warn("XML 정규화 실패, 원본 XML 사용:", error);
-      }
-    }
-
-    // 4. OOXML을 JSON으로 변환
-    const { json } = processDocumentOriginal(normalizedXml);
-    
-    // 로깅
-    const mappingString = JSON.stringify(json, null, 2);
-    console.log('문서 구조 JSON:\n', mappingString);
-
-    return json;
-  });
-}
-
-/**
  * JSON-Patch 배열을 받아, id 기반으로 콘텐츠 컨트롤 내부 요소를 수정 후 문서에 반영합니다.
  */
 export async function importDocumentWithPatch(patch: Operation[]): Promise<void> {
