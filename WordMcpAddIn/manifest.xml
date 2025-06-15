@@ -14,7 +14,7 @@
     <AppDomain>https://wugypesggextuwltuyjh.supabase.co</AppDomain>
   </AppDomains>
   <Hosts>
-    <Host Name="Document"/>
+    <Host Name="Document" />     <Host Name="Workbook" />     <Host Name="Presentation" />
   </Hosts>
   <DefaultSettings>
     <SourceLocation DefaultValue="https://localhost:3001/taskpane.html"/>

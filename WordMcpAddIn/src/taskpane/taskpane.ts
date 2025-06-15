@@ -1,9 +1,10 @@
 import { WebSocketClient } from './ws-client';
-import { updateDocumentStructure } from './document';
-import { updateDocumentFromPatch as writeDoc } from './service';
 import './taskpane.css';
+import { getDocumentAdapter } from './adapters/index';
+import { IDocumentAdapter } from './adapters/adapter.interface';
 
 let wsClient: WebSocketClient | null = null;
+let docAdapter: IDocumentAdapter | null = null; // 어댑터를 저장할 변수
 
 // DOM utility function
 const $ = (id: string): HTMLElement | null => document.getElementById(id);
@@ -54,9 +55,10 @@ async function connectWebSocket(): Promise<void> {
     wsClient = new WebSocketClient(url);
 
     // Set up event handlers
-    wsClient.onOpen = () => {
+    wsClient.onOpen = async () => { // onOpen을 async로 변경
       updateStatus('Connected');
       enableControls(true);
+      await handleSync();
     };
     
     wsClient.onClose = () => {
@@ -77,6 +79,18 @@ async function connectWebSocket(): Promise<void> {
     
     wsClient.onInitialized = () => {
       updateStatus('Connected and document synchronized');
+    };
+
+    wsClient.onToolRequest = async (toolName, args) => {
+      console.log(`Received tool request from server: ${toolName}`, args);
+      if (toolName.toUpperCase() === 'WRITE_DOC') {
+        if (!docAdapter) throw new Error("Adapter not ready");
+        // 어댑터를 통해 문서에 패치를 적용합니다.
+        await docAdapter.applyDocumentPatch(args.patch);
+        // 성공적으로 완료되었음을 알리는 결과를 반환할 수 있습니다.
+        return { status: "ok" };
+      }
+      throw new Error(`Unsupported tool requested: ${toolName}`);
     };
 
     // Connect to the server
@@ -112,8 +126,14 @@ function enableControls(enabled: boolean): void {
  * Handles document snapshot retrieval
  */
 async function handleSnapshot(): Promise<void> {
+  // CHANGED: docAdapter를 사용하여 스냅샷 가져오기
+  if (!docAdapter) {
+    console.error("Document Adapter is not initialized.");
+    return;
+  }
+
   try {
-    const snapshot = await updateDocumentStructure();
+    const snapshot = await docAdapter.getDocumentSnapshot(); // 어댑터의 메서드 호출
     updateResultDisplay(snapshot);
   } catch (error) {
     console.error('Failed to get document snapshot:', error);
@@ -132,9 +152,14 @@ async function handleSync(): Promise<void> {
     updateResultDisplay('WebSocket not connected');
     return;
   }
-  
+  if (!docAdapter) {
+    console.error("Document Adapter is not initialized.");
+    return;
+  }
+
   try {
-    await wsClient.syncDocument();
+    const snapshot = await docAdapter.getDocumentSnapshot();
+    await wsClient.syncDocument(snapshot, Office.context.host); 
     updateResultDisplay({ status: 'Document synchronized successfully' });
   } catch (error) {
     console.error('Sync failed:', error);
@@ -172,29 +197,7 @@ async function handleApplyPatch(): Promise<void> {
         return;
     }
 
-    // Assuming wsClient.writeDocument or a similar function handles the patch
-    // if (wsClient) {
-    //   const toolResponse = await wsClient.writeDocument(mergePatchData);
-    //   // ... (handle toolResponse)
-    //    if (toolResponse.error) {
-    //      throw new Error(toolResponse.error);
-    //    }
-    //    if (toolResponse.success) {
-    //        updateResultDisplay({
-    //            status: 'Patch successfully processed by server.',
-    //            details: toolResponse.data
-    //        });
-    //    } else {
-    //        updateResultDisplay({
-    //            error: 'Server indicated failure in applying patch.',
-    //            details: toolResponse.error
-    //        });
-    //    }
-    // } else if (!wsClient) {
-    //     // If not using WebSocket or not initialized, try local application via service.ts
-    //     // This assumes 'writeDoc' (updateDocumentFromPatch) is imported from your service.ts
-    //     // import { updateDocumentFromPatch as writeDoc } from './service';
-    await writeDoc(mergePatchData); // writeDoc is from service.ts
+    await docAdapter?.applyDocumentPatch(mergePatchData); // Use the adapter to apply the patch
     updateResultDisplay({
       status: 'Local document patch applied successfully.',
       message: 'Document has been updated. Consider syncing with server if applicable.'
@@ -204,11 +207,7 @@ async function handleApplyPatch(): Promise<void> {
         await handleSync(); 
       } else {
         console.warn("WebSocket not connected or initialized; server sync skipped after local patch.");
-         }
-    // } else {
-    //   updateResultDisplay({ error: 'Cannot apply patch: Client not properly initialized.' });
-    //   return;
-    // }
+      }
 
   } catch (error) {
     console.error('Failed to parse or apply patch:', error);
@@ -289,17 +288,21 @@ function setupEventListeners(): void {
 Office.onReady(info => {
   console.log(`Office.js initialized in ${info.host}`);
   
-  if (info.host === Office.HostType.Word) {
-    // Set up UI and connect
+  // 1. 호스트에 맞는 어댑터 가져오기
+  docAdapter = getDocumentAdapter(info.host);
+  console.log(`Document adapter created for host: ${info.host}`, docAdapter);
+  if (docAdapter) {
+    // 어댑터가 성공적으로 생성되면 UI 설정 및 웹소켓 연결
     setupEventListeners();
     connectWebSocket();
   } else {
+    // 2. 지원하지 않는 호스트에 대한 에러 처리
     const appElement = $('app');
     if (appElement) {
       appElement.innerHTML = `
         <div class="error-container">
           <h2>Unsupported Application</h2>
-          <p>This add-in requires Microsoft Word.</p>
+          <p>This add-in currently supports Word, Excel, and PowerPoint.</p>
         </div>
       `;
     }

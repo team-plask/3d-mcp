@@ -1,6 +1,4 @@
 import { v4 as uuid } from 'uuid';
-import { updateDocumentStructure } from './document';
-import { updateDocumentFromPatch as writeDoc } from './service';
 
 // Role definitions
 const Roles = ["user", "model", "process"] as const;
@@ -108,6 +106,10 @@ export class WebSocketClient {
   onError = (_: any) => {};
   onMessage = (_: any) => {};
   onInitialized = () => {};
+  onToolRequest: (toolName: string, args: any) => Promise<any> = async (toolName) => {
+    // 이 핸들러가 설정되지 않았을 경우를 대비한 기본 에러 처리
+    throw new Error(`onToolRequest handler not implemented for tool: ${toolName}`);
+  };
 
   constructor(private url: string) {
     if (wsInstance) return wsInstance;
@@ -128,13 +130,13 @@ export class WebSocketClient {
           console.log("WebSocket connection established");
           this.onOpen();
           
-          try {
-            await this.syncDocument();
-            resolve();
-          } catch (error) {
-            console.error("Failed to initialize with document:", error);
-            reject(error);
-          }
+          // try {
+          //   await this.syncDocument();
+          //   resolve();
+          // } catch (error) {
+          //   console.error("Failed to initialize with document:", error);
+          //   reject(error);
+          // }
         };
 
         this.ws.onclose = (event) => {
@@ -157,16 +159,17 @@ export class WebSocketClient {
     });
   }
 
-  async syncDocument(inputData?: any): Promise<void> {
+  async syncDocument(documentStructure: any, host: Office.HostType): Promise<void> {
     try {
-      let documentStructure = inputData || await updateDocumentStructure();
-
+      // 이제 이 메서드는 외부로부터 받은 데이터를 서버에 전송만 합니다.
       const result = await this.send<"UPDATE">({
         role: "process",
         command: "UPDATE",
         type: "REQUEST",
         document: JSON.stringify(documentStructure),
-        processId: this.processId
+        processId: this.processId,
+        // @ts-ignore - 서버에서 이 필드를 사용하도록 메시지 타입 확장 필요
+        host: host, 
       });
       
       if (result.error) {
@@ -176,10 +179,7 @@ export class WebSocketClient {
         this.isInitialized = true;
         this.onInitialized();
       }
-    } catch (error) {
-      console.error("Error synchronizing document:", error);
-      throw error;
-    }
+    } catch (error) { /* ... */ }
   }
 
   private async handleMessage(event: MessageEvent): Promise<void> {
@@ -256,44 +256,10 @@ export class WebSocketClient {
   private async handleToolRequest(message: Message<"TOOL", "REQUEST"> & { id: string }): Promise<Message<"TOOL", "RESPONSE"> & { id: string }> {
     const { name, args, id } = message;
     
-    // Normalize the tool name to handle case-insensitive matching
-    const normalizedName = String(name).toUpperCase().replace(/[-_]/g, '') as keyof typeof TOOLS;
-    
-    // Create a map for normalized tool names
-    const normalizedToolMap: Record<string, keyof typeof TOOLS> = {};
-    for (const toolName of Object.keys(TOOLS) as Array<keyof typeof TOOLS>) {
-      normalizedToolMap[String(toolName).toUpperCase().replace(/[-_]/g, '')] = toolName;
-    }
-    
-    // Look up the actual tool name using the normalized version
-    const actualToolName = normalizedToolMap[normalizedName];
-    
-    // Similar to the simpler example, use a name-to-handler map
-    const toolHandlers: Record<keyof typeof TOOLS, Function> = {
-      WRITE_DOC: async () => {
-        if (!args.patch || typeof args.patch !== 'object') {
-          throw new Error("Valid patch data is required");
-        }
-        console.log("Applying patch:", args.patch);
-        const result = await writeDoc(args.patch);
-        this.syncDocument(result); // Ensure document is synced after writing
-        setTimeout(() => this.syncDocument(), 500);
-        return result;
-      }
-    };
-    
     try {
-      // Check if we have a valid normalized tool name
-      if (!actualToolName) {
-        throw new Error(`Unsupported tool: ${name}`);
-      }
-      
-      const handler = toolHandlers[actualToolName];
-      if (!handler) {
-        throw new Error(`Tool ${actualToolName} is defined but not implemented`);
-      }
-      
-      const result = await handler();
+      // CHANGED: 내부에서 직접 처리하는 대신 onToolRequest 콜백을 호출
+      console.log(`Delegating tool request '${name}' to external handler.`);
+      const result = await this.onToolRequest(name, args);
       
       return {
         role: "process",
@@ -303,7 +269,7 @@ export class WebSocketClient {
         result: { success: true, data: result }
       };
     } catch (error) {
-      console.error(`Error in ${name} tool:`, error);
+      console.error(`Error in external handler for ${name} tool:`, error);
       return {
         role: "process",
         command: "TOOL",
