@@ -22,6 +22,7 @@
     "unsideload": "npx office-addin-dev-settings uninstall dist/manifest.xml"
   },
   "dependencies": {
+    "@microsoft/office-js": "^1.1.110",
     "@types/shortid": "^2.2.0",
     "core-js": "^3.36.0",
     "fast-json-patch": "^3.1.1",

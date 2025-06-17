@@ -2,30 +2,6 @@
 
 import type { IHostConfig, ElementConfig, PatchAction } from './config.interface';
 
-const cellValueAction: PatchAction = (context, range, value) => {
-    // 값이 비어있으면 clear, 아니면 값을 설정
-    if (value === "" || value === null) {
-        range.clear(Excel.ClearApplyTo.contents);
-    } else {
-        range.values = [[value]];
-    }
-};
-const cellFormulaAction: PatchAction = (context, range, formula) => {
-    range.formulas = [[`=${formula}`]];
-};
-const cellStyleAction: PatchAction = (context, range, styleId, fullTargetJson) => {
-    const styleDef = fullTargetJson.styles[styleId];
-    if (styleDef) {
-        // API가 지원하는 형식으로 변환 후 적용
-        const format = {
-            font: styleDef.font,
-            fill: styleDef.fill ? { color: styleDef.fill.fgColor } : undefined,
-            alignment: styleDef.alignment,
-        };
-        range.format.set(format);
-    }
-};
-
 // ✅ XML에 존재하는 모든 처리 대상 태그를 타입으로 정의합니다.
 const TAG_TO_TYPE: Record<string, string> = {
     // workbook & rels

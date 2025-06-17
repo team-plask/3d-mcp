@@ -1,117 +1,183 @@
-// src/core/patch-engine-excel.ts
-
-import { compare, Operation } from 'fast-json-patch';
+import { Operation } from 'fast-json-patch';
 import type { IHostConfig } from '../../configs/config.interface';
-import * as JsonUtils from '../json-utils';
-import * as XmlUtils from '../xml-utils';
-// src/core/patch-engine-excel.ts
 
 /**
- * [Excel용 메인 함수] JSON 변경사항을 기반으로 수정이 필요한 모든 XML 파트들의
- * 새로운 내용을 생성하여 맵 형태로 반환합니다.
+ * [메인 엔진] 모든 XML 파트(DOM)와 전체 패치 목록을 받아 적절한 핸들러에 작업을 분배합니다.
  */
-export function applyPatchToMultiPart(
-  originalParts: Map<string, string>,
-  originalJson: Record<string, any>,
-  targetJson: Record<string, any>,
+export function applyPatchesToDom(
+  originalParts: Map<string, Document>,
+  patch: Operation[],
+  targetJson: any,
   config: IHostConfig
-): Map<string, string> {
-  const updatedParts = new Map<string, string>();
-  const operations = compare(originalJson, targetJson);
-  if (operations.length === 0) return updatedParts;
+): void {
+  // 1. styles.xml과 sharedStrings.xml은 재빌드하여 최신 인덱스 맵을 확보합니다.
+  const { stringMap } = rebuildAndApplySharedStrings(originalParts, targetJson);
+  const { styleMap } = rebuildAndApplyStyles(originalParts, targetJson, config);
 
-  console.log("[Excel Patch Engine] Operations to apply:", operations);
-  // 스타일, 공유문자열, 시트 데이터는 서로 영향을 주므로,
-  // 관련 변경이 하나라도 있으면 모두 다시 빌드하는 것이 가장 안정적입니다.
-  const styleOps = operations.some(op => op.path.startsWith('/styles'));
-  const sheetOps = operations.some(op => op.path.startsWith('/sheets'));
+  // 2. 나머지 patch عمليات을 순회하며 DOM을 직접 수정합니다.
+  for (const op of patch) {
+    const pathSegments = op.path.split('/').slice(1);
 
-  console.log("[Excel Patch Engine] Style operations:", styleOps, "Sheet operations:", sheetOps);
-  if (styleOps || sheetOps) {
-    // 1. 스타일(styles.xml) 재생성 및 새 스타일 맵 확보
-    const { xml: newStylesXml, styleMap } = rebuildStylesXml(targetJson.styles, config);
-    console.log("[Excel Patch Engine] New styles XML generated.", XmlUtils.formatXML(newStylesXml));
-    updatedParts.set('/xl/styles.xml', newStylesXml);
-    
-    // 2. 공유 문자열(sharedStrings.xml) 재생성 및 새 문자열 맵 확보
-    const allStrings = getAllStringCellValues(targetJson.sheets);
-    console.log("[Excel Patch Engine] All string cell values collected:", allStrings);
-    const { xml: newSharedStringsXml, stringMap } = rebuildSharedStringsXml(allStrings, config);
-    console.log("[Excel Patch Engine] New shared strings XML generated.", XmlUtils.formatXML(newSharedStringsXml));
-    updatedParts.set('/xl/sharedStrings.xml', newSharedStringsXml);
+    if (pathSegments[0] === 'sheets') {
+      const sheetId = pathSegments[1];
+      const sheetRel = targetJson.sheetRels.find((r: any) => r.id === sheetId);
+      if (!sheetRel) continue;
 
-    // 3. 각 시트(sheetN.xml) 재생성
-    for (const sheetId of targetJson.sheetOrder) {
-        const sheetJson = targetJson.sheets[sheetId];
-        const sheetPath = findSheetPathFromRels(targetJson.sheetRels, sheetId);
-        if (sheetPath && sheetJson) {
-            const newSheetXml = rebuildSheetXml(sheetJson, styleMap, stringMap, config);
-            console.log(`[Excel Patch Engine] New XML for sheet ${sheetId} generated.`, XmlUtils.formatXML(newSheetXml));
-            updatedParts.set(sheetPath, newSheetXml);
-        }
-        console.log(`[Excel Patch Engine] Sheet ${sheetId} XML rebuilt.`);
+      const sheetPath = `xl/${sheetRel.target}`;
+      const sheetDom = originalParts.get(sheetPath);
+      if (!sheetDom) continue;
+      
+      _handleSheetOperation(sheetDom, op, pathSegments.slice(2), targetJson.sheets[sheetId], stringMap, styleMap);
+
+    } else if (pathSegments[0] === 'sheetOrder') {
+      const workbookDom = originalParts.get('xl/workbook.xml');
+      if (workbookDom) {
+        _handleSheetOrderOperation(workbookDom, targetJson);
+      }
     }
   }
-
-  // TODO: 4. 시트 순서/이름 변경 시 -> workbook.xml 수정
-
-  return updatedParts;
 }
 
 // ===============================================================
-// XML 재건축(Rebuild) 헬퍼 함수들
+// 시트 및 워크북 DOM 직접 수정 핸들러
 // ===============================================================
 
-function rebuildStylesXml(stylesJson: any, config: IHostConfig): { xml: string, styleMap: Map<string, number> } {
-    const styleMap = new Map<string, number>();
-    const fontDefs: string[] = ['<font><sz val="11"/><name val="Calibri"/></font>']; // 0번 기본 폰트
-    const fillDefs: string[] = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>']; // 0, 1번 기본 채우기
-    const borderDefs: string[] = ['<border><left/><right/><top/><bottom/><diagonal/></border>']; // 0번 기본 테두리
-    const xfDefs: string[] = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>']; // 0번 기본 xf
+function _handleSheetOperation(
+  sheetDom: Document, 
+  op: Operation, 
+  path: string[], 
+  targetSheetJson: any,
+  stringMap: Map<string, number>,
+  styleMap: Map<string, number>
+) {
+  const action = path[0];
 
-    const fontMap = new Map<string, number>();
-    const fillMap = new Map<string, number>();
+  if (action === 'cells') {
+    const cellAddress = path[1];
+    const cellData = targetSheetJson.cells[cellAddress];
+    let cellElement = sheetDom.querySelector(`c[r="${cellAddress}"]`);
 
-    Object.entries(stylesJson).forEach(([styleId, styleDef]: [string, any]) => {
-        let fontId = 0, fillId = 0, borderId = 0;
+    switch (op.op) {
+      case 'add':
+      case 'replace':
+        if (!cellElement) {
+            cellElement = _createCell(sheetDom, cellAddress);
+        }
+        _updateCell(cellElement, cellData, stringMap, styleMap);
+        break;
+      
+      case 'remove':
+        if (cellElement) {
+          cellElement.parentNode?.removeChild(cellElement);
+        }
+        break;
+    }
+  } 
+}
+
+function _handleSheetOrderOperation(workbookDom: Document, targetJson: any) {
+  const sheetsElement = workbookDom.querySelector('sheets');
+  if (!sheetsElement) return;
+
+  while (sheetsElement.firstChild) {
+    sheetsElement.removeChild(sheetsElement.firstChild);
+  }
+
+  targetJson.sheetRels.forEach((rel: any) => {
+    const sheetTag = workbookDom.createElement('sheet');
+    sheetTag.setAttribute('name', rel.name);
+    sheetTag.setAttribute('sheetId', rel.id.replace('sheet',''));
+    sheetTag.setAttribute('r:id', rel.rId);
+    sheetsElement.appendChild(sheetTag);
+  });
+}
+
+// ===============================================================
+// 재빌드(Rebuild) 방식 핸들러
+// ===============================================================
+
+/**
+ * sharedStrings.xml을 재빌드하고 DOM을 교체합니다.
+ */
+function rebuildAndApplySharedStrings(originalParts: Map<string, Document>, targetJson: any): { stringMap: Map<string, number> } {
+    const allStrings = Array.from(new Set(
+        Object.values(targetJson.sheets).flatMap((sheet: any) => 
+            Object.values(sheet.cells)
+                  .filter((cell: any) => cell.type === 'string')
+                  .map((cell: any) => cell.value)
+        )
+    )) as string[];
+
+    const stringMap = new Map(allStrings.map((s, i) => [s, i]));
+    const items = allStrings.map(s => `<si><t>${escapeXml(s)}</t></si>`).join('');
+    const newXmlString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${allStrings.length}" uniqueCount="${allStrings.length}">${items}</sst>`;
+
+    originalParts.set('xl/sharedStrings.xml', new DOMParser().parseFromString(newXmlString, "text/xml"));
+    return { stringMap };
+}
+
+/**
+ * styles.xml을 재빌드하고 DOM을 교체합니다.
+ */
+function rebuildAndApplyStyles(originalParts: Map<string, Document>, targetJson: any, config: IHostConfig): { styleMap: Map<string, number> } {
+    const finalStyleMap = new Map<string, number>();
+    
+    // 1. 기본 스타일 요소 정의
+    const fontDefs = ['<font><sz val="12"/><name val="Calibri"/></font>'];
+    const fillDefs = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
+    const borderDefs = ['<border><left/><right/><top/><bottom/><diagonal/></border>'];
+    const xfDefs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
+
+    // 2. 중복 방지를 위한 맵
+    const fontFingerprintMap = new Map<string, number>([['{"sz":12,"name":"Calibri"}', 0]]);
+    const fillFingerprintMap = new Map<string, number>([['{"patternType":"none"}', 0], ['{"patternType":"gray125"}', 1]]);
+
+    // 3. targetJson의 스타일을 순회하며 XML 정의 생성
+    for (const [styleId, styleDef] of Object.entries(targetJson.styles as Record<string, any>)) {
+        let fontId = 0, fillId = 0, borderId = 0; // 기본값
 
         // Font 처리
         if (styleDef.font) {
             const fontFingerprint = JSON.stringify(styleDef.font);
-            if (!fontMap.has(fontFingerprint)) {
+            if (!fontFingerprintMap.has(fontFingerprint)) {
                 let fontXml = '<font>';
-                if(styleDef.font.bold) fontXml += '<b/>';
-                if(styleDef.font.size) fontXml += `<sz val="${styleDef.font.size}"/>`;
-                if(styleDef.font.color) fontXml += `<color rgb="${styleDef.font.color}"/>`;
+                if (styleDef.font.bold) fontXml += '<b/>';
+                if (styleDef.font.size) fontXml += `<sz val="${styleDef.font.size}"/>`;
+                if (styleDef.font.name) fontXml += `<name val="${escapeXml(styleDef.font.name)}"/>`;
+                if (styleDef.font.color) fontXml += `<color rgb="${styleDef.font.color}"/>`;
                 fontXml += '</font>';
-                fontMap.set(fontFingerprint, fontDefs.length);
+                fontFingerprintMap.set(fontFingerprint, fontDefs.length);
                 fontDefs.push(fontXml);
             }
-            fontId = fontMap.get(fontFingerprint)!;
+            fontId = fontFingerprintMap.get(fontFingerprint)!;
         }
 
         // Fill 처리
         if (styleDef.fill) {
             const fillFingerprint = JSON.stringify(styleDef.fill);
-            if (!fillMap.has(fillFingerprint)) {
+            if (!fillFingerprintMap.has(fillFingerprint)) {
                 const fillXml = `<fill><patternFill patternType="solid"><fgColor rgb="${styleDef.fill.fgColor}"/></patternFill></fill>`;
-                fillMap.set(fillFingerprint, fillDefs.length);
+                fillFingerprintMap.set(fillFingerprint, fillDefs.length);
                 fillDefs.push(fillXml);
             }
-            fillId = fillMap.get(fillFingerprint)!;
+            fillId = fillFingerprintMap.get(fillFingerprint)!;
         }
         
-        // xf 레코드 생성
+        // TODO: Border 처리 로직 추가
+
+        // XF (셀 스타일 최종 조합) 레코드 생성
         let alignmentXml = '';
         if (styleDef.alignment) {
-            alignmentXml = `<alignment horizontal="${styleDef.alignment.horizontal || 'general'}" vertical="${styleDef.alignment.vertical || 'bottom'}"/>`;
+            alignmentXml = `<alignment horizontal="${styleDef.alignment.horizontal}" vertical="${styleDef.alignment.vertical}"/>`;
         }
-        const xfXml = `<xf numFmtId="${styleDef.numberFormat ? 164 : 0}" fontId="${fontId}" fillId="${fillId}" borderId="${borderId}" xfId="0" applyFont="1" applyFill="1" applyAlignment="${styleDef.alignment ? 1:0}">${alignmentXml}</xf>`;
-        styleMap.set(styleId, xfDefs.length);
+        const xfXml = `<xf numFmtId="0" fontId="${fontId}" fillId="${fillId}" borderId="${borderId}" xfId="0" applyFont="1" applyFill="1" applyAlignment="${styleDef.alignment ? 1:0}">${alignmentXml}</xf>`;
+        
+        finalStyleMap.set(styleId, xfDefs.length);
         xfDefs.push(xfXml);
-    });
-
-    const finalXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    }
+    
+    // 4. 최종 styles.xml 문자열 조립
+    const newXmlString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="${config.namespaces.main}">
     <fonts count="${fontDefs.length}">${fontDefs.join('')}</fonts>
     <fills count="${fillDefs.length}">${fillDefs.join('')}</fills>
@@ -120,78 +186,78 @@ function rebuildStylesXml(stylesJson: any, config: IHostConfig): { xml: string, 
     <cellXfs count="${xfDefs.length}">${xfDefs.join('')}</cellXfs>
     <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
+
+    originalParts.set('xl/styles.xml', new DOMParser().parseFromString(newXmlString, "text/xml"));
+    return { styleMap: finalStyleMap };
+}
+
+
+// ===============================================================
+// DOM 조작 헬퍼 함수들
+// ===============================================================
+
+function _findOrCreateRow(sheetDom: Document, rowNum: string): Element {
+    let rowElement = sheetDom.querySelector(`row[r="${rowNum}"]`);
+    if (!rowElement) {
+        const sheetData = sheetDom.querySelector('sheetData');
+        if (!sheetData) throw new Error("sheetData not found!");
+        rowElement = sheetDom.createElement('row');
+        rowElement.setAttribute('r', rowNum);
+        sheetData.appendChild(rowElement); // TODO: 정렬된 위치에 삽입 필요
+    }
+    return rowElement;
+}
+
+function _createCell(sheetDom: Document, cellAddress: string): Element {
+    const rowNum = cellAddress.match(/\d+/)?.[0];
+    if (!rowNum) throw new Error(`Invalid cell address: ${cellAddress}`);
+    const rowElement = _findOrCreateRow(sheetDom, rowNum);
+    const cellElement = sheetDom.createElement('c');
+    cellElement.setAttribute('r', cellAddress);
+    rowElement.appendChild(cellElement); // TODO: 정렬된 위치에 삽입 필요
+    return cellElement;
+}
+
+function _updateCell(
+  cellElement: Element,
+  cellData: any,
+  stringMap: Map<string, number>,
+  styleMap: Map<string, number>
+) {
+    if (cellData.type === 'string') {
+        cellElement.setAttribute('t', 's');
+    } else {
+        cellElement.removeAttribute('t');
+    }
+
+    while(cellElement.firstChild) {
+        cellElement.removeChild(cellElement.firstChild);
+    }
+
+    if (cellData.formula) {
+        const formulaElement = cellElement.ownerDocument.createElement('f');
+        formulaElement.textContent = escapeXml(cellData.formula);
+        cellElement.appendChild(formulaElement);
+    }
     
-    return { xml: finalXml, styleMap };
-}
-
-function rebuildSharedStringsXml(strings: string[], config: IHostConfig): { xml: string, stringMap: Map<string, number> } {
-    const stringMap = new Map(strings.map((s, i) => [s, i]));
-    const items = strings.map(s => `<si><t>${escapeXml(s)}</t></si>`).join('');
-    const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="${config.namespaces.main}" count="${strings.length}" uniqueCount="${strings.length}">${items}</sst>`;
-    return { xml, stringMap };
-}
-
-function rebuildSheetXml(sheetJson: any, styleMap: Map<string, number>, stringMap: Map<string, number>, config: IHostConfig): string {
-    let sheetDataXml = '';
-    const rows: Record<string, any[]> = {};
-    for (const cellId in sheetJson.cells) {
-        const rowNum = cellId.match(/\d+/)?.[0];
-        if (rowNum) {
-            if (!rows[rowNum]) rows[rowNum] = [];
-            rows[rowNum].push({ id: cellId, ...sheetJson.cells[cellId] });
+    if (cellData.value !== undefined && cellData.value !== null) {
+        const valueElement = cellElement.ownerDocument.createElement('v');
+        if(cellData.type === 'string') {
+            valueElement.textContent = String(stringMap.get(cellData.value) ?? '');
+        } else {
+            valueElement.textContent = String(cellData.value);
         }
-    }
-
-    for (const rowNum in rows) {
-        let rowCellsXml = '';
-        rows[rowNum].sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
-        
-        for (const cell of rows[rowNum]) {
-            const styleIdx = cell.styleId ? styleMap.get(cell.styleId) : undefined;
-            const styleAttr = styleIdx !== undefined ? `s="${styleIdx}"` : '';
-            let valueXml = '', typeAttr = '';
-            
-            if (cell.type === 'string') {
-                const sstIndex = stringMap.get(cell.value);
-                if (sstIndex !== undefined) {
-                    valueXml = `<v>${sstIndex}</v>`;
-                    typeAttr = `t="s"`;
-                }
-            } else if (cell.type === 'number') {
-                valueXml = `<v>${cell.value}</v>`;
-            }
-            if (cell.formula) {
-                valueXml = `<f>${cell.formula}</f>${valueXml}`;
-            }
-
-            rowCellsXml += `<c r="${cell.id}" ${styleAttr} ${typeAttr}>${valueXml}</c>`;
-        }
-        sheetDataXml += `<row r="${rowNum}">${rowCellsXml}</row>`;
+        cellElement.appendChild(valueElement);
     }
     
-    const mergesXml = sheetJson.merges.map((m: any) => `<mergeCell ref="${m.startCell}:${m.endCell}"/>`).join('');
-
-    return `<?xml version="1.0" ...><worksheet xmlns="${config.namespaces.main}"><sheetData>${sheetDataXml}</sheetData><mergeCells count="${sheetJson.merges.length}">${mergesXml}</mergeCells></worksheet>`;
-}
-
-// --- 기타 유틸리티 함수들 ---
-
-function getAllStringCellValues(sheetsJson: Record<string, any>): string[] {
-    const strings = new Set<string>();
-    for (const sheetId in sheetsJson) {
-        for (const cellId in sheetsJson[sheetId].cells) {
-            const cell = sheetsJson[sheetId].cells[cellId];
-            if (cell.type === 'string' && typeof cell.value === 'string') {
-                strings.add(cell.value);
-            }
+    if (cellData.styleId) {
+        const styleIndex = styleMap.get(cellData.styleId);
+        if (styleIndex !== undefined) {
+            cellElement.setAttribute('s', String(styleIndex));
         }
+    } else {
+        cellElement.removeAttribute('s');
     }
-    return Array.from(strings); // Set을 배열로 변환
-}
-
-function findSheetPathFromRels(sheetRels: any[], sheetId: string): string | null {
-    const rel = sheetRels.find(r => r.id === sheetId);
-    return rel ? `xl/${rel.target}` : null;
 }
 
 function escapeXml(unsafe: string): string {

@@ -1,15 +1,14 @@
 // src/adapters/excel.adapter.ts
 
-import { IDocumentAdapter, } from './adapter.interface';
+import { IDocumentAdapter } from './adapter.interface';
 import { excelConfig } from '../configs/excel.config';
-import { compare, Operation } from 'fast-json-patch';
-import type { IHostConfig } from '../configs/config.interface';
 import { processExcelWorkbook, processExcelSheet, processExcelStyles, processSharedStrings } from '../core/processing/processing-engine-excel';
-import { applyPatchToMultiPart } from '../core/patch/patch-engine-excel';
+import { applyPatchesToDom } from '../core/patch/patch-engine-excel';
 import * as XmlUtils from '../core/xml-utils';
 import * as JsonUtils from '../core/json-utils';
 import { loadDocumentState, saveDocumentState } from '../core/state-manager';
 import JSZip from 'jszip';
+import { Operation, compare } from 'fast-json-patch';
 
 export class ExcelAdapter implements IDocumentAdapter {
     private readonly config = excelConfig;
@@ -21,6 +20,10 @@ export class ExcelAdapter implements IDocumentAdapter {
           const stylesXml = await parts.get('xl/styles.xml')?.async('string');
           const sharedStringsXml = await parts.get('xl/sharedStrings.xml')?.async('string');
           const workbookRelsXml = await parts.get('xl/_rels/workbook.xml.rels')?.async('string');
+          console.log("[ExcelAdapter] Document snapshot created successfully.", XmlUtils.formatXML(workbookXml));
+          console.log("[ExcelAdapter] Styles XML:", XmlUtils.formatXML(stylesXml));
+          console.log("[ExcelAdapter] Shared Strings XML:", XmlUtils.formatXML(sharedStringsXml));
+          console.log("[ExcelAdapter] Workbook Rels XML:", XmlUtils.formatXML(workbookRelsXml));
 
           if (!workbookXml || !stylesXml || !workbookRelsXml) throw new Error("Core workbook parts not found.");
           
@@ -33,6 +36,7 @@ export class ExcelAdapter implements IDocumentAdapter {
           for (const rel of sheetRels) {
               const sheetPath = rel.target.startsWith('worksheets/') ? `xl/${rel.target}` : rel.target;
               const sheetXml = await parts.get(sheetPath)?.async('string');
+              console.log("[ExcelAdapter] Processing sheetXml:", XmlUtils.formatXML(sheetXml));
               if (sheetXml) {
                   const sheetData = processExcelSheet(sheetXml, sharedStrings, xmlIndexToStyleIdMap);
                   sheetsJson[rel.id] = { name: rel.name, ...sheetData };
@@ -54,51 +58,63 @@ export class ExcelAdapter implements IDocumentAdapter {
     /**
      * ✅ 수정: Excel.run() 래퍼를 제거하고 순수 async 함수로 변경합니다.
      */
-    public async applyDocumentPatch(patch: any): Promise<void> {
-      return Excel.run(async (context) => {
-          console.log("[ExcelAdapter] Applying patch via API calls...");
+    public async applyDocumentPatch(mergePatch: any): Promise<void> { // 인자 이름을 mergePatch로 변경하여 명확화
+      return Excel.run(async () => {
+          console.log("[ExcelAdapter] Applying patch via DOM modification...");
 
+          // 1. 원본 JSON과 mergePatch를 이용해 targetJson 계산
           const originalJson = loadDocumentState();
-          const targetJson = JsonUtils.robustApplyMergePatchRecursive(originalJson, patch);
+          const targetJson = JsonUtils.robustApplyMergePatchRecursive(originalJson, mergePatch);
+          console.log("[ExcelAdapter] Target JSON calculated.");
 
-          // 1. Patch Engine으로부터 API 호출 계획을 생성합니다.
-          const executionPlan = generateApiExecutionPlan(originalJson, targetJson, this.config);
-          console.log("[ExcelAdapter] Execution plan generated:", executionPlan);
-          // 2. 실행 계획에 따라 실제 API를 호출합니다.
-          for (const call of executionPlan) {
-              if (call.type === 'cell') {
-                  const sheet = context.workbook.worksheets.getItem(call.sheet);
-                  const range = sheet.getRange(call.address);
-                  
-                  const cellData = call.data;
-                  if (!cellData) { // 셀이 삭제된 경우 (JSON에서 키가 없어짐)
-                      range.clear();
-                      continue;
-                  }
-
-                  // Office.js API를 사용하여 각 속성을 설정
-                  range.values = [[cellData.value]];
-                  if(cellData.formula) range.formulas = [[cellData.formula]];
-                  if(cellData.numberFormat) range.numberFormat = [[cellData.numberFormat]];
-                  
-                  if (cellData.styleId && targetJson.styles[cellData.styleId]) {
-                      const style = targetJson.styles[cellData.styleId];
-                      if (style.font) range.format.font.set(style.font);
-                      if (style.fill) range.format.fill.color = style.fill.fgColor;
-                      if (style.alignment) range.format.horizontalAlignment = style.alignment.horizontal;
-                  }
-              }
-              // TODO: 병합, 시트 순서 변경 등 다른 타입의 API 호출 처리
+          // ✅ 2. [수정] 누락되었던 Operation 배열 생성 단계 추가!
+          // originalJson과 targetJson을 비교하여 실제 작업 목록(배열)을 생성합니다.
+          const operations: Operation[] = compare(originalJson, targetJson);
+          if (operations.length === 0) {
+              console.log("[ExcelAdapter] No effective changes to apply.");
+              return; // 변경사항 없으면 종료
           }
+          console.log("[ExcelAdapter] Patch operations generated:", operations);
 
-          // 3. 큐에 쌓인 모든 변경사항을 한 번에 실행합니다.
-          await context.sync();
+          // 3. 원본 파트를 DOM 객체로 변환
+          const originalPartsZip = await this._getWorkbookParts();
+          const originalPartsDOM = new Map<string, Document>();
+          const parser = new DOMParser();
+          const promises = Array.from(originalPartsZip.entries()).map(async ([path, fileObject]) => {
+              if (path.endsWith('.xml') || path.endsWith('.rels')) {
+                  const xmlString = await fileObject.async('string');
+                  originalPartsDOM.set(path, parser.parseFromString(xmlString, "text/xml"));
+              }
+          });
+          await Promise.all(promises);
+          console.log("[ExcelAdapter] Original parts parsed into DOMs.");
+
+          // ✅ 4. [수정] 패치 엔진에 'mergePatch' 객체가 아닌, 'operations' 배열을 전달합니다.
+          applyPatchesToDom(
+              originalPartsDOM,
+              operations, // <--- 이 부분이 수정되었습니다.
+              targetJson,
+              this.config
+          );
+          console.log("[ExcelAdapter] DOM patching completed.");
           
-          console.log("[ExcelAdapter] Patch applied successfully via API.");
-          await this.getDocumentSnapshot(); // 최종 상태 저장
+          // 5. 수정된 DOM 객체를 다시 XML 문자열로 변환
+          const updatedPartsString = new Map<string, string>();
+          const serializer = new XMLSerializer();
+          originalPartsDOM.forEach((dom, path) => {
+              const xmlString = serializer.serializeToString(dom);
+              updatedPartsString.set(path, xmlString);
+          });
+
+          // 6. 업데이트된 문자열 맵을 사용하여 문서 업데이트
+          await this._setWorkbookParts(updatedPartsString, originalPartsZip);
+          
+          console.log("[ExcelAdapter] Workbook patch applied successfully.");
+          
+          // 7. 최종 상태 스냅샷 저장
+          await this.getDocumentSnapshot();
       });
   }
-    
     // --- Private Helper Functions (변경 없음) ---
     
     private _getWorkbookName(): string {
@@ -199,7 +215,7 @@ export class ExcelAdapter implements IDocumentAdapter {
         await Promise.all(promises);
 
         updatedParts.forEach((content, path) => {
-          console.log("Adding updated part:", path, "content", XmlUtils.formatXML(content));
+          console.log("Adding updated part:", path, "content", XmlUtils);
             newZip.file(path, content);
         });
 
@@ -216,41 +232,3 @@ export class ExcelAdapter implements IDocumentAdapter {
         });
     }
 }
-
-// ✅ API 호출을 위한 실행 계획의 타입 정의
-export type ApiCall = 
-    { type: 'cell', sheet: string, address: string, data: any } |
-    { type: 'merge', sheet: string, address: string, action: 'merge' | 'unmerge' } |
-    { type: 'sheet_order', order: string[] };
-
-/**
- * [최종] JSON 변경사항을 분석하여 필요한 Excel API 호출 목록을 생성합니다.
- */
-export function generateApiExecutionPlan(
-  originalJson: any,
-  targetJson: any,
-  config: IHostConfig
-): ApiCall[] {
-  const operations = compare(originalJson, targetJson);
-  const executionPlan: ApiCall[] = [];
-
-  for (const op of operations) {
-    const path = op.path.split('/'); // 예: ["", "sheets", "sheet1", "cells", "A1", "value"]
-    if (path[1] === 'sheets' && path[3] === 'cells') {
-        const sheetId = path[2];
-        const cellAddress = path[4];
-        // 셀 변경 작업을 요약하여 계획에 추가 (중복 방지 필요)
-        if (!executionPlan.some(p => p.type === 'cell' && p.sheet === sheetId && p.address === cellAddress)) {
-            executionPlan.push({
-                type: 'cell',
-                sheet: targetJson.sheets[sheetId].name,
-                address: cellAddress,
-                data: targetJson.sheets[sheetId].cells[cellAddress]
-            });
-        }
-    }
-    // TODO: merges, sheetOrder 변경에 대한 실행 계획 추가
-  }
-  return executionPlan;
-}
-
