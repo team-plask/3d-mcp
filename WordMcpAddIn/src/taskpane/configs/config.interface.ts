@@ -71,6 +71,12 @@ export interface ElementConfig {
       idTagName: string;      // 예: 'w:tag'
       aliasTagName: string;   // 예: 'w:alias'
     };
+    attributeIdentifierConfig?: {
+        targetElementTags: string[];
+        pathToIdContainer: string[];
+        idAttributeName: string;
+        aliasAttributeName: string;
+    };
   }
 
   export type PatchAction = (

@@ -1,45 +1,51 @@
+// src/adapters/powerpoint.adapter.ts ('되돌리기' 기능 테스트용)
+
 import { IDocumentAdapter } from './adapter.interface';
-// import { powerpointConfig } from '../configs/powerpoint.config';
+import { powerpointConfig } from '../configs/powerpoint.config';
 
 export class PowerPointAdapter implements IDocumentAdapter {
+    private readonly config = powerpointConfig;
+
     /**
-     * [제한적 구현] 현재 슬라이드의 선택된 내용을 가져옵니다.
-     * PowerPoint JavaScript API는 전체 문서의 모든 Shape을 순회하는 직접적인 방법을 제공하지 않습니다.
-     * 완전한 구현을 위해서는 OOXML을 직접 파싱하는 복잡한 과정이 필요합니다.
+     * [더미 구현] 이 테스트에서는 사용하지 않습니다.
      */
     public async getDocumentSnapshot(): Promise<any> {
-        console.warn("[PowerPointAdapter] getDocumentSnapshot provides a limited view (selected object only) due to API constraints.");
-        return new Promise((resolve, reject) => {
-            Office.context.document.getSelectedDataAsync(Office.CoercionType.Ooxml, (result) => {
-                if (result.status === Office.AsyncResultStatus.Succeeded) {
-                    console.log("[PowerPointAdapter] Got OOXML for selected shape.");
-                    // 실제 구현에서는 이 OOXML을 파싱하여 JSON을 생성해야 합니다.
-                    // 여기서는 예시로 XML 문자열 자체를 반환합니다.
-                    resolve({ selectedOoxml: result.value });
-                } else {
-                    reject(result.error);
-                }
-            });
-        });
+        console.log("[Undo-Test] getDocumentSnapshot called (dummy).");
+        return { status: "This is a dummy snapshot for the Undo test." };
     }
 
     /**
-     * [제한적 구현] 새로운 텍스트 상자를 삽입하는 예시입니다.
-     * 기존 Shape을 ID로 찾아 수정하는 기능은 API에서 직접 지원하지 않으므로,
-     * OOXML을 직접 수정하여 전체 슬라이드를 교체하는 방식이 필요할 수 있습니다.
+     * [테스트용 핵심 구현]
+     * 현재 선택한 도형의 텍스트를 API로 변경하여,
+     * 이 작업이 '되돌리기' 스택에 기록되는지 테스트합니다.
      */
     public async applyDocumentPatch(patch: any): Promise<void> {
-        console.warn("[PowerPointAdapter] applyDocumentPatch is a simplified example (inserting text).");
+        console.log("=============================================");
+        console.log("🚀 '되돌리기(Undo)' 테스트를 시작합니다.");
+        console.log("=============================================");
+
+        // 변경할 텍스트를 미리 정의합니다.
+        const newText = `✅ API Test Successful! (Timestamp: ${new Date().toLocaleTimeString()})`;
+        
+        console.log(`📄 선택된 도형의 텍스트를 "${newText}" (으)로 변경합니다...`);
+
         return new Promise((resolve, reject) => {
-            const textToInsert = patch.newText || "Patched Text";
-            Office.context.document.setSelectedDataAsync(textToInsert, (result) => {
-                if (result.status === Office.AsyncResultStatus.Succeeded) {
-                    console.log("[PowerPointAdapter] Text inserted/updated successfully.");
+            Office.context.document.setSelectedDataAsync(
+                newText,
+                { coercionType: Office.CoercionType.Text },
+                (result) => {
+                    if (result.status === Office.AsyncResultStatus.Failed) {
+                        const errorMsg = `❌ TEST ACTION FAILED: setSelectedDataAsync failed. Error: ${result.error.message}`;
+                        console.error(errorMsg);
+                        reject(new Error(errorMsg));
+                        return;
+                    }
+
+                    console.log("🎉 TEST ACTION COMPLETE: 텍스트가 성공적으로 변경되었습니다.");
+                    console.log("🔔 지금 바로 PowerPoint에서 '되돌리기' (Ctrl+Z 또는 Cmd+Z)를 실행하여 텍스트가 원래대로 돌아오는지 확인해주세요.");
                     resolve();
-                } else {
-                    reject(result.error);
                 }
-            });
+            );
         });
     }
 }
